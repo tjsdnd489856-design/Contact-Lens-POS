@@ -475,6 +475,8 @@ class CustomerForm extends HTMLElement {
             formattedInput = input.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
         } else if (input.length > 7) { // 000-0000-000 format (older phone numbers)
             formattedInput = input.replace(/(\d{3})(\d{4})(\d{0,4})/, '$1-$2-$3');
+        } else if (input.length > 3) { // 000-000 format
+            formattedInput = input.replace(/(\d{3})(\d{0,4})/, '$1-$2');
         } else {
             formattedInput = input;
         }
