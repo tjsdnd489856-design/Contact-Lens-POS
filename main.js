@@ -316,7 +316,7 @@ const CustomerService = {
         alert('중복된 고객입니다.');
         return false;
     }
-    const index = this._customers.findIndex(c => c.id === updatedProduct.id);
+    const index = this._customers.findIndex(c => c.id === updatedCustomer.id);
     if (index !== -1) {
       // Preserve purchase history and last purchase date
       updatedCustomer.purchaseHistory = this._customers[index].purchaseHistory; 
