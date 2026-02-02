@@ -43,6 +43,7 @@ This section outlines the immediate tasks for the current development cycle.
     -   **DONE:** Implement "delete" functionality for customers.
     -   **DONE:** Connect customer components to manage data.
     -   **DONE:** Add right/left eye power fields to customer data, form, and list.
+    -   **DONE:** Display "Left Eye" values next to "Right Eye" values with a separator in the customer form.
     -   **DONE:** Integrate customer purchase history tracking via SalesService.
     -   **DONE:** Remove 'email' field and add 'lastPurchaseDate' to customer data, form, and list.
     -   **DONE:** Remove 'Actions' column from customer list; add 'Notes' field to customer data, form, and list.

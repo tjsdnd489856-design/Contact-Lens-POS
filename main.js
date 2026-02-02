@@ -699,24 +699,41 @@ class CustomerForm extends HTMLElement {
             
             .power-fields-container {
                 display: flex;
-                flex-direction: column; /* Stack eye sections */
-                gap: 10px; /* Reduced space between eye sections */
+                flex-direction: row; /* Changed to row for side-by-side */
+                justify-content: space-between; /* Distribute space between eye sections */
+                gap: 10px;
                 margin-bottom: 1rem;
             }
+            .eye-section-wrapper { /* New wrapper for each eye to control width */
+                flex: 1; /* Allow each eye section to take equal space */
+                min-width: 250px; /* Ensure minimum width to prevent squishing */
+                padding: 10px;
+                border: 1px solid #eee;
+                border-radius: 5px;
+                background-color: #f9f9f9;
+            }
+            .eye-section-divider {
+                width: 1px;
+                background-color: #ccc;
+                margin: 0 10px; /* Space around the divider */
+            }
             h4 {
-                margin: 0.5rem 0;
+                margin: 0 0 0.5rem 0; /* Adjusted margin */
                 font-size: 1em;
                 color: #34495e;
+                text-align: center; /* Center the eye titles */
             }
             .power-eye-section {
                 display: flex;
                 flex-wrap: nowrap; /* Prevent wrapping */
+                justify-content: center; /* Center align fields within section */
                 gap: 5px; /* Reduced space between S, C, AX fields */
                 align-items: flex-end; /* Align inputs at the bottom */
             }
             .power-eye-section .power-field-group {
                 display: flex;
-                align-items: center; /* Align label and input */
+                flex-direction: column; /* Stack label and input vertically */
+                align-items: center; /* Center items in column */
                 gap: 3px; /* Further reduced space between label and input */
                 flex-grow: 0; /* Prevent growth to maintain size */
                 flex-shrink: 0; /* Allow shrinking */
@@ -724,12 +741,13 @@ class CustomerForm extends HTMLElement {
             .power-eye-section .power-field-group label {
                 margin-bottom: 0; /* Remove default label margin */
                 white-space: nowrap; /* Prevent label wrapping */
-                font-size: 0.9em; /* Smaller label font size */
+                font-size: 0.8em; /* Smaller label font size */
             }
             .power-eye-section .power-field-group input[type="text"] {
-                width: 50px; /* Smaller fixed width for dose inputs */
+                width: 55px; /* Slightly larger fixed width for dose inputs */
                 padding: 0.4rem; /* Reduced padding */
                 text-align: center; /* Center align text in dose inputs */
+                font-size: 0.9em;
             }
 
             .form-buttons {
@@ -762,34 +780,39 @@ class CustomerForm extends HTMLElement {
             </div>
 
             <div class="power-fields-container">
-                <h4>오른쪽 눈</h4>
-                <div class="power-eye-section">
-                    <div class="form-group power-field-group">
-                      <label for="rightS">S</label>
-                      <input type="text" id="rightS" name="rightS" step="0.25">
-                    </div>
-                    <div class="form-group power-field-group">
-                      <label for="rightC">C</label>
-                      <input type="text" id="rightC" name="rightC" step="0.25">
-                    </div>
-                    <div class="form-group power-field-group">
-                      <label for="rightAX">AX</label>
-                      <input type="text" id="rightAX" name="rightAX">
+                <div class="eye-section-wrapper">
+                    <h4>오른쪽 눈</h4>
+                    <div class="power-eye-section">
+                        <div class="form-group power-field-group">
+                          <label for="rightS">S</label>
+                          <input type="text" id="rightS" name="rightS" step="0.25">
+                        </div>
+                        <div class="form-group power-field-group">
+                          <label for="rightC">C</label>
+                          <input type="text" id="rightC" name="rightC" step="0.25">
+                        </div>
+                        <div class="form-group power-field-group">
+                          <label for="rightAX">AX</label>
+                          <input type="text" id="rightAX" name="rightAX">
+                        </div>
                     </div>
                 </div>
-                <h4>왼쪽 눈</h4>
-                <div class="power-eye-section">
-                    <div class="form-group power-field-group">
-                      <label for="leftS">S</label>
-                      <input type="text" id="leftS" name="leftS" step="0.25">
-                    </div>
-                    <div class="form-group power-field-group">
-                      <label for="leftC">C</label>
-                      <input type="text" id="leftC" name="leftC" step="0.25">
-                    </div>
-                    <div class="form-group power-field-group">
-                      <label for="leftAX">AX</label>
-                      <input type="text" id="leftAX" name="leftAX">
+                <div class="eye-section-divider"></div> <!-- Divider -->
+                <div class="eye-section-wrapper">
+                    <h4>왼쪽 눈</h4>
+                    <div class="power-eye-section">
+                        <div class="form-group power-field-group">
+                          <label for="leftS">S</label>
+                          <input type="text" id="leftS" name="leftS" step="0.25">
+                        </div>
+                        <div class="form-group power-field-group">
+                          <label for="leftC">C</label>
+                          <input type="text" id="leftC" name="leftC" step="0.25">
+                        </div>
+                        <div class="form-group power-field-group">
+                          <label for="leftAX">AX</label>
+                          <input type="text" id="leftAX" name="leftAX">
+                        </div>
                     </div>
                 </div>
             </div>
