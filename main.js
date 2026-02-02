@@ -414,14 +414,14 @@ class CustomerList extends HTMLElement {
       <table>
         <thead>
           <tr>
-            <th>ID</th>
-            <th>이름</th>
-            <th>연락처</th>
-            <th>오른쪽 도수</th>
-            <th>왼쪽 도수</th>
-            <th>최종 구매일</th>
-            <th>비고</th>
-            <th class="actions-cell">관리</th>
+            <th style="width: 5%;">ID</th>
+            <th style="width: 15%;">이름</th>
+            <th style="width: 15%;">연락처</th>
+            <th style="width: 10%;">오른쪽 도수</th>
+            <th style="width: 10%;">왼쪽 도수</th>
+            <th style="width: 15%;">최종 구매일</th>
+            <th style="width: 20%;">비고</th>
+            <th class="actions-cell" style="width: 10%;">관리</th>
           </tr>
         </thead>
         <tbody>
@@ -511,6 +511,13 @@ class CustomerForm extends HTMLElement {
             label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; }
             input, textarea { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
             button { cursor: pointer; padding: 0.8rem 1.5rem; border: none; border-radius: 4px; color: white; background-color: #3498db; font-size: 1rem; }
+            .power-fields-container {
+                display: flex;
+                gap: 10px; /* Space between fields */
+            }
+            .power-fields-container .form-group {
+                flex: 1; /* Distribute space equally */
+            }
           </style>
           <form>
             <h3 class="form-title">고객 추가 / 수정</h3>
@@ -523,13 +530,15 @@ class CustomerForm extends HTMLElement {
               <label for="phone">연락처</label>
               <input type="tel" id="phone" name="phone" required>
             </div>
-            <div class="form-group">
-              <label for="rightPower">오른쪽 도수 (D)</label>
-              <input type="number" id="rightPower" name="rightPower" step="0.25">
-            </div>
-            <div class="form-group">
-              <label for="leftPower">왼쪽 도수 (D)</label>
-              <input type="number" id="leftPower" name="leftPower" step="0.25">
+            <div class="power-fields-container">
+                <div class="form-group">
+                  <label for="rightPower">오른쪽 도수 (D)</label>
+                  <input type="number" id="rightPower" name="rightPower" step="0.25">
+                </div>
+                <div class="form-group">
+                  <label for="leftPower">왼쪽 도수 (D)</label>
+                  <input type="number" id="leftPower" name="leftPower" step="0.25">
+                </div>
             </div>
             <div class="form-group">
               <label for="notes">비고</label>
@@ -892,11 +901,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.dispatchEvent(new CustomEvent('clearCustomerForm')); // Clear form when adding new customer
     });
     closeButton.addEventListener('click', closeCustomerModal);
-    window.addEventListener('click', (event) => {
-        if (event.target == customerModal) {
-            closeCustomerModal();
-        }
-    });
+    // Removed: window.addEventListener('click', ...) to prevent modal closing on outside click
     document.addEventListener('closeCustomerModal', closeCustomerModal); // Listen for custom event to close modal
     document.addEventListener('openCustomerModal', openCustomerModal); // Listen for custom event to open modal
 
