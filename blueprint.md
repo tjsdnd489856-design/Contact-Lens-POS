@@ -12,7 +12,7 @@ This section details all implemented features, design choices, and styling. It w
 
 ### Core Features:
 - **Product Management:** Add, edit, and view contact lens products (brand, model, power, price, stock, etc.).
-- **Customer Management:** Manage customer information, including personal details, prescription (right/left eye power), and purchase history.
+- **Customer Management:** Manage customer information, including personal details (name, phone), prescription (right/left eye power), last purchase date, and purchase history.
 - **Sales & Ordering:** Create and manage customer orders.
 - **Inventory Tracking:** Automatically track product stock levels.
 
@@ -44,6 +44,7 @@ This section outlines the immediate tasks for the current development cycle.
     -   **DONE:** Connect customer components to manage data.
     -   **DONE:** Add right/left eye power fields to customer data, form, and list.
     -   **DONE:** Integrate customer purchase history tracking via SalesService.
+    -   **DONE:** Remove 'email' field and add 'lastPurchaseDate' to customer data, form, and list.
 6.  **DONE:** Implement the "Sales & Ordering" feature.
     -   **DONE:** Create `sale-transaction` component for creating new sales.
     -   **DONE:** Allow selecting a customer and adding products to a cart.
