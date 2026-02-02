@@ -264,8 +264,9 @@ const CustomerService = {
       const lowerCaseQuery = query.toLowerCase().trim();
       return this._customers.filter(customer => {
           const nameMatch = customer.name.toLowerCase().includes(lowerCaseQuery);
-          const phoneLastFourMatch = customer.phone.slice(-4).includes(lowerCaseQuery); // Check last 4 digits
-          return nameMatch || phoneLastFourMatch;
+          const phoneLastFourMatch = customer.phone.replace(/-/g, '').slice(-4).includes(lowerCaseQuery); // Check last 4 digits after removing hyphens
+          const namePhoneCombinedMatch = `${customer.name}_${customer.phone}`.toLowerCase().includes(lowerCaseQuery);
+          return nameMatch || phoneLastFourMatch || namePhoneCombinedMatch;
       });
   },
 
@@ -423,19 +424,38 @@ class CustomerForm extends HTMLElement {
         this.populateForm = this.populateForm.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.clearForm = this.clearForm.bind(this);
+        this.formatPhoneNumber = this.formatPhoneNumber.bind(this);
     }
     
     connectedCallback() {
         this._render();
         this._form = this.shadowRoot.querySelector('form');
+        this._form.phone.addEventListener('input', this.formatPhoneNumber); // Add event listener for phone formatting
         document.addEventListener('editCustomer', this.populateForm);
         document.addEventListener('clearCustomerForm', this.clearForm); // Listen for clear event
         this._form.addEventListener('submit', this.handleSubmit);
     }
     
     disconnectedCallback() {
+        this._form.phone.removeEventListener('input', this.formatPhoneNumber); // Remove event listener
         document.removeEventListener('editCustomer', this.populateForm);
         document.removeEventListener('clearCustomerForm', this.clearForm);
+    }
+
+    formatPhoneNumber(event) {
+        let input = event.target.value.replace(/\D/g, ''); // Remove all non-digit characters
+        let formattedInput = '';
+
+        if (input.length > 10) { // 000-0000-0000 format
+            formattedInput = input.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+        } else if (input.length > 7) { // 000-0000-000 format (older phone numbers)
+            formattedInput = input.replace(/(\d{3})(\d{4})(\d{0,4})/, '$1-$2-$3');
+        } else if (input.length > 3) { // 000-000 format
+            formattedInput = input.replace(/(\d{3})(\d{0,4})/, '$1-$2');
+        } else {
+            formattedInput = input;
+        }
+        event.target.value = formattedInput;
     }
 
     _render() {
@@ -824,7 +844,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Event listeners for customer modal
-    addCustomerBtn.addEventListener('click', openCustomerModal);
+    addCustomerBtn.addEventListener('click', () => {
+        openCustomerModal();
+        document.dispatchEvent(new CustomEvent('clearCustomerForm')); // Clear form when adding new customer
+    });
     closeButton.addEventListener('click', closeCustomerModal);
     window.addEventListener('click', (event) => {
         if (event.target == customerModal) {
