@@ -316,7 +316,7 @@ class CustomerList extends HTMLElement {
     this.handleDelete = this.handleDelete.bind(this); // These are now just placeholders, actual buttons for these are gone from UI
     this.handleEdit = this.handleEdit.bind(this); // These are now just placeholders, actual buttons for these are gone from UI
     this.openEditModal = this.openEditModal.bind(this); // New method to open modal for editing
-    document.addEventListener('customersUpdated', () => this._render());
+    document.addEventListener('customersUpdated', (e) => this._render(e.detail?.filteredCustomers)); // Listen for filtered customers
   }
     
   connectedCallback() {
@@ -339,8 +339,8 @@ class CustomerList extends HTMLElement {
       }
   }
 
-  _render() {
-    const customers = CustomerService.getCustomers();
+  _render(filteredCustomers) {
+    const customers = filteredCustomers || CustomerService.getCustomers();
     const template = document.createElement('template');
     template.innerHTML = `
       <style>
