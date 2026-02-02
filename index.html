@@ -12,28 +12,28 @@
     <h1>콘택트렌즈 POS 시스템</h1>
   </header>
 
-  <nav>
-    <a href="#products">제품</a>
-    <a href="#customers">고객</a>
-    <a href="#sales">판매</a>
+  <nav class="tabs-nav">
+    <button class="tab-button active" data-tab="products">제품 관리</button>
+    <button class="tab-button" data-tab="customers">고객 관리</button>
+    <button class="tab-button" data-tab="sales">판매 및 주문</button>
   </nav>
 
   <main>
-    <section id="products">
+    <div id="products-tab" class="tab-content active">
       <h2>제품 관리</h2>
       <product-form></product-form>
       <product-list></product-list>
-    </section>
-    <section id="customers">
+    </div>
+    <div id="customers-tab" class="tab-content">
       <h2>고객 관리</h2>
       <customer-form></customer-form>
       <customer-list></customer-list>
-    </section>
-    <section id="sales">
+    </div>
+    <div id="sales-tab" class="tab-content">
       <h2>판매 및 주문</h2>
       <sale-transaction></sale-transaction>
       <sales-list></sales-list>
-    </section>
+    </div>
   </main>
 
   <footer>

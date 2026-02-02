@@ -24,27 +24,41 @@ header h1 {
   font-weight: 300;
 }
 
-/* Navigation Styles */
-nav {
+/* Navigation Styles - Tabbed Interface */
+.tabs-nav {
+  display: flex;
+  justify-content: center;
   background-color: #34495e;
-  padding: 1rem;
-  text-align: center;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   position: sticky;
   top: 0;
   z-index: 1000;
 }
 
-nav a {
+.tab-button {
+  background-color: transparent;
+  border: none;
+  padding: 1rem 1.5rem;
   color: #ecf0f1;
-  text-decoration: none;
-  margin: 0 1.5rem;
-  font-weight: 400;
   font-size: 1.1rem;
-  transition: color 0.3s ease;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  flex-grow: 1;
+  text-align: center;
+  max-width: 300px;
+  text-decoration: none; /* Ensure no underline on buttons */
 }
 
-nav a:hover {
-  color: #3498db;
+.tab-button:hover {
+  background-color: #3e5872;
+}
+
+.tab-button.active {
+  background-color: #2c3e50;
+  color: #ffffff;
+  border-bottom: 3px solid #3498db;
 }
 
 /* Main Content Styles */
@@ -54,20 +68,24 @@ main {
   max-width: 1100px;
 }
 
-section {
+.tab-content {
   background-color: #fff;
   margin-bottom: 1.5rem;
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  display: none; /* Hidden by default */
 }
 
-section h2 {
+.tab-content.active {
+  display: block; /* Shown when active */
+}
+
+.tab-content > h2 {
     border-bottom: 2px solid #3498db;
     padding-bottom: 0.5rem;
     margin-top: 0;
 }
-
 
 /* Footer Styles */
 footer {
@@ -80,4 +98,18 @@ footer {
   height: 60px;
   bottom: 0;
   left: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tabs-nav {
+    flex-direction: column;
+  }
+  .tab-button {
+    max-width: 100%;
+    border-bottom: 1px solid #3e5872;
+  }
+  .tab-button.active {
+    border-bottom: 3px solid #3498db;
+  }
 }

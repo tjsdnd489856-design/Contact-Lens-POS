@@ -691,3 +691,37 @@ class SalesList extends HTMLElement {
   }
 }
 customElements.define('sales-list', SalesList);
+
+// --- Tab Switching Logic ---
+document.addEventListener('DOMContentLoaded', () => {
+    const tabButtons = document.querySelectorAll('.tabs-nav .tab-button');
+    const tabContents = document.querySelectorAll('main .tab-content');
+
+    function showTab(tabId) {
+        tabContents.forEach(content => {
+            if (content.id === `${tabId}-tab`) {
+                content.classList.add('active');
+            } else {
+                content.classList.remove('active');
+            }
+        });
+        tabButtons.forEach(button => {
+            if (button.dataset.tab === tabId) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
+    }
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault(); // Prevent default anchor behavior
+            const tabId = button.dataset.tab;
+            showTab(tabId);
+        });
+    });
+
+    // Show the initial active tab (products tab by default)
+    showTab('products');
+});
