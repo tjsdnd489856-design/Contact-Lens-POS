@@ -1,10 +1,10 @@
 // --- Product Service (Singleton) ---
 const ProductService = {
   _products: [
-    { id: 1, brand: 'Acuvue', model: 'Oasys 1-Day', power: -1.25, price: 55.00, stock: 20 },
-    { id: 2, brand: 'Dailies', model: 'Total 1', power: -2.50, price: 65.00, stock: 15 },
-    { id: 3, brand: 'Biofinity', model: 'Toric', power: -1.75, price: 70.00, stock: 4 },
-    { id: 4, brand: 'Air Optix', model: 'Night & Day', power: -3.00, price: 75.00, stock: 30 },
+    { id: 1, brand: '아큐브', model: '오아시스 원데이', power: -1.25, price: 55.00, stock: 20 },
+    { id: 2, brand: '바슈롬', model: '바이오트루 원데이', power: -2.50, price: 65.00, stock: 15 },
+    { id: 3, brand: '알콘', model: '워터렌즈', power: -1.75, price: 70.00, stock: 4 },
+    { id: 4, brand: '쿠퍼비전', model: '클래리티 원데이', power: -3.00, price: 75.00, stock: 30 },
   ],
   _nextId: 5,
 
@@ -68,7 +68,7 @@ class ProductList extends HTMLElement {
 
   handleDelete(e) {
     const id = parseInt(e.target.dataset.id, 10);
-    if (confirm('Are you sure you want to delete this product?')) {
+    if (confirm('이 제품을 삭제하시겠습니까?')) {
         ProductService.deleteProduct(id);
     }
   }
@@ -101,12 +101,12 @@ class ProductList extends HTMLElement {
         <thead>
           <tr>
             <th>ID</th>
-            <th>Brand</th>
-            <th>Model</th>
-            <th>Power (D)</th>
-            <th>Price</th>
-            <th>Stock</th>
-            <th class="actions">Actions</th>
+            <th>브랜드</th>
+            <th>모델명</th>
+            <th>도수 (D)</th>
+            <th>가격</th>
+            <th>재고</th>
+            <th class="actions">동작</th>
           </tr>
         </thead>
         <tbody>
@@ -119,8 +119,8 @@ class ProductList extends HTMLElement {
               <td>$${product.price.toFixed(2)}</td>
               <td class="${product.stock < 5 ? 'low-stock' : ''}">${product.stock}</td>
               <td class="actions">
-                <button class="edit-btn" data-id="${product.id}">Edit</button>
-                <button class="delete-btn" data-id="${product.id}">Delete</button>
+                <button class="edit-btn" data-id="${product.id}">수정</button>
+                <button class="delete-btn" data-id="${product.id}">삭제</button>
               </td>
             </tr>
           `).join('')}
@@ -167,29 +167,29 @@ class ProductForm extends HTMLElement {
             button { cursor: pointer; padding: 0.8rem 1.5rem; border: none; border-radius: 4px; color: white; background-color: #3498db; font-size: 1rem; }
           </style>
           <form>
-            <h3 class="form-title">Add / Edit Product</h3>
+            <h3 class="form-title">제품 추가 / 수정</h3>
             <input type="hidden" name="id">
             <div class="form-group">
-              <label for="brand">Brand</label>
+              <label for="brand">브랜드</label>
               <input type="text" id="brand" name="brand" required>
             </div>
             <div class="form-group">
-              <label for="model">Model</label>
+              <label for="model">모델명</label>
               <input type="text" id="model" name="model" required>
             </div>
             <div class="form-group">
-              <label for="power">Power (D)</label>
+              <label for="power">도수 (D)</label>
               <input type="number" id="power" name="power" step="0.25" required>
             </div>
             <div class="form-group">
-              <label for="price">Price</label>
+              <label for="price">가격</label>
               <input type="number" id="price" name="price" step="0.01" min="0" required>
             </div>
             <div class="form-group">
-              <label for="stock">Stock</label>
+              <label for="stock">재고</label>
               <input type="number" id="stock" name="stock" min="0" required>
             </div>
-            <button type="submit">Save Product</button>
+            <button type="submit">제품 저장</button>
           </form>
         `;
         this.shadowRoot.appendChild(template.content.cloneNode(true));
@@ -204,7 +204,7 @@ class ProductForm extends HTMLElement {
         this._form.price.value = product.price;
         this._form.stock.value = product.stock;
         this.scrollIntoView({ behavior: 'smooth' });
-        this._form.querySelector('button').textContent = 'Update Product';
+        this._form.querySelector('button').textContent = '제품 수정';
     }
 
     handleSubmit(e) {
@@ -228,7 +228,7 @@ class ProductForm extends HTMLElement {
 
         this._form.reset();
         this._form.id.value = '';
-        this._form.querySelector('button').textContent = 'Save Product';
+        this._form.querySelector('button').textContent = '제품 저장';
     }
 }
 customElements.define('product-form', ProductForm);
@@ -236,8 +236,8 @@ customElements.define('product-form', ProductForm);
 // --- Customer Service (Singleton) ---
 const CustomerService = {
   _customers: [
-    { id: 1, name: 'John Doe', phone: '555-1234', email: 'john.doe@email.com' },
-    { id: 2, name: 'Jane Smith', phone: '555-5678', email: 'jane.smith@email.com' },
+    { id: 1, name: '홍길동', phone: '010-1234-5678', email: 'hong.gd@email.com' },
+    { id: 2, name: '김철수', phone: '010-9876-5432', email: 'kim.cs@email.com' },
   ],
   _nextId: 3,
 
@@ -294,7 +294,7 @@ class CustomerList extends HTMLElement {
 
   handleDelete(e) {
     const id = parseInt(e.target.dataset.id, 10);
-    if (confirm('Are you sure you want to delete this customer?')) {
+    if (confirm('이 고객 정보를 삭제하시겠습니까?')) {
         CustomerService.deleteCustomer(id);
     }
   }
@@ -325,10 +325,10 @@ class CustomerList extends HTMLElement {
         <thead>
           <tr>
             <th>ID</th>
-            <th>Name</th>
-            <th>Phone</th>
-            <th>Email</th>
-            <th class="actions">Actions</th>
+            <th>이름</th>
+            <th>연락처</th>
+            <th>이메일</th>
+            <th class="actions">동작</th>
           </tr>
         </thead>
         <tbody>
@@ -339,8 +339,8 @@ class CustomerList extends HTMLElement {
               <td>${customer.phone}</td>
               <td>${customer.email}</td>
               <td class="actions">
-                <button class="edit-btn" data-id="${customer.id}">Edit</button>
-                <button class="delete-btn" data-id="${customer.id}">Delete</button>
+                <button class="edit-btn" data-id="${customer.id}">수정</button>
+                <button class="delete-btn" data-id="${customer.id}">삭제</button>
               </td>
             </tr>
           `).join('')}
@@ -387,21 +387,21 @@ class CustomerForm extends HTMLElement {
             button { cursor: pointer; padding: 0.8rem 1.5rem; border: none; border-radius: 4px; color: white; background-color: #3498db; font-size: 1rem; }
           </style>
           <form>
-            <h3 class="form-title">Add / Edit Customer</h3>
+            <h3 class="form-title">고객 추가 / 수정</h3>
             <input type="hidden" name="id">
             <div class="form-group">
-              <label for="name">Name</label>
+              <label for="name">이름</label>
               <input type="text" id="name" name="name" required>
             </div>
             <div class="form-group">
-              <label for="phone">Phone</label>
+              <label for="phone">연락처</label>
               <input type="tel" id="phone" name="phone" required>
             </div>
             <div class="form-group">
-              <label for="email">Email</label>
+              <label for="email">이메일</label>
               <input type="email" id="email" name="email" required>
             </div>
-            <button type="submit">Save Customer</button>
+            <button type="submit">고객 저장</button>
           </form>
         `;
         this.shadowRoot.appendChild(template.content.cloneNode(true));
@@ -414,7 +414,7 @@ class CustomerForm extends HTMLElement {
         this._form.phone.value = customer.phone;
         this._form.email.value = customer.email;
         this.scrollIntoView({ behavior: 'smooth' });
-        this._form.querySelector('button').textContent = 'Update Customer';
+        this._form.querySelector('button').textContent = '고객 수정';
     }
 
     handleSubmit(e) {
@@ -436,7 +436,7 @@ class CustomerForm extends HTMLElement {
 
         this._form.reset();
         this._form.id.value = '';
-        this._form.querySelector('button').textContent = 'Save Customer';
+        this._form.querySelector('button').textContent = '고객 저장';
     }
 }
 customElements.define('customer-form', CustomerForm);
@@ -454,7 +454,7 @@ const SalesService = {
     for (const item of sale.items) {
         const product = ProductService.getProductById(item.product.id);
         if (!product || product.stock < item.quantity) {
-            alert(`Not enough stock for ${item.product.brand} ${item.product.model}. Only ${product.stock} left.`);
+            alert(`${item.product.brand} ${item.product.model} 제품의 재고가 부족합니다. 현재 재고: ${product.stock}개`);
             return false;
         }
     }
@@ -522,32 +522,32 @@ class SaleTransaction extends HTMLElement {
         .total { font-size: 1.5rem; font-weight: bold; text-align: right; margin-top: 1rem; }
       </style>
       <div class="transaction-form">
-        <h3 class="form-title">New Sale</h3>
+        <h3 class="form-title">새로운 판매</h3>
         <div class="form-group">
-          <label for="customer-select">Select Customer</label>
+          <label for="customer-select">고객 선택</label>
           <select id="customer-select" required>
-            <option value="">--Please choose a customer--</option>
+            <option value="">--고객을 선택하세요--</option>
             ${customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
           </select>
         </div>
         <div class="form-group">
-          <label for="product-select">Select Product</label>
+          <label for="product-select">제품 선택</label>
           <select id="product-select">
-            <option value="">--Please choose a product--</option>
+            <option value="">--제품을 선택하세요--</option>
             ${products.map(p => `<option value="${p.id}">${p.brand} ${p.model} - $${p.price.toFixed(2)}</option>`).join('')}
           </select>
         </div>
         <div class="form-group">
-            <label for="quantity">Quantity</label>
+            <label for="quantity">수량</label>
             <input type="number" id="quantity" value="1" min="1">
         </div>
-        <button id="add-to-cart-btn">Add to Cart</button>
+        <button id="add-to-cart-btn">카트에 추가</button>
         <div class="cart">
-            <h4 class="cart-title">Shopping Cart</h4>
+            <h4 class="cart-title">장바구니</h4>
             <div class="cart-items"></div>
-            <div class="total">Total: $0.00</div>
+            <div class="total">총액: $0.00</div>
         </div>
-        <button id="complete-sale-btn">Complete Sale</button>
+        <button id="complete-sale-btn">판매 완료</button>
       </div>
     `;
     this.shadowRoot.innerHTML = '';
@@ -563,7 +563,7 @@ class SaleTransaction extends HTMLElement {
     const product = ProductService.getProductById(productId);
 
     if (!product || !quantity || quantity <= 0) {
-        alert('Please select a valid product and quantity.');
+        alert('유효한 제품과 수량을 선택해주세요.');
         return;
     }
     
@@ -580,11 +580,11 @@ class SaleTransaction extends HTMLElement {
       const cartItemsContainer = this.shadowRoot.querySelector('.cart-items');
       let total = 0;
       if(this.cart.length === 0) {
-          cartItemsContainer.innerHTML = '<p>Cart is empty.</p>';
+          cartItemsContainer.innerHTML = '<p>장바구니가 비어 있습니다.</p>';
       } else {
         let cartTable = `
             <table>
-                <thead><tr><th>Product</th><th>Quantity</th><th>Price</th><th>Total</th></tr></thead>
+                <thead><tr><th>제품</th><th>수량</th><th>가격</th><th>총액</th></tr></thead>
                 <tbody>
         `;
         this.cart.forEach(item => {
@@ -602,13 +602,13 @@ class SaleTransaction extends HTMLElement {
         cartTable += '</tbody></table>';
         cartItemsContainer.innerHTML = cartTable;
       }
-      this.shadowRoot.querySelector('.total').textContent = `Total: $${total.toFixed(2)}`;
+      this.shadowRoot.querySelector('.total').textContent = `총액: $${total.toFixed(2)}`;
   }
 
   completeSale() {
     const customerId = parseInt(this.shadowRoot.querySelector('#customer-select').value, 10);
     if (!customerId || this.cart.length === 0) {
-      alert('Please select a customer and add products to the cart.');
+      alert('고객을 선택하고 장바구니에 제품을 추가해주세요.');
       return;
     }
     const total = this.cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
@@ -620,7 +620,7 @@ class SaleTransaction extends HTMLElement {
         this.cart = [];
         this._renderCart();
         this.shadowRoot.querySelector('#customer-select').value = '';
-        alert('Sale completed successfully!');
+        alert('판매가 성공적으로 완료되었습니다!');
     }
   }
 }
@@ -658,15 +658,15 @@ class SalesList extends HTMLElement {
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         thead { background-color: #34495e; color: #ecf0f1; }
       </style>
-      <h4>Past Sales</h4>
+      <h4>과거 판매 내역</h4>
       <table>
         <thead>
           <tr>
             <th>ID</th>
-            <th>Date</th>
-            <th>Customer</th>
-            <th>Items</th>
-            <th>Total</th>
+            <th>날짜</th>
+            <th>고객</th>
+            <th>품목 수</th>
+            <th>총액</th>
           </tr>
         </thead>
         <tbody>
