@@ -262,16 +262,36 @@ const CustomerService = {
           return this.getCustomers();
       }
       const lowerCaseQuery = query.toLowerCase().trim();
+      
       return this._customers.filter(customer => {
-          const customerPhoneCleaned = customer.phone.replace(/-/g, ''); // Remove hyphens for robust phone search
-          const nameMatch = customer.name.toLowerCase().includes(lowerCaseQuery);
-          const phoneLastFourMatch = customerPhoneCleaned.slice(-4).includes(lowerCaseQuery); // Check last 4 digits
-          
-          // New: "이름 전화번호" search
-          const customerNameAndPhone = `${customer.name} ${customerPhoneCleaned}`.toLowerCase(); // Use space as separator
-          const namePhoneCombinedMatch = customerNameAndPhone.includes(lowerCaseQuery);
+          const customerNameLower = customer.name.toLowerCase();
+          const customerPhoneCleaned = customer.phone.replace(/-/g, '');
+          const customerPhoneLower = customerPhoneCleaned.toLowerCase();
 
-          return nameMatch || phoneLastFourMatch || namePhoneCombinedMatch;
+          // Search by name
+          if (customerNameLower.includes(lowerCaseQuery)) {
+              return true;
+          }
+          // Search by last 4 digits of phone
+          if (customerPhoneCleaned.slice(-4).includes(lowerCaseQuery)) {
+              return true;
+          }
+          // Search by any part of the phone number
+          if (customerPhoneLower.includes(lowerCaseQuery)) {
+              return true;
+          }
+
+          // Search by "이름 전화번호" format
+          const queryParts = lowerCaseQuery.split(' ');
+          if (queryParts.length >= 2) {
+              const nameQuery = queryParts[0];
+              const phoneQuery = queryParts.slice(1).join(''); // Join remaining parts for phone query
+              if (customerNameLower.includes(nameQuery) && customerPhoneCleaned.includes(phoneQuery)) {
+                  return true;
+              }
+          }
+
+          return false; // No match found
       });
   },
 
@@ -455,8 +475,6 @@ class CustomerForm extends HTMLElement {
             formattedInput = input.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
         } else if (input.length > 7) { // 000-0000-000 format (older phone numbers)
             formattedInput = input.replace(/(\d{3})(\d{4})(\d{0,4})/, '$1-$2-$3');
-        } else if (input.length > 3) { // 000-000 format
-            formattedInput = input.replace(/(\d{3})(\d{0,4})/, '$1-$2');
         } else {
             formattedInput = input;
         }
