@@ -236,8 +236,8 @@ customElements.define('product-form', ProductForm);
 // --- Customer Service (Singleton) ---
 const CustomerService = {
   _customers: [
-    { id: 1, name: '홍길동', phone: '010-1234-5678', email: 'hong.gd@email.com', rightPower: -1.00, leftPower: -1.25, purchaseHistory: [] },
-    { id: 2, name: '김철수', phone: '010-9876-5432', email: 'kim.cs@email.com', rightPower: -2.00, leftPower: -2.00, purchaseHistory: [] },
+    { id: 1, name: '홍길동', phone: '010-1234-5678', rightPower: -1.00, leftPower: -1.25, purchaseHistory: [], lastPurchaseDate: null },
+    { id: 2, name: '김철수', phone: '010-9876-5432', rightPower: -2.00, leftPower: -2.00, purchaseHistory: [], lastPurchaseDate: null },
   ],
   _nextId: 3,
 
@@ -252,6 +252,7 @@ const CustomerService = {
   addCustomer(customer) {
     customer.id = this._nextId++;
     customer.purchaseHistory = []; // Initialize empty purchase history
+    customer.lastPurchaseDate = null; // Initialize last purchase date
     this._customers.push(customer);
     this._notify();
   },
@@ -259,8 +260,9 @@ const CustomerService = {
   updateCustomer(updatedCustomer) {
     const index = this._customers.findIndex(c => c.id === updatedCustomer.id);
     if (index !== -1) {
-      // Preserve purchase history
+      // Preserve purchase history and last purchase date
       updatedCustomer.purchaseHistory = this._customers[index].purchaseHistory; 
+      updatedCustomer.lastPurchaseDate = this._customers[index].lastPurchaseDate; 
       this._customers[index] = updatedCustomer;
       this._notify();
     }
@@ -271,10 +273,11 @@ const CustomerService = {
     this._notify();
   },
 
-  addPurchaseToCustomerHistory(customerId, saleId) {
+  addPurchaseToCustomerHistory(customerId, saleId, purchaseDate) {
     const customer = this.getCustomerById(customerId);
     if (customer) {
       customer.purchaseHistory.push(saleId);
+      customer.lastPurchaseDate = purchaseDate; // Update last purchase date
       this._notify(); // Notify that customer data has changed
     }
   },
@@ -338,9 +341,9 @@ class CustomerList extends HTMLElement {
             <th>ID</th>
             <th>이름</th>
             <th>연락처</th>
-            <th>이메일</th>
             <th>오른쪽 도수</th>
             <th>왼쪽 도수</th>
+            <th>최종 구매일</th>
             <th class="actions">동작</th>
           </tr>
         </thead>
@@ -350,9 +353,9 @@ class CustomerList extends HTMLElement {
               <td>${customer.id}</td>
               <td>${customer.name}</td>
               <td>${customer.phone}</td>
-              <td>${customer.email}</td>
               <td>${customer.rightPower ? customer.rightPower.toFixed(2) : 'N/A'}</td>
               <td>${customer.leftPower ? customer.leftPower.toFixed(2) : 'N/A'}</td>
+              <td>${customer.lastPurchaseDate ? new Date(customer.lastPurchaseDate).toLocaleDateString() : 'N/A'}</td>
               <td class="actions">
                 <button class="edit-btn" data-id="${customer.id}">수정</button>
                 <button class="delete-btn" data-id="${customer.id}">삭제</button>
@@ -413,10 +416,6 @@ class CustomerForm extends HTMLElement {
               <input type="tel" id="phone" name="phone" required>
             </div>
             <div class="form-group">
-              <label for="email">이메일</label>
-              <input type="email" id="email" name="email" required>
-            </div>
-            <div class="form-group">
               <label for="rightPower">오른쪽 도수 (D)</label>
               <input type="number" id="rightPower" name="rightPower" step="0.25">
             </div>
@@ -435,9 +434,9 @@ class CustomerForm extends HTMLElement {
         this._form.id.value = customer.id;
         this._form.name.value = customer.name;
         this._form.phone.value = customer.phone;
-        this._form.email.value = customer.email;
         this._form.rightPower.value = customer.rightPower;
         this._form.leftPower.value = customer.leftPower;
+        // lastPurchaseDate is auto-updated, not manually editable via form
         this.scrollIntoView({ behavior: 'smooth' });
         this._form.querySelector('button').textContent = '고객 수정';
     }
@@ -449,7 +448,6 @@ class CustomerForm extends HTMLElement {
             id: parseInt(formData.get('id'), 10) || null,
             name: formData.get('name'),
             phone: formData.get('phone'),
-            email: formData.get('email'),
             rightPower: parseFloat(formData.get('rightPower')) || null,
             leftPower: parseFloat(formData.get('leftPower')) || null,
         };
@@ -497,7 +495,7 @@ const SalesService = {
     sale.id = this._nextId++;
     sale.date = new Date();
     this._sales.push(sale);
-    CustomerService.addPurchaseToCustomerHistory(sale.customerId, sale.id); // Add sale to customer's history
+    CustomerService.addPurchaseToCustomerHistory(sale.customerId, sale.id, sale.date); // Pass purchaseDate
     this._notify();
     return true;
   },
