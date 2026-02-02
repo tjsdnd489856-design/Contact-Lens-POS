@@ -13,18 +13,13 @@
   </header>
 
   <nav class="tabs-nav">
-    <button class="tab-button active" data-tab="products">제품 관리</button>
-    <button class="tab-button" data-tab="customers">고객 관리</button>
+    <button class="tab-button active" data-tab="customers">고객 관리</button>
+    <button class="tab-button" data-tab="products">제품 관리</button>
     <button class="tab-button" data-tab="sales">판매 및 주문</button>
   </nav>
 
   <main>
-    <div id="products-tab" class="tab-content active">
-      <h2>제품 관리</h2>
-      <product-form></product-form>
-      <product-list></product-list>
-    </div>
-    <div id="customers-tab" class="tab-content">
+    <div id="customers-tab" class="tab-content active">
       <h2>고객 관리</h2>
       <div class="customer-controls">
         <div class="search-container">
@@ -33,6 +28,11 @@
         <button id="add-customer-btn">새 고객 추가</button>
       </div>
       <customer-list></customer-list>
+    </div>
+    <div id="products-tab" class="tab-content">
+      <h2>제품 관리</h2>
+      <product-form></product-form>
+      <product-list></product-list>
     </div>
     <div id="sales-tab" class="tab-content">
       <h2>판매 및 주문</h2>
