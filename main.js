@@ -421,12 +421,18 @@ class CustomerList extends HTMLElement {
         tr:hover { background-color: #ecf0f1; cursor: pointer; } 
         tr.selected { background-color: #cce0ff; border: 2px solid #3498db; }
         .actions-cell { text-align: center; } 
-        .go-to-sales-btn { 
+        .edit-customer-btn { 
             cursor: pointer; padding: 6px 10px; margin: 2px; border: none; border-radius: 4px; color: white; font-size: 0.9rem;
-            background-color: #28a745; 
+            background-color: #2980b9; 
         }
-        .go-to-sales-btn:hover {
-            background-color: #218838;
+        .edit-customer-btn:hover {
+            background-color: #3498db;
+        }
+        .delete-customer-btn {
+             background-color: #c0392b;
+        }
+        .delete-customer-btn:hover {
+             background-color: #e74c3c;
         }
       </style>
       ${message ? `<div class="message">${message}</div>` : `
@@ -439,7 +445,7 @@ class CustomerList extends HTMLElement {
             <th style="width: 10%;">왼쪽 도수</th>
             <th style="width: 15%;">최종 구매일</th>
             <th style="width: 25%;">비고</th>
-            <th class="actions-cell" style="width: 10%;">판매</th>
+            <th class="actions-cell" style="width: 10%;">관리</th>
           </tr>
         </thead>
         <tbody>
@@ -452,7 +458,8 @@ class CustomerList extends HTMLElement {
               <td>${customer.lastPurchaseDate ? new Date(customer.lastPurchaseDate).toLocaleDateString() : 'N/A'}</td>
               <td>${customer.notes}</td>
               <td class="actions-cell">
-                <button data-id="${customer.id}" class="go-to-sales-btn">판매</button>
+                <button data-id="${customer.id}" class="edit-customer-btn">수정</button>
+                <button data-id="${customer.id}" class="delete-customer-btn" style="background-color: #c0392b;">삭제</button>
               </td>
             </tr>
           `).join('')}
@@ -463,13 +470,20 @@ class CustomerList extends HTMLElement {
     this.shadowRoot.innerHTML = '';
     this.shadowRoot.appendChild(template.content.cloneNode(true));
     if (!message) { // Only add event listeners if table is rendered
-        this.shadowRoot.querySelectorAll('.go-to-sales-btn').forEach(btn => btn.addEventListener('click', (e) => {
-            const customerId = parseInt(e.target.dataset.id, 10);
-            document.dispatchEvent(new CustomEvent('selectCustomerForSale', { detail: { customerId: customerId } }));
-            document.dispatchEvent(new CustomEvent('showTab', { detail: { tabId: 'sales' } }));
+        this.shadowRoot.querySelectorAll('.edit-customer-btn').forEach(btn => btn.addEventListener('click', this.openEditModal));
+        this.shadowRoot.querySelectorAll('.delete-customer-btn').forEach(btn => btn.addEventListener('click', (e) => {
+            const id = parseInt(e.target.dataset.id, 10);
+            if (confirm('이 고객 정보를 삭제하시겠습니까?')) {
+                CustomerService.deleteCustomer(id);
+            }
         }));
         this.shadowRoot.querySelectorAll('tbody tr.customer-row').forEach(row => {
             row.addEventListener('click', this.selectCustomer);
+            row.addEventListener('dblclick', (e) => { // Double-click to go to sales
+                const customerId = parseInt(row.dataset.id, 10);
+                document.dispatchEvent(new CustomEvent('selectCustomerForSale', { detail: { customerId: customerId } }));
+                document.dispatchEvent(new CustomEvent('showTab', { detail: { tabId: 'sales' } }));
+            });
         });
     }
   }
@@ -888,7 +902,7 @@ class CustomerPurchaseHistory extends HTMLElement {
 
     renderHistory(customerId) {
         this.selectedCustomerId = customerId;
-        const customer = customerId ? CustomerService.getCustomerById(customerId) : null;
+        const customer = CustomerService.getCustomerById(customerId);
         let sales = customer ? SalesService.getSalesByCustomerId(customerId) : [];
 
         const template = document.createElement('template');
