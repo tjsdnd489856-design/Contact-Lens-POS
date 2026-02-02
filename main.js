@@ -402,32 +402,30 @@ class CustomerList extends HTMLElement {
         tr:nth-child(even) { background-color: #f8f9f9; }
         tr:hover { background-color: #ecf0f1; }
         .actions-cell { text-align: center; } 
-        .actions-cell button { 
+        .go-to-sales-btn { 
             cursor: pointer; padding: 6px 10px; margin: 2px; border: none; border-radius: 4px; color: white; font-size: 0.9rem;
-            background-color: #2980b9; 
+            background-color: #28a745; /* Green color for sales button */
         }
-        .actions-cell button:hover {
-            background-color: #3498db;
+        .go-to-sales-btn:hover {
+            background-color: #218838;
         }
       </style>
       ${message ? `<div class="message">${message}</div>` : `
       <table>
         <thead>
           <tr>
-            <th style="width: 5%;">ID</th>
             <th style="width: 15%;">이름</th>
             <th style="width: 15%;">연락처</th>
             <th style="width: 10%;">오른쪽 도수</th>
             <th style="width: 10%;">왼쪽 도수</th>
             <th style="width: 15%;">최종 구매일</th>
             <th style="width: 20%;">비고</th>
-            <th class="actions-cell" style="width: 10%;">관리</th>
+            <th class="actions-cell" style="width: 15%;">관리</th>
           </tr>
         </thead>
         <tbody>
           ${customers.map(customer => `
             <tr>
-              <td>${customer.id}</td>
               <td>${customer.name}</td>
               <td>${customer.phone}</td>
               <td>${customer.rightPower ? customer.rightPower.toFixed(2) : 'N/A'}</td>
@@ -435,8 +433,7 @@ class CustomerList extends HTMLElement {
               <td>${customer.lastPurchaseDate ? new Date(customer.lastPurchaseDate).toLocaleDateString() : 'N/A'}</td>
               <td>${customer.notes}</td>
               <td class="actions-cell">
-                <button data-id="${customer.id}" class="edit-customer-btn">수정</button>
-                <button data-id="${customer.id}" class="delete-customer-btn" style="background-color: #c0392b;">삭제</button>
+                <button data-id="${customer.id}" class="go-to-sales-btn">판매 및 주문으로 이동</button>
               </td>
             </tr>
           `).join('')}
@@ -447,12 +444,10 @@ class CustomerList extends HTMLElement {
     this.shadowRoot.innerHTML = '';
     this.shadowRoot.appendChild(template.content.cloneNode(true));
     if (!message) { // Only add event listeners if table is rendered
-        this.shadowRoot.querySelectorAll('.edit-customer-btn').forEach(btn => btn.addEventListener('click', this.openEditModal));
-        this.shadowRoot.querySelectorAll('.delete-customer-btn').forEach(btn => btn.addEventListener('click', (e) => {
-            const id = parseInt(e.target.dataset.id, 10);
-            if (confirm('이 고객 정보를 삭제하시겠습니까?')) {
-                CustomerService.deleteCustomer(id);
-            }
+        this.shadowRoot.querySelectorAll('.go-to-sales-btn').forEach(btn => btn.addEventListener('click', (e) => {
+            const customerId = parseInt(e.target.dataset.id, 10);
+            document.dispatchEvent(new CustomEvent('selectCustomerForSale', { detail: { customerId: customerId } }));
+            document.dispatchEvent(new CustomEvent('showTab', { detail: { tabId: 'sales' } }));
         }));
     }
   }
@@ -644,6 +639,8 @@ class SaleTransaction extends HTMLElement {
     this.rerender = this.rerender.bind(this);
     this.addToCart = this.addToCart.bind(this);
     this.completeSale = this.completeSale.bind(this);
+    this.setSelectedCustomer = this.setSelectedCustomer.bind(this);
+    document.addEventListener('selectCustomerForSale', (e) => this.setSelectedCustomer(e.detail.customerId));
   }
 
   connectedCallback() {
@@ -659,6 +656,10 @@ class SaleTransaction extends HTMLElement {
     
   rerender() {
       this._render();
+  }
+
+  setSelectedCustomer(customerId) {
+      this.shadowRoot.querySelector('#customer-select').value = customerId;
   }
 
   _render() {
@@ -904,6 +905,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Removed: window.addEventListener('click', ...) to prevent modal closing on outside click
     document.addEventListener('closeCustomerModal', closeCustomerModal); // Listen for custom event to close modal
     document.addEventListener('openCustomerModal', openCustomerModal); // Listen for custom event to open modal
+    document.addEventListener('showTab', (e) => { // New listener for tab switching
+        showTab(e.detail.tabId);
+    });
+
 
     // Event listener for customer search
     customerSearchInput.addEventListener('input', (event) => {
@@ -914,5 +919,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // Show the initial active tab (products tab by default)
-    showTab('products');
+    showTab('customers'); // Changed to customers
 });
