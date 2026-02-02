@@ -415,13 +415,15 @@ class CustomerList extends HTMLElement {
         table { width: 100%; border-collapse: collapse; margin-top: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         thead { background-color: #34495e; color: #ecf0f1; }
+        thead tr:hover { background-color: #34495e; cursor: default; } /* Prevent hover on header */
+        thead th { text-align: center; } /* Center align header text */
         tr:nth-child(even) { background-color: #f8f9f9; }
-        tr:hover { background-color: #ecf0f1; cursor: pointer; } /* Added cursor for clickable rows */
-        tr.selected { background-color: #cce0ff; border: 2px solid #3498db; } /* Style for selected row */
+        tr:hover { background-color: #ecf0f1; cursor: pointer; } 
+        tr.selected { background-color: #cce0ff; border: 2px solid #3498db; }
         .actions-cell { text-align: center; } 
         .go-to-sales-btn { 
             cursor: pointer; padding: 6px 10px; margin: 2px; border: none; border-radius: 4px; color: white; font-size: 0.9rem;
-            background-color: #28a745; /* Green color for sales button */
+            background-color: #28a745; 
         }
         .go-to-sales-btn:hover {
             background-color: #218838;
@@ -886,7 +888,7 @@ class CustomerPurchaseHistory extends HTMLElement {
 
     renderHistory(customerId) {
         this.selectedCustomerId = customerId;
-        const customer = CustomerService.getCustomerById(customerId);
+        const customer = customerId ? CustomerService.getCustomerById(customerId) : null;
         let sales = customer ? SalesService.getSalesByCustomerId(customerId) : [];
 
         const template = document.createElement('template');
@@ -898,6 +900,8 @@ class CustomerPurchaseHistory extends HTMLElement {
                 thead { background-color: #5cb85c; color: white; } /* Green header for purchase history */
                 tbody tr:nth-child(even) { background-color: #f2f2f2; }
                 .message { text-align: center; padding: 1rem; color: #555; }
+                thead tr:hover { background-color: #5cb85c; cursor: default; } /* Prevent hover on header */
+                thead th { text-align: center; } /* Center align header text */
             </style>
             <h4>고객 구매 내역</h4>
             ${customer ? `
