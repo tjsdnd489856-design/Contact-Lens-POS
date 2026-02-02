@@ -248,17 +248,34 @@ const CustomerService = {
   getCustomerById(id) {
       return this._customers.find(c => c.id === id);
   },
+  
+  isDuplicateCustomer(name, phone, id = null) {
+      return this._customers.some(customer => 
+          customer.name === name && 
+          customer.phone === phone && 
+          customer.id !== id
+      );
+  },
 
   addCustomer(customer) {
+    if (this.isDuplicateCustomer(customer.name, customer.phone)) {
+        alert('중복된 고객입니다.');
+        return false;
+    }
     customer.id = this._nextId++;
     customer.purchaseHistory = []; // Initialize empty purchase history
     customer.lastPurchaseDate = null; // Initialize last purchase date
     customer.notes = ''; // Initialize notes
     this._customers.push(customer);
     this._notify();
+    return true;
   },
 
   updateCustomer(updatedCustomer) {
+    if (this.isDuplicateCustomer(updatedCustomer.name, updatedCustomer.phone, updatedCustomer.id)) {
+        alert('중복된 고객입니다.');
+        return false;
+    }
     const index = this._customers.findIndex(c => c.id === updatedCustomer.id);
     if (index !== -1) {
       // Preserve purchase history and last purchase date
@@ -266,7 +283,9 @@ const CustomerService = {
       updatedCustomer.lastPurchaseDate = this._customers[index].lastPurchaseDate; 
       this._customers[index] = updatedCustomer;
       this._notify();
+      return true;
     }
+    return false;
   },
 
   deleteCustomer(id) {
@@ -294,8 +313,9 @@ class CustomerList extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this.handleDelete = this.handleDelete.bind(this); // Keep these as they are for products, but not used in customer list itself
-    this.handleEdit = this.handleEdit.bind(this); // Keep these as they are for products, but not used in customer list itself
+    this.handleDelete = this.handleDelete.bind(this); // These are now just placeholders, actual buttons for these are gone from UI
+    this.handleEdit = this.handleEdit.bind(this); // These are now just placeholders, actual buttons for these are gone from UI
+    this.openEditModal = this.openEditModal.bind(this); // New method to open modal for editing
     document.addEventListener('customersUpdated', () => this._render());
   }
     
@@ -307,19 +327,16 @@ class CustomerList extends HTMLElement {
     document.removeEventListener('customersUpdated', this._render);
   }
 
-  handleDelete(e) { // This method is technically not used now, but keeping for reference if action buttons are reintroduced
-    const id = parseInt(e.target.dataset.id, 10);
-    if (confirm('이 고객 정보를 삭제하시겠습니까?')) {
-        CustomerService.deleteCustomer(id);
-    }
-  }
+  handleDelete(e) { /* Placeholder */ } // Not used directly in new UI
+  handleEdit(e) { /* Placeholder */ } // Not used directly in new UI
 
-  handleEdit(e) { // This method is technically not used now, but keeping for reference if action buttons are reintroduced
-    const id = parseInt(e.target.dataset.id, 10);
-    const customer = CustomerService.getCustomerById(id);
-    if (customer) {
-        document.dispatchEvent(new CustomEvent('editCustomer', { detail: customer }));
-    }
+  openEditModal(e) {
+      const id = parseInt(e.target.dataset.id, 10);
+      const customer = CustomerService.getCustomerById(id);
+      if (customer) {
+          document.dispatchEvent(new CustomEvent('editCustomer', { detail: customer }));
+          document.dispatchEvent(new CustomEvent('openCustomerModal')); // Trigger modal open
+      }
   }
 
   _render() {
@@ -331,6 +348,15 @@ class CustomerList extends HTMLElement {
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         thead { background-color: #34495e; color: #ecf0f1; }
         tr:nth-child(even) { background-color: #f8f9f9; }
+        tr:hover { background-color: #ecf0f1; }
+        .actions-cell { text-align: center; } /* New class for actions if needed */
+        .actions-cell button { 
+            cursor: pointer; padding: 6px 10px; margin: 2px; border: none; border-radius: 4px; color: white; font-size: 0.9rem;
+            background-color: #2980b9; /* Edit button like color */
+        }
+        .actions-cell button:hover {
+            background-color: #3498db;
+        }
       </style>
       <table>
         <thead>
@@ -342,6 +368,7 @@ class CustomerList extends HTMLElement {
             <th>왼쪽 도수</th>
             <th>최종 구매일</th>
             <th>비고</th>
+            <th class="actions-cell">관리</th> <!-- New header for edit/delete -->
           </tr>
         </thead>
         <tbody>
@@ -354,6 +381,10 @@ class CustomerList extends HTMLElement {
               <td>${customer.leftPower ? customer.leftPower.toFixed(2) : 'N/A'}</td>
               <td>${customer.lastPurchaseDate ? new Date(customer.lastPurchaseDate).toLocaleDateString() : 'N/A'}</td>
               <td>${customer.notes}</td>
+              <td class="actions-cell">
+                <button data-id="${customer.id}" class="edit-customer-btn">수정</button>
+                <button data-id="${customer.id}" class="delete-customer-btn" style="background-color: #c0392b;">삭제</button>
+              </td>
             </tr>
           `).join('')}
         </tbody>
@@ -361,7 +392,13 @@ class CustomerList extends HTMLElement {
     `;
     this.shadowRoot.innerHTML = '';
     this.shadowRoot.appendChild(template.content.cloneNode(true));
-    // Edit and Delete event listeners removed as per request to remove actions column
+    this.shadowRoot.querySelectorAll('.edit-customer-btn').forEach(btn => btn.addEventListener('click', this.openEditModal));
+    this.shadowRoot.querySelectorAll('.delete-customer-btn').forEach(btn => btn.addEventListener('click', (e) => {
+        const id = parseInt(e.target.dataset.id, 10);
+        if (confirm('이 고객 정보를 삭제하시겠습니까?')) {
+            CustomerService.deleteCustomer(id);
+        }
+    }));
   }
 }
 customElements.define('customer-list', CustomerList);
@@ -373,17 +410,20 @@ class CustomerForm extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         this.populateForm = this.populateForm.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.clearForm = this.clearForm.bind(this);
     }
     
     connectedCallback() {
         this._render();
         this._form = this.shadowRoot.querySelector('form');
         document.addEventListener('editCustomer', this.populateForm);
+        document.addEventListener('clearCustomerForm', this.clearForm); // Listen for clear event
         this._form.addEventListener('submit', this.handleSubmit);
     }
     
     disconnectedCallback() {
         document.removeEventListener('editCustomer', this.populateForm);
+        document.removeEventListener('clearCustomerForm', this.clearForm);
     }
 
     _render() {
@@ -426,6 +466,12 @@ class CustomerForm extends HTMLElement {
         this.shadowRoot.appendChild(template.content.cloneNode(true));
     }
 
+    clearForm() {
+        this._form.reset();
+        this._form.id.value = '';
+        this._form.querySelector('button[type="submit"]').textContent = '고객 저장';
+    }
+
     populateForm(e) {
         const customer = e.detail;
         this._form.id.value = customer.id;
@@ -434,7 +480,6 @@ class CustomerForm extends HTMLElement {
         this._form.rightPower.value = customer.rightPower;
         this._form.leftPower.value = customer.leftPower;
         this._form.notes.value = customer.notes;
-        // lastPurchaseDate is auto-updated, not manually editable via form
         this.scrollIntoView({ behavior: 'smooth' });
         this._form.querySelector('button').textContent = '고객 수정';
     }
@@ -451,16 +496,18 @@ class CustomerForm extends HTMLElement {
             notes: formData.get('notes'),
         };
 
+        let success = false;
         if (customer.id) {
-            CustomerService.updateCustomer(customer);
+            success = CustomerService.updateCustomer(customer);
         } else {
             delete customer.id;
-            CustomerService.addCustomer(customer);
+            success = CustomerService.addCustomer(customer);
         }
 
-        this._form.reset();
-        this._form.id.value = '';
-        this._form.querySelector('button').textContent = '고객 저장';
+        if (success) {
+            document.dispatchEvent(new CustomEvent('closeCustomerModal')); // Close modal on success
+            this.clearForm(); // Clear form after successful save
+        }
     }
 }
 customElements.define('customer-form', CustomerForm);
@@ -725,6 +772,9 @@ customElements.define('sales-list', SalesList);
 document.addEventListener('DOMContentLoaded', () => {
     const tabButtons = document.querySelectorAll('.tabs-nav .tab-button');
     const tabContents = document.querySelectorAll('main .tab-content');
+    const customerModal = document.getElementById('customer-modal');
+    const closeButton = customerModal.querySelector('.close-button');
+    const addCustomerBtn = document.getElementById('add-customer-btn');
 
     function showTab(tabId) {
         tabContents.forEach(content => {
@@ -742,6 +792,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    
+    function openCustomerModal() {
+        customerModal.style.display = 'block';
+    }
+
+    function closeCustomerModal() {
+        customerModal.style.display = 'none';
+        document.dispatchEvent(new CustomEvent('clearCustomerForm')); // Clear form when modal closes
+    }
 
     tabButtons.forEach(button => {
         button.addEventListener('click', (event) => {
@@ -750,6 +809,17 @@ document.addEventListener('DOMContentLoaded', () => {
             showTab(tabId);
         });
     });
+
+    // Event listeners for customer modal
+    addCustomerBtn.addEventListener('click', openCustomerModal);
+    closeButton.addEventListener('click', closeCustomerModal);
+    window.addEventListener('click', (event) => {
+        if (event.target == customerModal) {
+            closeCustomerModal();
+        }
+    });
+    document.addEventListener('closeCustomerModal', closeCustomerModal); // Listen for custom event to close modal
+    document.addEventListener('openCustomerModal', openCustomerModal); // Listen for custom event to open modal
 
     // Show the initial active tab (products tab by default)
     showTab('products');

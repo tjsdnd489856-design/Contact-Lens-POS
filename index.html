@@ -26,7 +26,7 @@
     </div>
     <div id="customers-tab" class="tab-content">
       <h2>고객 관리</h2>
-      <customer-form></customer-form>
+      <button id="add-customer-btn">새 고객 추가</button>
       <customer-list></customer-list>
     </div>
     <div id="sales-tab" class="tab-content">
@@ -35,6 +35,14 @@
       <sales-list></sales-list>
     </div>
   </main>
+
+  <!-- 고객 폼 모달 -->
+  <div id="customer-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <customer-form></customer-form>
+    </div>
+  </div>
 
   <footer>
     <p>&copy; 2026 콘택트렌즈 POS</p>
