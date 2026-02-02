@@ -177,3 +177,40 @@ footer {
 #add-customer-btn:hover {
   background-color: #218838;
 }
+
+/* Customer Controls Layout */
+.customer-controls {
+  display: flex;
+  gap: 10px; /* Space between search and button */
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.customer-controls .search-container {
+  flex-grow: 1; /* Allow search input to take available space */
+}
+
+#customer-search-input {
+  width: 100%; /* Make input fill its container */
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+/* Adjust button margin for new layout */
+#add-customer-btn {
+  margin-bottom: 0;
+  flex-shrink: 0; /* Prevent button from shrinking */
+}
+
+/* Responsive adjustments for customer controls */
+@media (max-width: 600px) {
+  .customer-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  #add-customer-btn {
+    width: 100%;
+  }
+}
