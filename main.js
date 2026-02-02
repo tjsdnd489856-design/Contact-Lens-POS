@@ -236,8 +236,8 @@ customElements.define('product-form', ProductForm);
 // --- Customer Service (Singleton) ---
 const CustomerService = {
   _customers: [
-    { id: 1, name: '홍길동', phone: '010-1234-5678', rightPower: -1.00, leftPower: -1.25, purchaseHistory: [], lastPurchaseDate: null, notes: '' },
-    { id: 2, name: '김철수', phone: '010-9876-5432', rightPower: -2.00, leftPower: -2.00, purchaseHistory: [], lastPurchaseDate: null, notes: '' },
+    { id: 1, name: '홍길동', phone: '010-1234-5678', rightPower: -1.00, leftPower: -1.25, purchaseHistory: [], lastPurchaseDate: null, notes: '', isVIP: false, isCaution: false },
+    { id: 2, name: '김철수', phone: '010-9876-5432', rightPower: -2.00, leftPower: -2.00, purchaseHistory: [], lastPurchaseDate: null, notes: '', isVIP: false, isCaution: false },
   ],
   _nextId: 3,
 
@@ -304,6 +304,8 @@ const CustomerService = {
     customer.purchaseHistory = []; // Initialize empty purchase history
     customer.lastPurchaseDate = null; // Initialize last purchase date
     customer.notes = ''; // Initialize notes
+    customer.isVIP = customer.isVIP || false; // Initialize VIP
+    customer.isCaution = customer.isCaution || false; // Initialize Caution
     this._customers.push(customer);
     this._notify();
     return true;
@@ -341,7 +343,7 @@ const CustomerService = {
   },
 
   _notify() {
-    document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: null } }));
+    document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: null, query: '' } }));
   }
 };
 
@@ -355,7 +357,7 @@ class CustomerList extends HTMLElement {
     this.handleEdit = this.handleEdit.bind(this); // These are now just placeholders, actual buttons for these are gone from UI
     this.openEditModal = this.openEditModal.bind(this); // New method to open modal for editing
     this.selectCustomer = this.selectCustomer.bind(this);
-    document.addEventListener('customersUpdated', (e) => this._render(e.detail?.filteredCustomers)); // Listen for filtered customers
+    document.addEventListener('customersUpdated', (e) => this._render(e.detail?.filteredCustomers, e.detail?.query)); // Listen for filtered customers and query
   }
     
   connectedCallback() {
@@ -389,16 +391,20 @@ class CustomerList extends HTMLElement {
           row.classList.add('selected');
           // Dispatch event to show purchase history
           document.dispatchEvent(new CustomEvent('customerSelectedForHistory', { detail: customerId }));
+          
+          // New: Single selection logic
+          // Only show the selected customer in the list
+          this._render([customer], document.getElementById('customer-search-input')?.value.toLowerCase().trim());
       }
   }
 
-  _render(filteredCustomers) {
-    const query = document.getElementById('customer-search-input')?.value.toLowerCase().trim();
+  _render(filteredCustomers, currentQueryFromEvent) {
+    const query = currentQueryFromEvent; // Use query from event
     let customers = [];
     let message = '';
 
     if (query) { // A query exists, so perform search or use provided filtered customers
-        customers = filteredCustomers || CustomerService.searchCustomers(query);
+        customers = filteredCustomers;
         if (customers.length === 0) {
             message = '검색 결과가 없습니다.';
         }
@@ -428,12 +434,16 @@ class CustomerList extends HTMLElement {
         .edit-customer-btn:hover {
             background-color: #3498db;
         }
-        .delete-customer-btn {
-             background-color: #c0392b;
+        .customer-tags {
+            font-size: 0.8em;
+            margin-left: 5px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            color: white;
+            background-color: gray;
         }
-        .delete-customer-btn:hover {
-             background-color: #e74c3c;
-        }
+        .vip-tag { background-color: #f39c12; } /* Orange */
+        .caution-tag { background-color: #e74c3c; } /* Red */
       </style>
       ${message ? `<div class="message">${message}</div>` : `
       <table>
@@ -451,7 +461,11 @@ class CustomerList extends HTMLElement {
         <tbody>
           ${customers.map(customer => `
             <tr data-id="${customer.id}" class="customer-row">
-              <td>${customer.name}</td>
+              <td>
+                ${customer.name}
+                ${customer.isVIP ? '<span class="customer-tags vip-tag">VIP</span>' : ''}
+                ${customer.isCaution ? '<span class="customer-tags caution-tag">주의</span>' : ''}
+              </td>
               <td>${customer.phone}</td>
               <td>${customer.rightPower ? customer.rightPower.toFixed(2) : 'N/A'}</td>
               <td>${customer.leftPower ? customer.leftPower.toFixed(2) : 'N/A'}</td>
@@ -459,7 +473,6 @@ class CustomerList extends HTMLElement {
               <td>${customer.notes}</td>
               <td class="actions-cell">
                 <button data-id="${customer.id}" class="edit-customer-btn">수정</button>
-                <button data-id="${customer.id}" class="delete-customer-btn" style="background-color: #c0392b;">삭제</button>
               </td>
             </tr>
           `).join('')}
@@ -471,12 +484,6 @@ class CustomerList extends HTMLElement {
     this.shadowRoot.appendChild(template.content.cloneNode(true));
     if (!message) { // Only add event listeners if table is rendered
         this.shadowRoot.querySelectorAll('.edit-customer-btn').forEach(btn => btn.addEventListener('click', this.openEditModal));
-        this.shadowRoot.querySelectorAll('.delete-customer-btn').forEach(btn => btn.addEventListener('click', (e) => {
-            const id = parseInt(e.target.dataset.id, 10);
-            if (confirm('이 고객 정보를 삭제하시겠습니까?')) {
-                CustomerService.deleteCustomer(id);
-            }
-        }));
         this.shadowRoot.querySelectorAll('tbody tr.customer-row').forEach(row => {
             row.addEventListener('click', this.selectCustomer);
             row.addEventListener('dblclick', (e) => { // Double-click to go to sales
@@ -499,21 +506,37 @@ class CustomerForm extends HTMLElement {
         this.handleSubmit = this.handleSubmit.bind(this);
         this.clearForm = this.clearForm.bind(this);
         this.formatPhoneNumber = this.formatPhoneNumber.bind(this);
+        this.formatDose = this.formatDose.bind(this);
+        this.handleDeleteClick = this.handleDeleteClick.bind(this); // Bind new delete handler
     }
     
     connectedCallback() {
         this._render();
         this._form = this.shadowRoot.querySelector('form');
         this._form.phone.addEventListener('input', this.formatPhoneNumber); // Add event listener for phone formatting
+        // Attaching formatDose to blur event for cleaner input
+        this._form.rightPower.addEventListener('blur', this.formatDose);
+        this._form.leftPower.addEventListener('blur', this.formatDose);
+        // On input, allow user to type freely
+        this._form.rightPower.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9.-]/g, ''); });
+        this._form.leftPower.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9.-]/g, ''); });
+
+
         document.addEventListener('editCustomer', this.populateForm);
         document.addEventListener('clearCustomerForm', this.clearForm); // Listen for clear event
         this._form.addEventListener('submit', this.handleSubmit);
+        this.shadowRoot.querySelector('#delete-customer-from-form-btn')?.addEventListener('click', this.handleDeleteClick);
     }
     
     disconnectedCallback() {
         this._form.phone.removeEventListener('input', this.formatPhoneNumber); // Remove event listener
+        this._form.rightPower.removeEventListener('blur', this.formatDose);
+        this._form.leftPower.removeEventListener('blur', this.formatDose);
+        this._form.rightPower.removeEventListener('input', (e) => {}); // Remove anonymous functions
+        this._form.leftPower.removeEventListener('input', (e) => {});
         document.removeEventListener('editCustomer', this.populateForm);
         document.removeEventListener('clearCustomerForm', this.clearForm);
+        this.shadowRoot.querySelector('#delete-customer-from-form-btn')?.removeEventListener('click', this.handleDeleteClick);
     }
 
     formatPhoneNumber(event) {
@@ -532,6 +555,38 @@ class CustomerForm extends HTMLElement {
         event.target.value = formattedInput;
     }
 
+    formatDose(event) {
+        let input = event.target.value;
+        if (input === '' || input === null) {
+            event.target.value = '';
+            return;
+        }
+        // Remove non-numeric characters except for '-' and '.'
+        input = input.replace(/[^0-9.-]/g, ''); 
+        let floatValue = parseFloat(input);
+
+        if (isNaN(floatValue)) {
+            event.target.value = '';
+            return;
+        }
+        
+        if (floatValue === 0) {
+            event.target.value = '0.00D';
+        } else if (floatValue < 0) {
+            event.target.value = floatValue.toFixed(2) + 'D';
+        } else {
+            event.target.value = '+' + floatValue.toFixed(2) + 'D';
+        }
+    }
+
+    handleDeleteClick() {
+        const customerId = parseInt(this._form.id.value, 10);
+        if (customerId && confirm('이 고객 정보를 삭제하시겠습니까?')) {
+            CustomerService.deleteCustomer(customerId);
+            document.dispatchEvent(new CustomEvent('closeCustomerModal'));
+        }
+    }
+
     _render() {
         const template = document.createElement('template');
         template.innerHTML = `
@@ -540,7 +595,15 @@ class CustomerForm extends HTMLElement {
             .form-title { margin-top: 0; margin-bottom: 1.5rem; font-weight: 400; }
             .form-group { margin-bottom: 1rem; }
             label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; }
-            input, textarea { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+            input[type="text"], input[type="tel"], textarea { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+            /* Adjusted for dose inputs which are now type="text" */
+            input[name="rightPower"], input[name="leftPower"] {
+                width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
+            }
+
+            .checkbox-group { display: flex; align-items: center; margin-bottom: 1rem; gap: 15px; }
+            .checkbox-group label { margin-bottom: 0; display: flex; align-items: center; }
+            .checkbox-group input[type="checkbox"] { width: auto; margin-right: 5px; }
             button { cursor: pointer; padding: 0.8rem 1.5rem; border: none; border-radius: 4px; color: white; background-color: #3498db; font-size: 1rem; }
             .power-fields-container {
                 display: flex;
@@ -548,6 +611,14 @@ class CustomerForm extends HTMLElement {
             }
             .power-fields-container .form-group {
                 flex: 1; /* Distribute space equally */
+            }
+            .form-buttons {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 2rem;
+            }
+            #delete-customer-from-form-btn {
+                background-color: #c0392b;
             }
           </style>
           <form>
@@ -557,6 +628,14 @@ class CustomerForm extends HTMLElement {
               <label for="name">이름</label>
               <input type="text" id="name" name="name" required>
             </div>
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="isVIP" name="isVIP"> VIP
+                </label>
+                <label>
+                    <input type="checkbox" id="isCaution" name="isCaution"> 주의
+                </label>
+            </div>
             <div class="form-group">
               <label for="phone">연락처</label>
               <input type="tel" id="phone" name="phone" required>
@@ -564,18 +643,21 @@ class CustomerForm extends HTMLElement {
             <div class="power-fields-container">
                 <div class="form-group">
                   <label for="rightPower">오른쪽 도수 (D)</label>
-                  <input type="number" id="rightPower" name="rightPower" step="0.25">
+                  <input type="text" id="rightPower" name="rightPower" step="0.25">
                 </div>
                 <div class="form-group">
                   <label for="leftPower">왼쪽 도수 (D)</label>
-                  <input type="number" id="leftPower" name="leftPower" step="0.25">
+                  <input type="text" id="leftPower" name="leftPower" step="0.25">
                 </div>
             </div>
             <div class="form-group">
               <label for="notes">비고</label>
               <textarea id="notes" name="notes" rows="3"></textarea>
             </div>
-            <button type="submit">고객 저장</button>
+            <div class="form-buttons">
+                <button type="submit">고객 저장</button>
+                <button type="button" id="delete-customer-from-form-btn">고객 삭제</button>
+            </div>
           </form>
         `;
         this.shadowRoot.appendChild(template.content.cloneNode(true));
@@ -585,18 +667,23 @@ class CustomerForm extends HTMLElement {
         this._form.reset();
         this._form.id.value = '';
         this._form.querySelector('button[type="submit"]').textContent = '고객 저장';
+        this.shadowRoot.querySelector('#delete-customer-from-form-btn').style.display = 'none'; // Hide delete button for new customer
     }
 
     populateForm(e) {
         const customer = e.detail;
         this._form.id.value = customer.id;
         this._form.name.value = customer.name;
+        this._form.isVIP.checked = customer.isVIP;
+        this._form.isCaution.checked = customer.isCaution;
         this._form.phone.value = customer.phone;
-        this._form.rightPower.value = customer.rightPower;
-        this._form.leftPower.value = customer.leftPower;
+        // Format dose values for display
+        this._form.rightPower.value = customer.rightPower ? (customer.rightPower > 0 ? '+' : '') + customer.rightPower.toFixed(2) + 'D' : '';
+        this._form.leftPower.value = customer.leftPower ? (customer.leftPower > 0 ? '+' : '') + customer.leftPower.toFixed(2) + 'D' : '';
         this._form.notes.value = customer.notes;
         this.scrollIntoView({ behavior: 'smooth' });
-        this._form.querySelector('button').textContent = '고객 수정';
+        this._form.querySelector('button[type="submit"]').textContent = '고객 수정';
+        this.shadowRoot.querySelector('#delete-customer-from-form-btn').style.display = 'inline-block'; // Show delete button for existing customer
     }
 
     handleSubmit(e) {
@@ -606,9 +693,12 @@ class CustomerForm extends HTMLElement {
             id: parseInt(formData.get('id'), 10) || null,
             name: formData.get('name'),
             phone: formData.get('phone'),
+            // Parse formatted dose string back to float
             rightPower: parseFloat(formData.get('rightPower')) || null,
             leftPower: parseFloat(formData.get('leftPower')) || null,
             notes: formData.get('notes'),
+            isVIP: formData.get('isVIP') === 'on',
+            isCaution: formData.get('isCaution') === 'on',
         };
 
         let success = false;
@@ -902,7 +992,7 @@ class CustomerPurchaseHistory extends HTMLElement {
 
     renderHistory(customerId) {
         this.selectedCustomerId = customerId;
-        const customer = CustomerService.getCustomerById(customerId);
+        const customer = customerId ? CustomerService.getCustomerById(customerId) : null;
         let sales = customer ? SalesService.getSalesByCustomerId(customerId) : [];
 
         const template = document.createElement('template');
