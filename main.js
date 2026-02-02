@@ -263,9 +263,14 @@ const CustomerService = {
       }
       const lowerCaseQuery = query.toLowerCase().trim();
       return this._customers.filter(customer => {
+          const customerPhoneCleaned = customer.phone.replace(/-/g, ''); // Remove hyphens for robust phone search
           const nameMatch = customer.name.toLowerCase().includes(lowerCaseQuery);
-          const phoneLastFourMatch = customer.phone.replace(/-/g, '').slice(-4).includes(lowerCaseQuery); // Check last 4 digits after removing hyphens
-          const namePhoneCombinedMatch = `${customer.name}_${customer.phone}`.toLowerCase().includes(lowerCaseQuery);
+          const phoneLastFourMatch = customerPhoneCleaned.slice(-4).includes(lowerCaseQuery); // Check last 4 digits
+          
+          // New: "이름 전화번호" search
+          const customerNameAndPhone = `${customer.name} ${customerPhoneCleaned}`.toLowerCase(); // Use space as separator
+          const namePhoneCombinedMatch = customerNameAndPhone.includes(lowerCaseQuery);
+
           return nameMatch || phoneLastFourMatch || namePhoneCombinedMatch;
       });
   },
