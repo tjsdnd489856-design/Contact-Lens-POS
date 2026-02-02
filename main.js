@@ -266,7 +266,7 @@ const CustomerService = {
       return this._customers.filter(customer => {
           const customerNameLower = customer.name.toLowerCase();
           const customerPhoneCleaned = customer.phone.replace(/-/g, '');
-          const customerPhoneLower = customerPhoneCleaned.toLowerCase();
+          const customerPhoneLower = customerPhonePhoneCleaned.toLowerCase();
 
           // Search by name
           if (customerNameLower.includes(lowerCaseQuery)) {
@@ -354,6 +354,7 @@ class CustomerList extends HTMLElement {
     this.handleDelete = this.handleDelete.bind(this); // These are now just placeholders, actual buttons for these are gone from UI
     this.handleEdit = this.handleEdit.bind(this); // These are now just placeholders, actual buttons for these are gone from UI
     this.openEditModal = this.openEditModal.bind(this); // New method to open modal for editing
+    this.selectCustomer = this.selectCustomer.bind(this);
     document.addEventListener('customersUpdated', (e) => this._render(e.detail?.filteredCustomers)); // Listen for filtered customers
   }
     
@@ -377,6 +378,19 @@ class CustomerList extends HTMLElement {
           document.dispatchEvent(new CustomEvent('openCustomerModal')); // Trigger modal open
       }
   }
+  
+  selectCustomer(e) {
+      const row = e.currentTarget; // The clicked <tr>
+      const customerId = parseInt(row.dataset.id, 10);
+      const customer = CustomerService.getCustomerById(customerId);
+      if (customer) {
+          // Highlight selected row
+          this.shadowRoot.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+          row.classList.add('selected');
+          // Dispatch event to show purchase history
+          document.dispatchEvent(new CustomEvent('customerSelectedForHistory', { detail: customerId }));
+      }
+  }
 
   _render(filteredCustomers) {
     const query = document.getElementById('customer-search-input')?.value.toLowerCase().trim();
@@ -390,6 +404,8 @@ class CustomerList extends HTMLElement {
         }
     } else { // No query, so display initial message
         message = '검색어를 입력하여 고객을 조회해주세요.';
+        // Also clear history when search query is empty
+        document.dispatchEvent(new CustomEvent('customerSelectedForHistory', { detail: null }));
     }
 
     const template = document.createElement('template');
@@ -400,7 +416,8 @@ class CustomerList extends HTMLElement {
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         thead { background-color: #34495e; color: #ecf0f1; }
         tr:nth-child(even) { background-color: #f8f9f9; }
-        tr:hover { background-color: #ecf0f1; }
+        tr:hover { background-color: #ecf0f1; cursor: pointer; } /* Added cursor for clickable rows */
+        tr.selected { background-color: #cce0ff; border: 2px solid #3498db; } /* Style for selected row */
         .actions-cell { text-align: center; } 
         .go-to-sales-btn { 
             cursor: pointer; padding: 6px 10px; margin: 2px; border: none; border-radius: 4px; color: white; font-size: 0.9rem;
@@ -419,13 +436,13 @@ class CustomerList extends HTMLElement {
             <th style="width: 10%;">오른쪽 도수</th>
             <th style="width: 10%;">왼쪽 도수</th>
             <th style="width: 15%;">최종 구매일</th>
-            <th style="width: 20%;">비고</th>
-            <th class="actions-cell" style="width: 15%;">관리</th>
+            <th style="width: 25%;">비고</th>
+            <th class="actions-cell" style="width: 10%;">판매</th>
           </tr>
         </thead>
         <tbody>
           ${customers.map(customer => `
-            <tr>
+            <tr data-id="${customer.id}" class="customer-row">
               <td>${customer.name}</td>
               <td>${customer.phone}</td>
               <td>${customer.rightPower ? customer.rightPower.toFixed(2) : 'N/A'}</td>
@@ -433,7 +450,7 @@ class CustomerList extends HTMLElement {
               <td>${customer.lastPurchaseDate ? new Date(customer.lastPurchaseDate).toLocaleDateString() : 'N/A'}</td>
               <td>${customer.notes}</td>
               <td class="actions-cell">
-                <button data-id="${customer.id}" class="go-to-sales-btn">판매 및 주문으로 이동</button>
+                <button data-id="${customer.id}" class="go-to-sales-btn">판매</button>
               </td>
             </tr>
           `).join('')}
@@ -449,6 +466,9 @@ class CustomerList extends HTMLElement {
             document.dispatchEvent(new CustomEvent('selectCustomerForSale', { detail: { customerId: customerId } }));
             document.dispatchEvent(new CustomEvent('showTab', { detail: { tabId: 'sales' } }));
         }));
+        this.shadowRoot.querySelectorAll('tbody tr.customer-row').forEach(row => {
+            row.addEventListener('click', this.selectCustomer);
+        });
     }
   }
 }
@@ -853,6 +873,60 @@ class SalesList extends HTMLElement {
 }
 customElements.define('sales-list', SalesList);
 
+// --- CustomerPurchaseHistory Component ---
+class CustomerPurchaseHistory extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.selectedCustomerId = null;
+        this.renderHistory = this.renderHistory.bind(this);
+        document.addEventListener('customerSelectedForHistory', (e) => this.renderHistory(e.detail));
+        document.addEventListener('salesUpdated', () => this.renderHistory(this.selectedCustomerId)); // Re-render if sales update
+    }
+
+    renderHistory(customerId) {
+        this.selectedCustomerId = customerId;
+        const sales = customerId ? SalesService.getSalesByCustomerId(customerId) : [];
+        const template = document.createElement('template');
+        template.innerHTML = `
+            <style>
+                h4 { margin-top: 2rem; border-top: 1px solid #eee; padding-top: 2rem; }
+                table { width: 100%; border-collapse: collapse; margin-top: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                thead { background-color: #5cb85c; color: white; } /* Green header for purchase history */
+                tbody tr:nth-child(even) { background-color: #f2f2f2; }
+            </style>
+            <h4>고객 구매 내역</h4>
+            ${sales.length > 0 ? `
+            <table>
+                <thead>
+                    <tr>
+                        <th>판매 ID</th>
+                        <th>판매 날짜</th>
+                        <th>총액</th>
+                        <th>상세 보기</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${sales.map(sale => `
+                        <tr>
+                            <td>${sale.id}</td>
+                            <td>${new Date(sale.date).toLocaleString()}</td>
+                            <td>$${sale.total.toFixed(2)}</td>
+                            <td><button data-sale-id="${sale.id}">상세 보기</button></td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            ` : `<p>선택된 고객의 구매 내역이 없습니다.</p>`}
+        `;
+        this.shadowRoot.innerHTML = '';
+        this.shadowRoot.appendChild(template.content.cloneNode(true));
+    }
+}
+customElements.define('customer-purchase-history', CustomerPurchaseHistory);
+
+
 // --- Tab Switching Logic ---
 document.addEventListener('DOMContentLoaded', () => {
     const tabButtons = document.querySelectorAll('.tabs-nav .tab-button');
@@ -907,6 +981,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('openCustomerModal', openCustomerModal); // Listen for custom event to open modal
     document.addEventListener('showTab', (e) => { // New listener for tab switching
         showTab(e.detail.tabId);
+        if (e.detail.tabId !== 'customers') { // Clear purchase history if not on customer tab
+            document.dispatchEvent(new CustomEvent('customerSelectedForHistory', { detail: null }));
+        }
     });
 
 
