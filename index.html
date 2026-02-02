@@ -1,14 +1,45 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
+  <title>Contact Lens POS</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+
+  <header>
+    <h1>Contact Lens POS</h1>
+  </header>
+
+  <nav>
+    <a href="#products">Products</a>
+    <a href="#customers">Customers</a>
+    <a href="#sales">Sales</a>
+  </nav>
+
+  <main>
+    <section id="products">
+      <h2>Products</h2>
+      <product-form></product-form>
+      <product-list></product-list>
+    </section>
+    <section id="customers">
+      <h2>Customers</h2>
+      <customer-form></customer-form>
+      <customer-list></customer-list>
+    </section>
+    <section id="sales">
+      <h2>Sales</h2>
+      <sale-transaction></sale-transaction>
+      <sales-list></sales-list>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Contact Lens POS</p>
+  </footer>
+
+  <script src="main.js"></script>
 </body>
 </html>
