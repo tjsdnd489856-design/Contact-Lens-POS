@@ -266,7 +266,7 @@ const CustomerService = {
       return this._customers.filter(customer => {
           const customerNameLower = customer.name.toLowerCase();
           const customerPhoneCleaned = customer.phone.replace(/-/g, '');
-          const customerPhoneLower = customerPhonePhoneCleaned.toLowerCase();
+          const customerPhoneLower = customerPhoneCleaned.toLowerCase();
 
           // Search by name
           if (customerNameLower.includes(lowerCaseQuery)) {
@@ -886,7 +886,9 @@ class CustomerPurchaseHistory extends HTMLElement {
 
     renderHistory(customerId) {
         this.selectedCustomerId = customerId;
-        const sales = customerId ? SalesService.getSalesByCustomerId(customerId) : [];
+        const customer = CustomerService.getCustomerById(customerId);
+        let sales = customer ? SalesService.getSalesByCustomerId(customerId) : [];
+
         const template = document.createElement('template');
         template.innerHTML = `
             <style>
@@ -895,30 +897,33 @@ class CustomerPurchaseHistory extends HTMLElement {
                 th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
                 thead { background-color: #5cb85c; color: white; } /* Green header for purchase history */
                 tbody tr:nth-child(even) { background-color: #f2f2f2; }
+                .message { text-align: center; padding: 1rem; color: #555; }
             </style>
             <h4>고객 구매 내역</h4>
-            ${sales.length > 0 ? `
-            <table>
-                <thead>
-                    <tr>
-                        <th>판매 ID</th>
-                        <th>판매 날짜</th>
-                        <th>총액</th>
-                        <th>상세 보기</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${sales.map(sale => `
+            ${customer ? `
+                ${sales.length > 0 ? `
+                <table>
+                    <thead>
                         <tr>
-                            <td>${sale.id}</td>
-                            <td>${new Date(sale.date).toLocaleString()}</td>
-                            <td>$${sale.total.toFixed(2)}</td>
-                            <td><button data-sale-id="${sale.id}">상세 보기</button></td>
+                            <th>판매 ID</th>
+                            <th>판매 날짜</th>
+                            <th>총액</th>
+                            <th>품목 수</th>
                         </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-            ` : `<p>선택된 고객의 구매 내역이 없습니다.</p>`}
+                    </thead>
+                    <tbody>
+                        ${sales.map(sale => `
+                            <tr>
+                                <td>${sale.id}</td>
+                                <td>${new Date(sale.date).toLocaleString()}</td>
+                                <td>$${sale.total.toFixed(2)}</td>
+                                <td>${sale.items.reduce((sum, item) => sum + item.quantity, 0)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                ` : `<p class="message">선택된 고객의 구매 내역이 없습니다.</p>`}
+            ` : `<p class="message">고객을 선택하면 구매 내역이 표시됩니다.</p>`}
         `;
         this.shadowRoot.innerHTML = '';
         this.shadowRoot.appendChild(template.content.cloneNode(true));
@@ -984,6 +989,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.detail.tabId !== 'customers') { // Clear purchase history if not on customer tab
             document.dispatchEvent(new CustomEvent('customerSelectedForHistory', { detail: null }));
         }
+        // Also clear search input and reset customer list when switching away from customer tab
+        if (e.detail.tabId === 'customers') {
+            customerSearchInput.value = '';
+            document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: [], query: '' } }));
+        }
     });
 
 
@@ -991,7 +1001,7 @@ document.addEventListener('DOMContentLoaded', () => {
     customerSearchInput.addEventListener('input', (event) => {
         const query = event.target.value;
         const filteredCustomers = CustomerService.searchCustomers(query);
-        document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: filteredCustomers } }));
+        document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: filteredCustomers, query: query } }));
     });
 
 
