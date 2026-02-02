@@ -236,8 +236,8 @@ customElements.define('product-form', ProductForm);
 // --- Customer Service (Singleton) ---
 const CustomerService = {
   _customers: [
-    { id: 1, name: '홍길동', phone: '010-1234-5678', rightPower: -1.00, leftPower: -1.25, purchaseHistory: [], lastPurchaseDate: null, notes: '', isVIP: false, isCaution: false },
-    { id: 2, name: '김철수', phone: '010-9876-5432', rightPower: -2.00, leftPower: -2.00, purchaseHistory: [], lastPurchaseDate: null, notes: '', isVIP: false, isCaution: false },
+    { id: 1, name: '홍길동', phone: '010-1234-5678', rightS: -1.00, rightC: -0.50, rightAX: 180, leftS: -1.25, leftC: -0.75, leftAX: 90, purchaseHistory: [], lastPurchaseDate: null, notes: '', isVIP: false, isCaution: false },
+    { id: 2, name: '김철수', phone: '010-9876-5432', rightS: -2.00, rightC: 0.00, rightAX: 0, leftS: -2.00, leftC: 0.00, leftAX: 0, purchaseHistory: [], lastPurchaseDate: null, notes: '', isVIP: false, isCaution: false },
   ],
   _nextId: 3,
 
@@ -306,6 +306,14 @@ const CustomerService = {
     customer.notes = ''; // Initialize notes
     customer.isVIP = customer.isVIP || false; // Initialize VIP
     customer.isCaution = customer.isCaution || false; // Initialize Caution
+    // Initialize new dose fields
+    customer.rightS = customer.rightS || null;
+    customer.rightC = customer.rightC || null;
+    customer.rightAX = customer.rightAX || 0;
+    customer.leftS = customer.leftS || null;
+    customer.leftC = customer.leftC || null;
+    customer.leftAX = customer.leftAX || 0;
+
     this._customers.push(customer);
     this._notify();
     return true;
@@ -460,8 +468,12 @@ class CustomerList extends HTMLElement {
           <tr>
             <th style="width: 15%;">이름</th>
             <th style="width: 15%;">연락처</th>
-            <th style="width: 10%;">오른쪽 도수</th>
-            <th style="width: 10%;">왼쪽 도수</th>
+            <th style="width: 10%;">오른쪽 S</th>
+            <th style="width: 5%;">오른쪽 C</th>
+            <th style="width: 5%;">오른쪽 AX</th>
+            <th style="width: 10%;">왼쪽 S</th>
+            <th style="width: 5%;">왼쪽 C</th>
+            <th style="width: 5%;">왼쪽 AX</th>
             <th style="width: 15%;">최종 구매일</th>
             <th style="width: 25%;">비고</th>
             <th class="actions-cell" style="width: 10%;">관리</th>
@@ -476,8 +488,12 @@ class CustomerList extends HTMLElement {
                 </span>
               </td>
               <td>${customer.phone}</td>
-              <td>${customer.rightPower ? customer.rightPower.toFixed(2) : 'N/A'}</td>
-              <td>${customer.leftPower ? customer.leftPower.toFixed(2) : 'N/A'}</td>
+              <td>${customer.rightS ? (customer.rightS > 0 ? '+' : '') + customer.rightS.toFixed(2) : 'N/A'}</td>
+              <td>${customer.rightC ? (customer.rightC > 0 ? '+' : '') + customer.rightC.toFixed(2) : 'N/A'}</td>
+              <td>${customer.rightAX !== null ? customer.rightAX : 'N/A'}</td>
+              <td>${customer.leftS ? (customer.leftS > 0 ? '+' : '') + customer.leftS.toFixed(2) : 'N/A'}</td>
+              <td>${customer.leftC ? (customer.leftC > 0 ? '+' : '') + customer.leftC.toFixed(2) : 'N/A'}</td>
+              <td>${customer.leftAX !== null ? customer.leftAX : 'N/A'}</td>
               <td>${customer.lastPurchaseDate ? new Date(customer.lastPurchaseDate).toLocaleDateString() : 'N/A'}</td>
               <td>${customer.notes}</td>
               <td class="actions-cell">
@@ -516,6 +532,7 @@ class CustomerForm extends HTMLElement {
         this.clearForm = this.clearForm.bind(this);
         this.formatPhoneNumber = this.formatPhoneNumber.bind(this);
         this.formatDose = this.formatDose.bind(this);
+        this.formatAX = this.formatAX.bind(this); // New AX formatter
         this.handleDeleteClick = this.handleDeleteClick.bind(this); // Bind new delete handler
         this.handleVipCautionChange = this.handleVipCautionChange.bind(this);
     }
@@ -525,11 +542,21 @@ class CustomerForm extends HTMLElement {
         this._form = this.shadowRoot.querySelector('form');
         this._form.phone.addEventListener('input', this.formatPhoneNumber); // Add event listener for phone formatting
         // Attaching formatDose to blur event for cleaner input
-        this._form.rightPower.addEventListener('blur', this.formatDose);
-        this._form.leftPower.addEventListener('blur', this.formatDose);
+        this._form.rightS.addEventListener('blur', this.formatDose);
+        this._form.rightC.addEventListener('blur', this.formatDose);
+        this._form.leftS.addEventListener('blur', this.formatDose);
+        this._form.leftC.addEventListener('blur', this.formatDose);
         // On input, allow user to type freely
-        this._form.rightPower.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9.-]/g, ''); });
-        this._form.leftPower.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9.-]/g, ''); });
+        this._form.rightS.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9.-]/g, ''); });
+        this._form.rightC.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9.-]/g, ''); });
+        this._form.leftS.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9.-]/g, ''); });
+        this._form.leftC.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9.-]/g, ''); });
+
+        // AX fields
+        this._form.rightAX.addEventListener('blur', this.formatAX);
+        this._form.leftAX.addEventListener('blur', this.formatAX);
+        this._form.rightAX.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9]/g, ''); }); // Only digits
+        this._form.leftAX.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9]/g, ''); }); // Only digits
 
 
         this._form.isVIP.addEventListener('change', this.handleVipCautionChange);
@@ -544,13 +571,19 @@ class CustomerForm extends HTMLElement {
     
     disconnectedCallback() {
         this._form.phone.removeEventListener('input', this.formatPhoneNumber); // Remove event listener
-        this._form.rightPower.removeEventListener('blur', this.formatDose);
-        this._form.leftPower.removeEventListener('blur', this.formatDose);
-        // Need to remove listeners for anonymous functions using a stored reference or re-create the listeners
-        // For simplicity, re-assigning null or empty function if original anonymous function reference is not stored
-        // A better approach would be to store the anonymous function reference if needed for removal.
-        // For now, these anonymous listeners might remain if the element is re-attached without full DOM refresh.
-        // Given the Web Component lifecycle, a full render often replaces innerHTML, effectively cleaning listeners.
+        this._form.rightS.removeEventListener('blur', this.formatDose);
+        this._form.rightC.removeEventListener('blur', this.formatDose);
+        this._form.leftS.removeEventListener('blur', this.formatDose);
+        this._form.leftC.removeEventListener('blur', this.formatDose);
+        this._form.rightS.removeEventListener('input', (e) => {});
+        this._form.rightC.removeEventListener('input', (e) => {});
+        this._form.leftS.removeEventListener('input', (e) => {});
+        this._form.leftC.removeEventListener('input', (e) => {});
+
+        this._form.rightAX.removeEventListener('blur', this.formatAX);
+        this._form.leftAX.removeEventListener('blur', this.formatAX);
+        this._form.rightAX.removeEventListener('input', (e) => {});
+        this._form.leftAX.removeEventListener('input', (e) => {});
         
         this._form.isVIP.removeEventListener('change', this.handleVipCautionChange);
         this._form.isCaution.removeEventListener('change', this.handleVipCautionChange);
@@ -600,6 +633,20 @@ class CustomerForm extends HTMLElement {
         }
     }
 
+    formatAX(event) {
+        let input = event.target.value;
+        if (input === '' || input === null) {
+            event.target.value = '';
+            return;
+        }
+        let intValue = parseInt(input.replace(/[^0-9]/g, ''), 10);
+        if (isNaN(intValue)) {
+            event.target.value = '';
+            return;
+        }
+        event.target.value = intValue.toString(); // Store as plain number string, will parse as int for saving.
+    }
+
     handleVipCautionChange(event) {
         const isVIPChecked = this._form.isVIP.checked;
         const isCautionChecked = this._form.isCaution.checked;
@@ -647,21 +694,29 @@ class CustomerForm extends HTMLElement {
             .form-group { margin-bottom: 1rem; }
             label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; }
             input[type="text"], input[type="tel"], textarea { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-            /* Adjusted for dose inputs which are now type="text" */
-            input[name="rightPower"], input[name="leftPower"] {
-                width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
-            }
-
+            
             .checkbox-group { display: flex; align-items: center; margin-bottom: 1rem; gap: 15px; }
             .checkbox-group label { margin-bottom: 0; display: flex; align-items: center; }
             .checkbox-group input[type="checkbox"] { width: auto; margin-right: 5px; }
             button { cursor: pointer; padding: 0.8rem 1.5rem; border: none; border-radius: 4px; color: white; background-color: #3498db; font-size: 1rem; }
             .power-fields-container {
                 display: flex;
+                flex-wrap: wrap; /* Allow wrapping for smaller screens */
                 gap: 10px; /* Space between fields */
+                margin-bottom: 1rem;
             }
-            .power-fields-container .form-group {
+            .power-field-group {
                 flex: 1; /* Distribute space equally */
+                min-width: calc(33% - 10px); /* Approx 3 fields per row */
+            }
+            .power-eye-section {
+                flex-basis: 100%; /* Each eye section takes full width */
+                display: flex;
+                gap: 10px;
+                margin-bottom: 1rem;
+            }
+            .power-eye-section .power-field-group {
+                flex: 1;
             }
             .form-buttons {
                 display: flex;
@@ -691,23 +746,47 @@ class CustomerForm extends HTMLElement {
               <label for="phone">연락처</label>
               <input type="tel" id="phone" name="phone" required>
             </div>
+
             <div class="power-fields-container">
-                <div class="form-group">
-                  <label for="rightPower">오른쪽 도수 (D)</label>
-                  <input type="text" id="rightPower" name="rightPower" step="0.25">
+                <h4>오른쪽 눈</h4>
+                <div class="power-eye-section">
+                    <div class="form-group power-field-group">
+                      <label for="rightS">S 입력란</label>
+                      <input type="text" id="rightS" name="rightS" step="0.25">
+                    </div>
+                    <div class="form-group power-field-group">
+                      <label for="rightC">C 입력란</label>
+                      <input type="text" id="rightC" name="rightC" step="0.25">
+                    </div>
+                    <div class="form-group power-field-group">
+                      <label for="rightAX">AX 입력란</label>
+                      <input type="text" id="rightAX" name="rightAX">
+                    </div>
                 </div>
-                <div class="form-group">
-                  <label for="leftPower">왼쪽 도수 (D)</label>
-                  <input type="text" id="leftPower" name="leftPower" step="0.25">
+                <h4>왼쪽 눈</h4>
+                <div class="power-eye-section">
+                    <div class="form-group power-field-group">
+                      <label for="leftS">S 입력란</label>
+                      <input type="text" id="leftS" name="leftS" step="0.25">
+                    </div>
+                    <div class="form-group power-field-group">
+                      <label for="leftC">C 입력란</label>
+                      <input type="text" id="leftC" name="leftC" step="0.25">
+                    </div>
+                    <div class="form-group power-field-group">
+                      <label for="leftAX">AX 입력란</label>
+                      <input type="text" id="leftAX" name="leftAX">
+                    </div>
                 </div>
             </div>
+
             <div class="form-group">
               <label for="notes">비고</label>
               <textarea id="notes" name="notes" rows="3"></textarea>
             </div>
             <div class="form-buttons">
-                <button type="submit">고객 저장</button>
                 <button type="button" id="delete-customer-from-form-btn">고객 삭제</button>
+                <button type="submit">고객 저장</button>
             </div>
           </form>
         `;
@@ -729,9 +808,14 @@ class CustomerForm extends HTMLElement {
         this._form.isVIP.checked = customer.isVIP;
         this._form.isCaution.checked = customer.isCaution;
         this._form.phone.value = customer.phone;
-        // Format dose values for display
-        this._form.rightPower.value = customer.rightPower ? (customer.rightPower > 0 ? '+' : '') + customer.rightPower.toFixed(2) + 'D' : '';
-        this._form.leftPower.value = customer.leftPower ? (customer.leftPower > 0 ? '+' : '') + customer.leftPower.toFixed(2) + 'D' : '';
+        // Populate new dose fields, applying formatting for display
+        this._form.rightS.value = customer.rightS ? (customer.rightS > 0 ? '+' : '') + customer.rightS.toFixed(2) + 'D' : '';
+        this._form.rightC.value = customer.rightC ? (customer.rightC > 0 ? '+' : '') + customer.rightC.toFixed(2) + 'D' : '';
+        this._form.rightAX.value = customer.rightAX !== null ? customer.rightAX.toString() : '';
+        this._form.leftS.value = customer.leftS ? (customer.leftS > 0 ? '+' : '') + customer.leftS.toFixed(2) + 'D' : '';
+        this._form.leftC.value = customer.leftC ? (customer.leftC > 0 ? '+' : '') + customer.leftC.toFixed(2) + 'D' : '';
+        this._form.leftAX.value = customer.leftAX !== null ? customer.leftAX.toString() : '';
+        
         this._form.notes.value = customer.notes;
         this.scrollIntoView({ behavior: 'smooth' });
         this._form.querySelector('button[type="submit"]').textContent = '고객 수정';
@@ -747,8 +831,12 @@ class CustomerForm extends HTMLElement {
             name: formData.get('name'),
             phone: formData.get('phone'),
             // Parse formatted dose string back to float
-            rightPower: parseFloat(formData.get('rightPower')) || null,
-            leftPower: parseFloat(formData.get('leftPower')) || null,
+            rightS: parseFloat(formData.get('rightS')) || null,
+            rightC: parseFloat(formData.get('rightC')) || null,
+            rightAX: parseInt(formData.get('rightAX'), 10) || 0, // AX is integer, default 0
+            leftS: parseFloat(formData.get('leftS')) || null,
+            leftC: parseFloat(formData.get('leftC')) || null,
+            leftAX: parseInt(formData.get('leftAX'), 10) || 0, // AX is integer, default 0
             notes: formData.get('notes'),
             isVIP: formData.get('isVIP') === 'on',
             isCaution: formData.get('isCaution') === 'on',
