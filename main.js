@@ -236,8 +236,8 @@ customElements.define('product-form', ProductForm);
 // --- Customer Service (Singleton) ---
 const CustomerService = {
   _customers: [
-    { id: 1, name: '홍길동', phone: '010-1234-5678', rightPower: -1.00, leftPower: -1.25, purchaseHistory: [], lastPurchaseDate: null },
-    { id: 2, name: '김철수', phone: '010-9876-5432', rightPower: -2.00, leftPower: -2.00, purchaseHistory: [], lastPurchaseDate: null },
+    { id: 1, name: '홍길동', phone: '010-1234-5678', rightPower: -1.00, leftPower: -1.25, purchaseHistory: [], lastPurchaseDate: null, notes: '' },
+    { id: 2, name: '김철수', phone: '010-9876-5432', rightPower: -2.00, leftPower: -2.00, purchaseHistory: [], lastPurchaseDate: null, notes: '' },
   ],
   _nextId: 3,
 
@@ -253,6 +253,7 @@ const CustomerService = {
     customer.id = this._nextId++;
     customer.purchaseHistory = []; // Initialize empty purchase history
     customer.lastPurchaseDate = null; // Initialize last purchase date
+    customer.notes = ''; // Initialize notes
     this._customers.push(customer);
     this._notify();
   },
@@ -293,8 +294,8 @@ class CustomerList extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this.handleDelete = this.handleDelete.bind(this);
-    this.handleEdit = this.handleEdit.bind(this);
+    this.handleDelete = this.handleDelete.bind(this); // Keep these as they are for products, but not used in customer list itself
+    this.handleEdit = this.handleEdit.bind(this); // Keep these as they are for products, but not used in customer list itself
     document.addEventListener('customersUpdated', () => this._render());
   }
     
@@ -306,14 +307,14 @@ class CustomerList extends HTMLElement {
     document.removeEventListener('customersUpdated', this._render);
   }
 
-  handleDelete(e) {
+  handleDelete(e) { // This method is technically not used now, but keeping for reference if action buttons are reintroduced
     const id = parseInt(e.target.dataset.id, 10);
     if (confirm('이 고객 정보를 삭제하시겠습니까?')) {
         CustomerService.deleteCustomer(id);
     }
   }
 
-  handleEdit(e) {
+  handleEdit(e) { // This method is technically not used now, but keeping for reference if action buttons are reintroduced
     const id = parseInt(e.target.dataset.id, 10);
     const customer = CustomerService.getCustomerById(id);
     if (customer) {
@@ -330,10 +331,6 @@ class CustomerList extends HTMLElement {
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         thead { background-color: #34495e; color: #ecf0f1; }
         tr:nth-child(even) { background-color: #f8f9f9; }
-        .actions { text-align: center; }
-        .actions button { cursor: pointer; padding: 8px 12px; margin-right: 5px; border: none; border-radius: 4px; color: white; }
-        .edit-btn { background-color: #2980b9; }
-        .delete-btn { background-color: #c0392b; }
       </style>
       <table>
         <thead>
@@ -344,7 +341,7 @@ class CustomerList extends HTMLElement {
             <th>오른쪽 도수</th>
             <th>왼쪽 도수</th>
             <th>최종 구매일</th>
-            <th class="actions">동작</th>
+            <th>비고</th>
           </tr>
         </thead>
         <tbody>
@@ -356,10 +353,7 @@ class CustomerList extends HTMLElement {
               <td>${customer.rightPower ? customer.rightPower.toFixed(2) : 'N/A'}</td>
               <td>${customer.leftPower ? customer.leftPower.toFixed(2) : 'N/A'}</td>
               <td>${customer.lastPurchaseDate ? new Date(customer.lastPurchaseDate).toLocaleDateString() : 'N/A'}</td>
-              <td class="actions">
-                <button class="edit-btn" data-id="${customer.id}">수정</button>
-                <button class="delete-btn" data-id="${customer.id}">삭제</button>
-              </td>
+              <td>${customer.notes}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -367,8 +361,7 @@ class CustomerList extends HTMLElement {
     `;
     this.shadowRoot.innerHTML = '';
     this.shadowRoot.appendChild(template.content.cloneNode(true));
-    this.shadowRoot.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', this.handleDelete));
-    this.shadowRoot.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', this.handleEdit));
+    // Edit and Delete event listeners removed as per request to remove actions column
   }
 }
 customElements.define('customer-list', CustomerList);
@@ -401,7 +394,7 @@ class CustomerForm extends HTMLElement {
             .form-title { margin-top: 0; margin-bottom: 1.5rem; font-weight: 400; }
             .form-group { margin-bottom: 1rem; }
             label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; }
-            input { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+            input, textarea { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
             button { cursor: pointer; padding: 0.8rem 1.5rem; border: none; border-radius: 4px; color: white; background-color: #3498db; font-size: 1rem; }
           </style>
           <form>
@@ -423,6 +416,10 @@ class CustomerForm extends HTMLElement {
               <label for="leftPower">왼쪽 도수 (D)</label>
               <input type="number" id="leftPower" name="leftPower" step="0.25">
             </div>
+            <div class="form-group">
+              <label for="notes">비고</label>
+              <textarea id="notes" name="notes" rows="3"></textarea>
+            </div>
             <button type="submit">고객 저장</button>
           </form>
         `;
@@ -436,6 +433,7 @@ class CustomerForm extends HTMLElement {
         this._form.phone.value = customer.phone;
         this._form.rightPower.value = customer.rightPower;
         this._form.leftPower.value = customer.leftPower;
+        this._form.notes.value = customer.notes;
         // lastPurchaseDate is auto-updated, not manually editable via form
         this.scrollIntoView({ behavior: 'smooth' });
         this._form.querySelector('button').textContent = '고객 수정';
@@ -450,6 +448,7 @@ class CustomerForm extends HTMLElement {
             phone: formData.get('phone'),
             rightPower: parseFloat(formData.get('rightPower')) || null,
             leftPower: parseFloat(formData.get('leftPower')) || null,
+            notes: formData.get('notes'),
         };
 
         if (customer.id) {
