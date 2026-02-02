@@ -142,6 +142,377 @@ class ProductForm extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         this.populateForm = this.populateForm.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+    }
+
+    connectedCallback() {
+        this._render();
+        this._form = this.shadowRoot.querySelector('form');
+        document.addEventListener('editProduct', this.populateForm);
+        this._form.addEventListener('submit', this.handleSubmit);
+    }
+
+    disconnectedCallback() {
+        document.removeEventListener('editProduct', this.populateForm);
+    }
+
+    _render() {
+        const template = document.createElement('template');
+        template.innerHTML = `
+          <style>
+            form { background: #fdfdfd; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+            .form-title { margin-top: 0; margin-bottom: 1.5rem; font-weight: 400; }
+            .form-group { margin-bottom: 1rem; }
+            label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; }
+            input { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+            button { cursor: pointer; padding: 0.8rem 1.5rem; border: none; border-radius: 4px; color: white; background-color: #3498db; font-size: 1rem; }
+          </style>
+          <form>
+            <h3 class="form-title">제품 추가 / 수정</h3>
+            <input type="hidden" name="id">
+            <div class="form-group">
+              <label for="brand">브랜드</label>
+              <input type="text" id="brand" name="brand" required>
+            </div>
+            <div class="form-group">
+              <label for="model">모델명</label>
+              <input type="text" id="model" name="model" required>
+            </div>
+            <div class="form-group">
+              <label for="power">도수 (D)</label>
+              <input type="number" id="power" name="power" step="0.25" required>
+            </div>
+            <div class="form-group">
+              <label for="price">가격</label>
+              <input type="number" id="price" name="price" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+              <label for="stock">재고</label>
+              <input type="number" id="stock" name="stock" min="0" required>
+            </div>
+            <button type="submit">제품 저장</button>
+          </form>
+        `;
+        this.shadowRoot.appendChild(template.content.cloneNode(true));
+    }
+
+    populateForm(e) {
+        const product = e.detail;
+        this._form.id.value = product.id;
+        this._form.brand.value = product.brand;
+        this._form.model.value = product.model;
+        this._form.power.value = product.power;
+        this._form.price.value = product.price;
+        this._form.stock.value = product.stock;
+        this.scrollIntoView({ behavior: 'smooth' });
+        this._form.querySelector('button').textContent = '제품 수정';
+    }
+
+    handleSubmit(e) {
+        e.preventDefault();
+        const formData = new FormData(this._form);
+        const product = {
+            id: parseInt(formData.get('id'), 10) || null,
+            brand: formData.get('brand'),
+            model: formData.get('model'),
+            power: parseFloat(formData.get('power')),
+            price: parseFloat(formData.get('price')),
+            stock: parseInt(formData.get('stock'), 10),
+        };
+
+        if (product.id) {
+            ProductService.updateProduct(product);
+        } else {
+            delete product.id;
+            ProductService.addProduct(product);
+        }
+
+        this._form.reset();
+        this._form.id.value = '';
+        this._form.querySelector('button').textContent = '제품 저장';
+    }
+}
+customElements.define('product-form', ProductForm);
+
+// --- Customer Service (Singleton) ---
+const CustomerService = {
+  _customers: [
+    { id: 1, name: '홍길동', phone: '010-1234-5678', rightPower: -1.00, leftPower: -1.25, purchaseHistory: [], lastPurchaseDate: null, notes: '', isVIP: false, isCaution: false },
+    { id: 2, name: '김철수', phone: '010-9876-5432', rightPower: -2.00, leftPower: -2.00, purchaseHistory: [], lastPurchaseDate: null, notes: '', isVIP: false, isCaution: false },
+  ],
+  _nextId: 3,
+
+  getCustomers() {
+    return [...this._customers];
+  },
+  
+  getCustomerById(id) {
+      return this._customers.find(c => c.id === id);
+  },
+  
+  isDuplicateCustomer(name, phone, id = null) {
+      return this._customers.some(customer => 
+          customer.name === name && 
+          customer.phone === phone && 
+          customer.id !== id
+      );
+  },
+
+  searchCustomers(query) {
+      if (!query) {
+          return this.getCustomers();
+      }
+      const lowerCaseQuery = query.toLowerCase().trim();
+      
+      return this._customers.filter(customer => {
+          const customerNameLower = customer.name.toLowerCase();
+          const customerPhoneCleaned = customer.phone.replace(/-/g, '');
+          const customerPhoneLower = customerPhoneCleaned.toLowerCase();
+
+          // Search by name
+          if (customerNameLower.includes(lowerCaseQuery)) {
+              return true;
+          }
+          // Search by last 4 digits of phone
+          if (customerPhoneCleaned.slice(-4).includes(lowerCaseQuery)) {
+              return true;
+          }
+          // Search by any part of the phone number
+          if (customerPhoneLower.includes(lowerCaseQuery)) {
+              return true;
+          }
+
+          // Search by "이름 전화번호" format
+          const queryParts = lowerCaseQuery.split(' ');
+          if (queryParts.length >= 2) {
+              const nameQuery = queryParts[0];
+              const phoneQuery = queryParts.slice(1).join(''); // Join remaining parts for phone query
+              if (customerNameLower.includes(nameQuery) && customerPhoneCleaned.includes(phoneQuery)) {
+                  return true;
+              }
+          }
+
+          return false; // No match found
+      });
+  },
+
+  addCustomer(customer) {
+    if (this.isDuplicateCustomer(customer.name, customer.phone)) {
+        alert('중복된 고객입니다.');
+        return false;
+    }
+    customer.id = this._nextId++;
+    customer.purchaseHistory = []; // Initialize empty purchase history
+    customer.lastPurchaseDate = null; // Initialize last purchase date
+    customer.notes = ''; // Initialize notes
+    customer.isVIP = customer.isVIP || false; // Initialize VIP
+    customer.isCaution = customer.isCaution || false; // Initialize Caution
+    this._customers.push(customer);
+    this._notify();
+    return true;
+  },
+
+  updateCustomer(updatedCustomer) {
+    if (this.isDuplicateCustomer(updatedCustomer.name, updatedCustomer.phone, updatedCustomer.id)) {
+        alert('중복된 고객입니다.');
+        return false;
+    }
+    const index = this._customers.findIndex(c => c.id === updatedProduct.id);
+    if (index !== -1) {
+      // Preserve purchase history and last purchase date
+      updatedCustomer.purchaseHistory = this._customers[index].purchaseHistory; 
+      updatedCustomer.lastPurchaseDate = this._customers[index].lastPurchaseDate; 
+      this._customers[index] = updatedCustomer;
+      this._notify();
+      return true;
+    }
+    return false;
+  },
+
+  deleteCustomer(id) {
+    this._customers = this._customers.filter(c => c.id !== id);
+    this._notify();
+  },
+
+  addPurchaseToCustomerHistory(customerId, saleId, purchaseDate) {
+    const customer = this.getCustomerById(customerId);
+    if (customer) {
+      customer.purchaseHistory.push(saleId);
+      customer.lastPurchaseDate = purchaseDate; // Update last purchase date
+      this._notify(); // Notify that customer data has changed
+    }
+  },
+
+  _notify() {
+    document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: null, query: '' } }));
+  }
+};
+
+
+// --- CustomerList Component ---
+class CustomerList extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.handleDelete = this.handleDelete.bind(this); // These are now just placeholders, actual buttons for these are gone from UI
+    this.handleEdit = this.handleEdit.bind(this); // These are now just placeholders, actual buttons for these are gone from UI
+    this.openEditModal = this.openEditModal.bind(this); // New method to open modal for editing
+    this.selectCustomer = this.selectCustomer.bind(this);
+    document.addEventListener('customersUpdated', (e) => this._render(e.detail?.filteredCustomers, e.detail?.query)); // Listen for filtered customers and query
+  }
+    
+  connectedCallback() {
+      // Initial render should not show all customers by default
+      // this._render(); // Removed to hide list initially
+  }
+
+  disconnectedCallback() {
+    document.removeEventListener('customersUpdated', this._render);
+  }
+
+  handleDelete(e) { /* Placeholder */ } // Not used directly in new UI
+  handleEdit(e) { /* Placeholder */ } // Not used directly in new UI
+
+  openEditModal(e) {
+      const id = parseInt(e.target.dataset.id, 10);
+      const customer = CustomerService.getCustomerById(id);
+      if (customer) {
+          document.dispatchEvent(new CustomEvent('editCustomer', { detail: customer }));
+          document.dispatchEvent(new CustomEvent('openCustomerModal')); // Trigger modal open
+      }
+  }
+  
+  selectCustomer(e) {
+      const row = e.currentTarget; // The clicked <tr>
+      const customerId = parseInt(row.dataset.id, 10);
+      const customer = CustomerService.getCustomerById(customerId);
+      if (customer) {
+          // Highlight selected row
+          this.shadowRoot.querySelectorAll('tbody tr').forEach(r => r.classList.remove('selected'));
+          row.classList.add('selected');
+          // Dispatch event to show purchase history
+          document.dispatchEvent(new CustomEvent('customerSelectedForHistory', { detail: customerId }));
+          
+          // New: Single selection logic
+          // Only show the selected customer in the list
+          this._render([customer], document.getElementById('customer-search-input')?.value.toLowerCase().trim());
+      }
+  }
+
+  _render(filteredCustomers, currentQueryFromEvent) {
+    const query = currentQueryFromEvent; // Use query from event
+    let customers = [];
+    let message = '';
+
+    if (query) { // A query exists, so perform search or use provided filtered customers
+        customers = filteredCustomers;
+        if (customers.length === 0) {
+            message = '검색 결과가 없습니다.';
+        }
+    } else { // No query, so display initial message
+        message = '검색어를 입력하여 고객을 조회해주세요.';
+        // Also clear history when search query is empty
+        document.dispatchEvent(new CustomEvent('customerSelectedForHistory', { detail: null }));
+    }
+
+    const template = document.createElement('template');
+    template.innerHTML = `
+      <style>
+        .message { text-align: center; padding: 2rem; color: #555; font-size: 1.1rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        thead { background-color: #34495e; color: #ecf0f1; }
+        thead tr:hover { background-color: #34495e; cursor: default; } /* Prevent hover on header */
+        thead th { text-align: center; } /* Center align header text */
+        tr:nth-child(even) { background-color: #f8f9f9; }
+        tr:hover { background-color: #ecf0f1; cursor: pointer; } 
+        tr.selected { background-color: #cce0ff; border: 2px solid #3498db; }
+        .actions-cell { text-align: center; } 
+        .edit-customer-btn { 
+            cursor: pointer; padding: 6px 10px; margin: 2px; border: none; border-radius: 4px; color: white; font-size: 0.9rem;
+            background-color: #2980b9; 
+        }
+        .edit-customer-btn:hover {
+            background-color: #3498db;
+        }
+        .customer-name-highlight {
+            font-weight: bold;
+        }
+        .vip-highlight {
+            color: #f39c12; /* Orange */
+        }
+        .caution-highlight {
+            color: #e74c3c; /* Red */
+        }
+        .customer-tags {
+            font-size: 0.8em;
+            margin-left: 5px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            color: white;
+            background-color: gray;
+        }
+        .vip-tag { background-color: #f39c12; } /* Orange */
+        .caution-tag { background-color: #e74c3c; } /* Red */
+      </style>
+      ${message ? `<div class="message">${message}</div>` : `
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 15%;">이름</th>
+            <th style="width: 15%;">연락처</th>
+            <th style="width: 10%;">오른쪽 도수</th>
+            <th style="width: 10%;">왼쪽 도수</th>
+            <th style="width: 15%;">최종 구매일</th>
+            <th style="width: 25%;">비고</th>
+            <th class="actions-cell" style="width: 10%;">관리</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${customers.map(customer => `
+            <tr data-id="${customer.id}" class="customer-row">
+              <td>
+                <span class="customer-name-highlight ${customer.isVIP ? 'vip-highlight' : ''} ${customer.isCaution ? 'caution-highlight' : ''}">
+                    ${customer.name}
+                </span>
+              </td>
+              <td>${customer.phone}</td>
+              <td>${customer.rightPower ? customer.rightPower.toFixed(2) : 'N/A'}</td>
+              <td>${customer.leftPower ? customer.leftPower.toFixed(2) : 'N/A'}</td>
+              <td>${customer.lastPurchaseDate ? new Date(customer.lastPurchaseDate).toLocaleDateString() : 'N/A'}</td>
+              <td>${customer.notes}</td>
+              <td class="actions-cell">
+                <button data-id="${customer.id}" class="edit-customer-btn">수정</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      `}
+    `;
+    this.shadowRoot.innerHTML = '';
+    this.shadowRoot.appendChild(template.content.cloneNode(true));
+    if (!message) { // Only add event listeners if table is rendered
+        this.shadowRoot.querySelectorAll('.edit-customer-btn').forEach(btn => btn.addEventListener('click', this.openEditModal));
+        this.shadowRoot.querySelectorAll('tbody tr.customer-row').forEach(row => {
+            row.addEventListener('click', this.selectCustomer);
+            row.addEventListener('dblclick', (e) => { // Double-click to go to sales
+                const customerId = parseInt(row.dataset.id, 10);
+                document.dispatchEvent(new CustomEvent('selectCustomerForSale', { detail: { customerId: customerId } }));
+                document.dispatchEvent(new CustomEvent('showTab', { detail: { tabId: 'sales' } }));
+            });
+        });
+    }
+  }
+}
+customElements.define('customer-list', CustomerList);
+
+// --- CustomerForm Component ---
+class CustomerForm extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+        this.populateForm = this.populateForm.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
         this.clearForm = this.clearForm.bind(this);
         this.formatPhoneNumber = this.formatPhoneNumber.bind(this);
         this.formatDose = this.formatDose.bind(this);
@@ -175,9 +546,12 @@ class ProductForm extends HTMLElement {
         this._form.phone.removeEventListener('input', this.formatPhoneNumber); // Remove event listener
         this._form.rightPower.removeEventListener('blur', this.formatDose);
         this._form.leftPower.removeEventListener('blur', this.formatDose);
-        this._form.rightPower.removeEventListener('input', (e) => {}); // Remove anonymous functions
-        this._form.leftPower.removeEventListener('input', (e) => {});
-
+        // Need to remove listeners for anonymous functions using a stored reference or re-create the listeners
+        // For simplicity, re-assigning null or empty function if original anonymous function reference is not stored
+        // A better approach would be to store the anonymous function reference if needed for removal.
+        // For now, these anonymous listeners might remain if the element is re-attached without full DOM refresh.
+        // Given the Web Component lifecycle, a full render often replaces innerHTML, effectively cleaning listeners.
+        
         this._form.isVIP.removeEventListener('change', this.handleVipCautionChange);
         this._form.isCaution.removeEventListener('change', this.handleVipCautionChange);
 
@@ -721,77 +1095,107 @@ customElements.define('customer-purchase-history', CustomerPurchaseHistory);
 
 // --- Tab Switching Logic ---
 document.addEventListener('DOMContentLoaded', () => {
-    const tabButtons = document.querySelectorAll('.tabs-nav .tab-button');
-    const tabContents = document.querySelectorAll('main .tab-content');
-    const customerModal = document.getElementById('customer-modal');
-    const closeButton = customerModal.querySelector('.close-button');
-    const addCustomerBtn = document.getElementById('add-customer-btn');
-    const customerSearchInput = document.getElementById('customer-search-input'); // Get search input
+    try {
+        console.log('DOMContentLoaded fired: Initializing application.');
+        const tabButtons = document.querySelectorAll('.tabs-nav .tab-button');
+        const tabContents = document.querySelectorAll('main .tab-content');
+        const customerModal = document.getElementById('customer-modal');
+        const closeButton = customerModal ? customerModal.querySelector('.close-button') : null;
+        const addCustomerBtn = document.getElementById('add-customer-btn');
+        const customerSearchInput = document.getElementById('customer-search-input'); // Get search input
 
-    function showTab(tabId) {
-        tabContents.forEach(content => {
-            if (content.id === `${tabId}-tab`) {
-                content.classList.add('active');
+        if (!customerModal) console.error('Error: customer-modal element not found.');
+        if (!closeButton) console.error('Error: close-button element not found within customer-modal.');
+        if (!addCustomerBtn) console.error('Error: add-customer-btn element not found.');
+        if (!customerSearchInput) console.error('Error: customer-search-input element not found.');
+
+        function showTab(tabId) {
+            tabContents.forEach(content => {
+                if (content.id === `${tabId}-tab`) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+            tabButtons.forEach(button => {
+                if (button.dataset.tab === tabId) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+            console.log(`Tab switched to: ${tabId}`);
+        }
+        
+        function openCustomerModal() {
+            if (customerModal) {
+                customerModal.style.display = 'block';
+                console.log('Customer modal opened.');
             } else {
-                content.classList.remove('active');
+                console.error('Attempted to open customer modal but element not found.');
             }
-        });
+        }
+
+        function closeCustomerModal() {
+            if (customerModal) {
+                customerModal.style.display = 'none';
+                document.dispatchEvent(new CustomEvent('clearCustomerForm')); // Clear form when modal closes
+                console.log('Customer modal closed.');
+            } else {
+                console.error('Attempted to close customer modal but element not found.');
+            }
+        }
+
         tabButtons.forEach(button => {
-            if (button.dataset.tab === tabId) {
-                button.classList.add('active');
-            } else {
-                button.classList.remove('active');
+            button.addEventListener('click', (event) => {
+                event.preventDefault(); // Prevent default anchor behavior
+                const tabId = button.dataset.tab;
+                showTab(tabId);
+            });
+        });
+
+        // Event listeners for customer modal
+        if (addCustomerBtn) {
+            addCustomerBtn.addEventListener('click', () => {
+                console.log('Add Customer button clicked.');
+                openCustomerModal();
+                document.dispatchEvent(new CustomEvent('clearCustomerForm')); // Clear form when adding new customer
+            });
+        }
+        if (closeButton) {
+            closeButton.addEventListener('click', closeCustomerModal);
+        }
+        document.addEventListener('closeCustomerModal', closeCustomerModal); // Listen for custom event to close modal
+        document.addEventListener('openCustomerModal', openCustomerModal); // Listen for custom event to open modal
+
+        // Event listener for customer search
+        if (customerSearchInput) {
+            customerSearchInput.addEventListener('input', (event) => {
+                const query = event.target.value;
+                console.log(`Customer search input: "${query}"`);
+                const filteredCustomers = CustomerService.searchCustomers(query);
+                document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: filteredCustomers, query: query } }));
+            });
+        }
+
+        // Event listener for tab switching to reset search and purchase history
+        document.addEventListener('showTab', (e) => {
+            showTab(e.detail.tabId);
+            if (e.detail.tabId !== 'customers') {
+                document.dispatchEvent(new CustomEvent('customerSelectedForHistory', { detail: null }));
+            }
+            if (e.detail.tabId === 'customers') {
+                if (customerSearchInput) customerSearchInput.value = '';
+                document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: [], query: '' } }));
             }
         });
+
+
+        // Show the initial active tab (customers tab by default)
+        showTab('customers');
+        console.log('Initial tab set to customers.');
+
+    } catch (error) {
+        console.error('Error during DOMContentLoaded initialization:', error);
     }
-    
-    function openCustomerModal() {
-        customerModal.style.display = 'block';
-    }
-
-    function closeCustomerModal() {
-        customerModal.style.display = 'none';
-        document.dispatchEvent(new CustomEvent('clearCustomerForm')); // Clear form when modal closes
-    }
-
-    tabButtons.forEach(button => {
-        button.addEventListener('click', (event) => {
-            event.preventDefault(); // Prevent default anchor behavior
-            const tabId = button.dataset.tab;
-            showTab(tabId);
-        });
-    });
-
-    // Event listeners for customer modal
-    addCustomerBtn.addEventListener('click', () => {
-        openCustomerModal();
-        document.dispatchEvent(new CustomEvent('clearCustomerForm')); // Clear form when adding new customer
-    });
-    closeButton.addEventListener('click', closeCustomerModal);
-    // Removed: window.addEventListener('click', ...) to prevent modal closing on outside click
-    document.addEventListener('closeCustomerModal', closeCustomerModal); // Listen for custom event to close modal
-    document.addEventListener('openCustomerModal', openCustomerModal); // Listen for custom event to open modal
-    document.addEventListener('showTab', (e) => { // New listener for tab switching
-        showTab(e.detail.tabId);
-        if (e.detail.tabId !== 'customers') { // Clear purchase history if not on customer tab
-            document.dispatchEvent(new CustomEvent('customerSelectedForHistory', { detail: null }));
-        }
-        // Also clear search input and reset customer list when switching away from customer tab
-        if (e.detail.tabId === 'customers') {
-            customerSearchInput.value = '';
-            document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: [], query: '' } }));
-        }
-    });
-
-
-    // Event listener for customer search
-    customerSearchInput.addEventListener('input', (event) => {
-        const query = event.target.value;
-        const filteredCustomers = CustomerService.searchCustomers(query);
-        document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: filteredCustomers, query: query } }));
-    });
-
-
-    // Show the initial active tab (products tab by default)
-    showTab('customers'); // Changed to customers
 });
