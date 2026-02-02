@@ -358,7 +358,8 @@ class CustomerList extends HTMLElement {
   }
     
   connectedCallback() {
-      this._render();
+      // Initial render should not show all customers by default
+      // this._render(); // Removed to hide list initially
   }
 
   disconnectedCallback() {
@@ -378,24 +379,38 @@ class CustomerList extends HTMLElement {
   }
 
   _render(filteredCustomers) {
-    const customers = filteredCustomers || CustomerService.getCustomers();
+    const query = document.getElementById('customer-search-input')?.value.toLowerCase().trim();
+    let customers = [];
+    let message = '';
+
+    if (query) { // A query exists, so perform search or use provided filtered customers
+        customers = filteredCustomers || CustomerService.searchCustomers(query);
+        if (customers.length === 0) {
+            message = '검색 결과가 없습니다.';
+        }
+    } else { // No query, so display initial message
+        message = '검색어를 입력하여 고객을 조회해주세요.';
+    }
+
     const template = document.createElement('template');
     template.innerHTML = `
       <style>
+        .message { text-align: center; padding: 2rem; color: #555; font-size: 1.1rem; }
         table { width: 100%; border-collapse: collapse; margin-top: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         thead { background-color: #34495e; color: #ecf0f1; }
         tr:nth-child(even) { background-color: #f8f9f9; }
         tr:hover { background-color: #ecf0f1; }
-        .actions-cell { text-align: center; } /* New class for actions if needed */
+        .actions-cell { text-align: center; } 
         .actions-cell button { 
             cursor: pointer; padding: 6px 10px; margin: 2px; border: none; border-radius: 4px; color: white; font-size: 0.9rem;
-            background-color: #2980b9; /* Edit button like color */
+            background-color: #2980b9; 
         }
         .actions-cell button:hover {
             background-color: #3498db;
         }
       </style>
+      ${message ? `<div class="message">${message}</div>` : `
       <table>
         <thead>
           <tr>
@@ -406,7 +421,7 @@ class CustomerList extends HTMLElement {
             <th>왼쪽 도수</th>
             <th>최종 구매일</th>
             <th>비고</th>
-            <th class="actions-cell">관리</th> <!-- New header for edit/delete -->
+            <th class="actions-cell">관리</th>
           </tr>
         </thead>
         <tbody>
@@ -427,16 +442,19 @@ class CustomerList extends HTMLElement {
           `).join('')}
         </tbody>
       </table>
+      `}
     `;
     this.shadowRoot.innerHTML = '';
     this.shadowRoot.appendChild(template.content.cloneNode(true));
-    this.shadowRoot.querySelectorAll('.edit-customer-btn').forEach(btn => btn.addEventListener('click', this.openEditModal));
-    this.shadowRoot.querySelectorAll('.delete-customer-btn').forEach(btn => btn.addEventListener('click', (e) => {
-        const id = parseInt(e.target.dataset.id, 10);
-        if (confirm('이 고객 정보를 삭제하시겠습니까?')) {
-            CustomerService.deleteCustomer(id);
-        }
-    }));
+    if (!message) { // Only add event listeners if table is rendered
+        this.shadowRoot.querySelectorAll('.edit-customer-btn').forEach(btn => btn.addEventListener('click', this.openEditModal));
+        this.shadowRoot.querySelectorAll('.delete-customer-btn').forEach(btn => btn.addEventListener('click', (e) => {
+            const id = parseInt(e.target.dataset.id, 10);
+            if (confirm('이 고객 정보를 삭제하시겠습니까?')) {
+                CustomerService.deleteCustomer(id);
+            }
+        }));
+    }
   }
 }
 customElements.define('customer-list', CustomerList);
@@ -773,7 +791,7 @@ class SalesList extends HTMLElement {
   }
 
   disconnectedCallback() {
-      document.removeEventListener('salesUpdated', this.rerender);
+    document.removeEventListener('salesUpdated', this.rerender);
   }
 
   rerender() {
