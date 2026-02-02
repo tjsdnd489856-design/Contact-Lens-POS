@@ -257,6 +257,18 @@ const CustomerService = {
       );
   },
 
+  searchCustomers(query) {
+      if (!query) {
+          return this.getCustomers();
+      }
+      const lowerCaseQuery = query.toLowerCase().trim();
+      return this._customers.filter(customer => {
+          const nameMatch = customer.name.toLowerCase().includes(lowerCaseQuery);
+          const phoneLastFourMatch = customer.phone.slice(-4).includes(lowerCaseQuery); // Check last 4 digits
+          return nameMatch || phoneLastFourMatch;
+      });
+  },
+
   addCustomer(customer) {
     if (this.isDuplicateCustomer(customer.name, customer.phone)) {
         alert('중복된 고객입니다.');
@@ -303,7 +315,7 @@ const CustomerService = {
   },
 
   _notify() {
-    document.dispatchEvent(new CustomEvent('customersUpdated'));
+    document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: null } }));
   }
 };
 
@@ -775,6 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const customerModal = document.getElementById('customer-modal');
     const closeButton = customerModal.querySelector('.close-button');
     const addCustomerBtn = document.getElementById('add-customer-btn');
+    const customerSearchInput = document.getElementById('customer-search-input'); // Get search input
 
     function showTab(tabId) {
         tabContents.forEach(content => {
@@ -820,6 +833,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.addEventListener('closeCustomerModal', closeCustomerModal); // Listen for custom event to close modal
     document.addEventListener('openCustomerModal', openCustomerModal); // Listen for custom event to open modal
+
+    // Event listener for customer search
+    customerSearchInput.addEventListener('input', (event) => {
+        const query = event.target.value;
+        const filteredCustomers = CustomerService.searchCustomers(query);
+        document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: filteredCustomers } }));
+    });
+
 
     // Show the initial active tab (products tab by default)
     showTab('products');
