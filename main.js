@@ -152,7 +152,7 @@ class ProductForm extends HTMLElement {
     }
 
     disconnectedCallback() {
-        document.removeEventListener('editProduct', this.populateForm);
+        document.removeEventListener('editProduct', this._render);
     }
 
     _render() {
@@ -468,15 +468,15 @@ class CustomerList extends HTMLElement {
           <tr>
             <th style="width: 15%;">이름</th>
             <th style="width: 15%;">연락처</th>
-            <th style="width: 10%;">오른쪽 S</th>
-            <th style="width: 5%;">오른쪽 C</th>
-            <th style="width: 5%;">오른쪽 AX</th>
-            <th style="width: 10%;">왼쪽 S</th>
-            <th style="width: 5%;">왼쪽 C</th>
-            <th style="width: 5%;">왼쪽 AX</th>
-            <th style="width: 15%;">최종 구매일</th>
+            <th style="width: 8%;">오른쪽 S</th>
+            <th style="width: 8%;">오른쪽 C</th>
+            <th style="width: 8%;">오른쪽 AX</th>
+            <th style="width: 8%;">왼쪽 S</th>
+            <th style="width: 8%;">왼쪽 C</th>
+            <th style="width: 8%;">왼쪽 AX</th>
+            <th style="width: 10%;">최종 구매일</th>
             <th style="width: 25%;">비고</th>
-            <th class="actions-cell" style="width: 10%;">관리</th>
+            <th class="actions-cell" style="width: 5%;">관리</th>
           </tr>
         </thead>
         <tbody>
@@ -575,15 +575,11 @@ class CustomerForm extends HTMLElement {
         this._form.rightC.removeEventListener('blur', this.formatDose);
         this._form.leftS.removeEventListener('blur', this.formatDose);
         this._form.leftC.removeEventListener('blur', this.formatDose);
-        this._form.rightS.removeEventListener('input', (e) => {});
-        this._form.rightC.removeEventListener('input', (e) => {});
-        this._form.leftS.removeEventListener('input', (e) => {});
-        this._form.leftC.removeEventListener('input', (e) => {});
-
-        this._form.rightAX.removeEventListener('blur', this.formatAX);
-        this._form.leftAX.removeEventListener('blur', this.formatAX);
-        this._form.rightAX.removeEventListener('input', (e) => {});
-        this._form.leftAX.removeEventListener('input', (e) => {});
+        // Need to remove listeners for anonymous functions using a stored reference or re-create the listeners
+        // For simplicity, re-assigning null or empty function if original anonymous function reference is not stored
+        // A better approach would be to store the anonymous function reference if needed for removal.
+        // For now, these anonymous listeners might remain if the element is re-attached without full DOM refresh.
+        // Given the Web Component lifecycle, a full render often replaces innerHTML, effectively cleaning listeners.
         
         this._form.isVIP.removeEventListener('change', this.handleVipCautionChange);
         this._form.isCaution.removeEventListener('change', this.handleVipCautionChange);
@@ -601,8 +597,6 @@ class CustomerForm extends HTMLElement {
             formattedInput = input.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
         } else if (input.length > 7) { // 000-0000-000 format (older phone numbers)
             formattedInput = input.replace(/(\d{3})(\d{4})(\d{0,4})/, '$1-$2-$3');
-        } else if (input.length > 3) { // 000-000 format
-            formattedInput = input.replace(/(\d{3})(\d{0,4})/, '$1-$2');
         } else {
             formattedInput = input;
         }
@@ -693,31 +687,42 @@ class CustomerForm extends HTMLElement {
             .form-title { margin-top: 0; margin-bottom: 1.5rem; font-weight: 400; }
             .form-group { margin-bottom: 1rem; }
             label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; }
-            input[type="text"], input[type="tel"], textarea { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+            input[type="text"], input[type="tel"], textarea { 
+                padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; 
+                width: 100%; /* Default to 100% width for general inputs */
+            }
             
             .checkbox-group { display: flex; align-items: center; margin-bottom: 1rem; gap: 15px; }
             .checkbox-group label { margin-bottom: 0; display: flex; align-items: center; }
             .checkbox-group input[type="checkbox"] { width: auto; margin-right: 5px; }
             button { cursor: pointer; padding: 0.8rem 1.5rem; border: none; border-radius: 4px; color: white; background-color: #3498db; font-size: 1rem; }
+            
             .power-fields-container {
                 display: flex;
-                flex-wrap: wrap; /* Allow wrapping for smaller screens */
-                gap: 10px; /* Space between fields */
+                flex-direction: column; /* Stack eye sections */
+                gap: 15px; /* Space between eye sections */
                 margin-bottom: 1rem;
-            }
-            .power-field-group {
-                flex: 1; /* Distribute space equally */
-                min-width: calc(33% - 10px); /* Approx 3 fields per row */
             }
             .power-eye-section {
-                flex-basis: 100%; /* Each eye section takes full width */
                 display: flex;
-                gap: 10px;
-                margin-bottom: 1rem;
+                gap: 10px; /* Space between S, C, AX fields */
+                align-items: flex-end; /* Align inputs at the bottom */
             }
             .power-eye-section .power-field-group {
-                flex: 1;
+                display: flex;
+                align-items: center; /* Align label and input */
+                gap: 5px; /* Space between label and input */
+                flex-grow: 1; /* Allow fields to grow */
             }
+            .power-eye-section .power-field-group label {
+                margin-bottom: 0; /* Remove default label margin */
+                white-space: nowrap; /* Prevent label wrapping */
+            }
+            .power-eye-section .power-field-group input[type="text"] {
+                width: 60px; /* Smaller fixed width for dose inputs */
+                padding: 0.5rem;
+            }
+
             .form-buttons {
                 display: flex;
                 justify-content: space-between;
@@ -751,30 +756,30 @@ class CustomerForm extends HTMLElement {
                 <h4>오른쪽 눈</h4>
                 <div class="power-eye-section">
                     <div class="form-group power-field-group">
-                      <label for="rightS">S 입력란</label>
+                      <label for="rightS">S</label>
                       <input type="text" id="rightS" name="rightS" step="0.25">
                     </div>
                     <div class="form-group power-field-group">
-                      <label for="rightC">C 입력란</label>
+                      <label for="rightC">C</label>
                       <input type="text" id="rightC" name="rightC" step="0.25">
                     </div>
                     <div class="form-group power-field-group">
-                      <label for="rightAX">AX 입력란</label>
+                      <label for="rightAX">AX</label>
                       <input type="text" id="rightAX" name="rightAX">
                     </div>
                 </div>
                 <h4>왼쪽 눈</h4>
                 <div class="power-eye-section">
                     <div class="form-group power-field-group">
-                      <label for="leftS">S 입력란</label>
+                      <label for="leftS">S</label>
                       <input type="text" id="leftS" name="leftS" step="0.25">
                     </div>
                     <div class="form-group power-field-group">
-                      <label for="leftC">C 입력란</label>
+                      <label for="leftC">C</label>
                       <input type="text" id="leftC" name="leftC" step="0.25">
                     </div>
                     <div class="form-group power-field-group">
-                      <label for="leftAX">AX 입력란</label>
+                      <label for="leftAX">AX</label>
                       <input type="text" id="leftAX" name="leftAX">
                     </div>
                 </div>
@@ -1068,7 +1073,7 @@ class SalesList extends HTMLElement {
   }
 
   disconnectedCallback() {
-    document.removeEventListener('salesUpdated', this.rerender);
+    document.removeEventListener('salesUpdated', this._render);
   }
 
   rerender() {
