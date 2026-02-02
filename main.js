@@ -468,12 +468,12 @@ class CustomerList extends HTMLElement {
           <tr>
             <th style="width: 15%;">이름</th>
             <th style="width: 15%;">연락처</th>
-            <th style="width: 8%;">오른쪽 S</th>
-            <th style="width: 8%;">오른쪽 C</th>
-            <th style="width: 8%;">오른쪽 AX</th>
-            <th style="width: 8%;">왼쪽 S</th>
-            <th style="width: 8%;">왼쪽 C</th>
-            <th style="width: 8%;">왼쪽 AX</th>
+            <th style="width: 8%;">S</th>
+            <th style="width: 8%;">C</th>
+            <th style="width: 8%;">AX</th>
+            <th style="width: 8%;">S</th>
+            <th style="width: 8%;">C</th>
+            <th style="width: 8%;">AX</th>
             <th style="width: 10%;">최종 구매일</th>
             <th style="width: 25%;">비고</th>
             <th class="actions-cell" style="width: 5%;">관리</th>
@@ -700,27 +700,36 @@ class CustomerForm extends HTMLElement {
             .power-fields-container {
                 display: flex;
                 flex-direction: column; /* Stack eye sections */
-                gap: 15px; /* Space between eye sections */
+                gap: 10px; /* Reduced space between eye sections */
                 margin-bottom: 1rem;
+            }
+            h4 {
+                margin: 0.5rem 0;
+                font-size: 1em;
+                color: #34495e;
             }
             .power-eye-section {
                 display: flex;
-                gap: 10px; /* Space between S, C, AX fields */
+                flex-wrap: nowrap; /* Prevent wrapping */
+                gap: 5px; /* Reduced space between S, C, AX fields */
                 align-items: flex-end; /* Align inputs at the bottom */
             }
             .power-eye-section .power-field-group {
                 display: flex;
                 align-items: center; /* Align label and input */
-                gap: 5px; /* Space between label and input */
-                flex-grow: 1; /* Allow fields to grow */
+                gap: 3px; /* Further reduced space between label and input */
+                flex-grow: 0; /* Prevent growth to maintain size */
+                flex-shrink: 0; /* Allow shrinking */
             }
             .power-eye-section .power-field-group label {
                 margin-bottom: 0; /* Remove default label margin */
                 white-space: nowrap; /* Prevent label wrapping */
+                font-size: 0.9em; /* Smaller label font size */
             }
             .power-eye-section .power-field-group input[type="text"] {
-                width: 60px; /* Smaller fixed width for dose inputs */
-                padding: 0.5rem;
+                width: 50px; /* Smaller fixed width for dose inputs */
+                padding: 0.4rem; /* Reduced padding */
+                text-align: center; /* Center align text in dose inputs */
             }
 
             .form-buttons {
