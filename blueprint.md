@@ -75,4 +75,4 @@ This section outlines the immediate tasks for the current development cycle.
 23. **DONE:** Change "고객 삭제" button color to red and ensure its position is fixed (or at the start of the `form-buttons` container).
 24. **DONE:** Move "고객 수정" button to the far right within the `form-buttons` container.
 25. **DONE:** Change "고객 수정" button text to "고객 추가" when adding a new customer in `CustomerForm`.
-26. **IN PROGRESS:** Re-verify and fix the positioning and color of the "고객 삭제" and "고객 저장/수정" buttons in the customer modification popup.
+26. **DONE:** Re-verify and fix the positioning and color of the "고객 삭제" and "고객 저장/수정" buttons in the customer modification popup.
