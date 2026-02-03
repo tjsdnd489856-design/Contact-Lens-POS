@@ -68,5 +68,6 @@ This section outlines the immediate tasks for the current development cycle.
 16. **DONE:** Center-align all search results (table content) in `CustomerList`.
 17. **DONE:** Move VIP and Caution checkboxes next to the customer name field in `CustomerForm`.
 18. **DONE:** Remove the 'D' character from the dose input box formatting in `CustomerForm`, while maintaining other formatting.
-19. **IN PROGRESS:** Modify `CustomerPurchaseHistory` headers to "구매일자", "구매품목", "금액", "총 금액".
-20. **IN PROGRESS:** Group purchase history items by "구매일자" and display them together in `CustomerPurchaseHistory`.
+19. **DONE:** Modify `CustomerPurchaseHistory` headers to "구매일자", "구매품목", "금액", "총 금액".
+20. **DONE:** Group purchase history items by "구매일자" and display them together in `CustomerPurchaseHistory`.
+21. **IN PROGRESS:** Add "구매수량" header to `CustomerPurchaseHistory` table and display item quantities.
