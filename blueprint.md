@@ -58,3 +58,4 @@ This section outlines the immediate tasks for the current development cycle.
     -   **DONE:** Display the stock level in the product list.
     -   **DONE:** Visually indicate low-stock products.
 8.  **DONE:** Performed `git push` to synchronize local changes with the remote repository.
+9.  **IN PROGRESS:** Adjust the `font-size` of `.tab-button` in `style.css` to ensure the "고객 관리" switch appears on a single line.
