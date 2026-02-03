@@ -475,32 +475,32 @@ class CustomerList extends HTMLElement {
             <th rowspan="2" class="actions-cell" style="width: 5%;">관리</th>
           </tr>
           <tr>
-            <th>S</th>
-            <th>C</th>
-            <th>AX</th>
-            <th>S</th>
-            <th>C</th>
-            <th>AX</th>
+            <th style="background-color: #34495e; color: #ecf0f1;">S</th>
+            <th style="background-color: #34495e; color: #ecf0f1;">C</th>
+            <th style="background-color: #34495e; color: #ecf0f1;">AX</th>
+            <th style="background-color: #34495e; color: #ecf0f1;">S</th>
+            <th style="background-color: #34495e; color: #ecf0f1;">C</th>
+            <th style="background-color: #34495e; color: #ecf0f1;">AX</th>
           </tr>
         </thead>
         <tbody>
           ${customers.map(customer => `
             <tr data-id="${customer.id}" class="customer-row">
-              <td>
+              <td style="text-align: center;">
                 <span class="customer-name-highlight ${customer.isVIP ? 'vip-highlight' : ''} ${customer.isCaution ? 'caution-highlight' : ''}">
                     ${customer.name}
                 </span>
               </td>
-              <td>${customer.phone}</td>
-              <td>${customer.rightS ? (customer.rightS > 0 ? '+' : '') + customer.rightS.toFixed(2) : 'N/A'}</td>
-              <td>${customer.rightC ? (customer.rightC > 0 ? '+' : '') + customer.rightC.toFixed(2) : 'N/A'}</td>
-              <td>${customer.rightAX !== null ? customer.rightAX : 'N/A'}</td>
-              <td>${customer.leftS ? (customer.leftS > 0 ? '+' : '') + customer.leftS.toFixed(2) : 'N/A'}</td>
-              <td>${customer.leftC ? (customer.leftC > 0 ? '+' : '') + customer.leftC.toFixed(2) : 'N/A'}</td>
-              <td>${customer.leftAX !== null ? customer.leftAX : 'N/A'}</td>
-              <td>${customer.lastPurchaseDate ? new Date(customer.lastPurchaseDate).toLocaleDateString() : 'N/A'}</td>
-              <td>${customer.notes}</td>
-              <td class="actions-cell">
+              <td style="text-align: center;">${customer.phone}</td>
+              <td style="text-align: center;">${customer.rightS ? (customer.rightS > 0 ? '+' : '') + customer.rightS.toFixed(2) : 'N/A'}</td>
+              <td style="text-align: center;">${customer.rightC ? (customer.rightC > 0 ? '+' : '') + customer.rightC.toFixed(2) : 'N/A'}</td>
+              <td style="text-align: center;">${customer.rightAX !== null ? customer.rightAX : 'N/A'}</td>
+              <td style="text-align: center;">${customer.leftS ? (customer.leftS > 0 ? '+' : '') + customer.leftS.toFixed(2) : 'N/A'}</td>
+              <td style="text-align: center;">${customer.leftC ? (customer.leftC > 0 ? '+' : '') + customer.leftC.toFixed(2) : 'N/A'}</td>
+              <td style="text-align: center;">${customer.leftAX !== null ? customer.leftAX : 'N/A'}</td>
+              <td style="text-align: center;">${customer.lastPurchaseDate ? new Date(customer.lastPurchaseDate).toLocaleDateString() : 'N/A'}</td>
+              <td style="text-align: center;">${customer.notes}</td>
+              <td class="actions-cell" style="text-align: center;">
                 <button data-id="${customer.id}" class="edit-customer-btn">수정</button>
               </td>
             </tr>
@@ -623,11 +623,11 @@ class CustomerForm extends HTMLElement {
         }
         
         if (floatValue === 0) {
-            event.target.value = '0.00D';
+            event.target.value = '0.00';
         } else if (floatValue < 0) {
-            event.target.value = floatValue.toFixed(2) + 'D';
+            event.target.value = floatValue.toFixed(2);
         } else {
-            event.target.value = '+' + floatValue.toFixed(2) + 'D';
+            event.target.value = '+' + floatValue.toFixed(2);
         }
     }
 
@@ -754,29 +754,29 @@ class CustomerForm extends HTMLElement {
                 font-size: 0.9em;
             }
 
-            .form-buttons {
+            .form-group-inline {
                 display: flex;
-                justify-content: space-between;
-                margin-top: 2rem;
-            }
-            #delete-customer-from-form-btn {
-                background-color: #c0392b;
+                align-items: flex-end; /* Align items to the bottom */
+                gap: 20px; /* Space between name input and checkboxes */
+                margin-bottom: 1rem;
             }
           </style>
           <form>
             <h3 class="form-title">고객 추가 / 수정</h3>
             <input type="hidden" name="id">
-            <div class="form-group">
-              <label for="name">이름</label>
-              <input type="text" id="name" name="name" required>
-            </div>
-            <div class="checkbox-group">
-                <label>
-                    <input type="checkbox" id="isVIP" name="isVIP"> VIP
-                </label>
-                <label>
-                    <input type="checkbox" id="isCaution" name="isCaution"> 주의
-                </label>
+            <div class="form-group-inline">
+                <div class="form-group" style="flex-grow: 1;">
+                    <label for="name">이름</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="checkbox-group" style="margin-top: auto; padding-bottom: 0.5rem;">
+                    <label>
+                        <input type="checkbox" id="isVIP" name="isVIP"> VIP
+                    </label>
+                    <label>
+                        <input type="checkbox" id="isCaution" name="isCaution"> 주의
+                    </label>
+                </div>
             </div>
             <div class="form-group">
               <label for="phone">연락처</label>
@@ -850,11 +850,11 @@ class CustomerForm extends HTMLElement {
         this._form.isCaution.checked = customer.isCaution;
         this._form.phone.value = customer.phone;
         // Populate new dose fields, applying formatting for display
-        this._form.rightS.value = customer.rightS ? (customer.rightS > 0 ? '+' : '') + customer.rightS.toFixed(2) + 'D' : '';
-        this._form.rightC.value = customer.rightC ? (customer.rightC > 0 ? '+' : '') + customer.rightC.toFixed(2) + 'D' : '';
+        this._form.rightS.value = customer.rightS ? (customer.rightS > 0 ? '+' : '') + customer.rightS.toFixed(2) : '';
+        this._form.rightC.value = customer.rightC ? (customer.rightC > 0 ? '+' : '') + customer.rightC.toFixed(2) : '';
         this._form.rightAX.value = customer.rightAX !== null ? customer.rightAX.toString() : '';
-        this._form.leftS.value = customer.leftS ? (customer.leftS > 0 ? '+' : '') + customer.leftS.toFixed(2) + 'D' : '';
-        this._form.leftC.value = customer.leftC ? (customer.leftC > 0 ? '+' : '') + customer.leftC.toFixed(2) + 'D' : '';
+        this._form.leftS.value = customer.leftS ? (customer.leftS > 0 ? '+' : '') + customer.leftS.toFixed(2) : '';
+        this._form.leftC.value = customer.leftC ? (customer.leftC > 0 ? '+' : '') + customer.leftC.toFixed(2) : '';
         this._form.leftAX.value = customer.leftAX !== null ? customer.leftAX.toString() : '';
         
         this._form.notes.value = customer.notes;
