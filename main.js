@@ -760,11 +760,18 @@ class CustomerForm extends HTMLElement {
                 gap: 20px; /* Space between name input and checkboxes */
                 margin-bottom: 1rem;
             }
-            form .form-buttons button[type="submit"] {
-                margin-left: auto; /* Push submit button to the right */
-            }
+
             #delete-customer-from-form-btn {
                 background-color: #c0392b; /* Ensure delete button is red */
+            }
+            .form-buttons {
+                display: flex;
+                justify-content: flex-end; /* 모든 버튼을 오른쪽으로 정렬 */
+                margin-top: 2rem;
+            }
+            #delete-customer-from-form-btn {
+                background-color: #c0392b; /* 붉은색으로 설정 */
+                margin-right: auto; /* 삭제 버튼을 왼쪽으로 밀어냅니다. */
             }
           </style>
           <form>

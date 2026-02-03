@@ -75,4 +75,4 @@ This section outlines the immediate tasks for the current development cycle.
 23. **DONE:** Change "고객 삭제" button color to red and ensure its position is fixed (or at the start of the `form-buttons` container).
 24. **DONE:** Move "고객 수정" button to the far right within the `form-buttons` container.
 25. **DONE:** Change "고객 수정" button text to "고객 추가" when adding a new customer in `CustomerForm`.
-26. **DONE:** Re-verify and fix the positioning and color of the "고객 삭제" and "고객 저장/수정" buttons in the customer modification popup.
+26. **DONE:** Re-verify and fix the positioning and color of the "고객 삭제" and "고객 저장/수정" buttons in the customer modification popup. (재시도: `main.js` 내 `<style>`에 `form .form-buttons { justify-content: flex-end; }`와 `#delete-customer-from-form-btn { margin-right: auto; background-color: #c0392b; }` 명시적 추가. `_render()`의 `submit` 버튼 인라인 스타일 제거 및 텍스트 '고객 추가' 확인. `clearForm()`의 `submit` 버튼 텍스트 '고객 추가' 확인.)
