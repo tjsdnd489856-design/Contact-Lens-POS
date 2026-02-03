@@ -691,16 +691,16 @@ class CustomerForm extends HTMLElement {
             .form-title { margin-top: 0; margin-bottom: 1.5rem; font-weight: 400; }
             .form-group { margin-bottom: 1rem; }
             label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; }
-            input[type="text"], input[type="tel"], textarea { 
-                padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; 
+            input[type="text"], input[type="tel"], textarea {
+                padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
                 width: 100%; /* Default to 100% width for general inputs */
             }
-            
+
             .checkbox-group { display: flex; align-items: center; margin-bottom: 1rem; gap: 15px; }
             .checkbox-group label { margin-bottom: 0; display: flex; align-items: center; }
             .checkbox-group input[type="checkbox"] { width: auto; margin-right: 5px; }
             button { cursor: pointer; padding: 0.8rem 1.5rem; border: none; border-radius: 4px; color: white; background-color: #3498db; font-size: 1rem; }
-            
+
             .power-fields-container {
                 display: flex;
                 flex-direction: row; /* Changed to row for side-by-side */
@@ -760,8 +760,11 @@ class CustomerForm extends HTMLElement {
                 gap: 20px; /* Space between name input and checkboxes */
                 margin-bottom: 1rem;
             }
-            form button[type="submit"] {
+            form .form-buttons button[type="submit"] {
                 margin-left: auto; /* Push submit button to the right */
+            }
+            #delete-customer-from-form-btn {
+                background-color: #c0392b; /* Ensure delete button is red */
             }
           </style>
           <form>
@@ -836,7 +839,6 @@ class CustomerForm extends HTMLElement {
         `;
         this.shadowRoot.appendChild(template.content.cloneNode(true));
     }
-
     clearForm() {
         this._form.reset();
         this._form.id.value = '';
