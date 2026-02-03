@@ -760,6 +760,9 @@ class CustomerForm extends HTMLElement {
                 gap: 20px; /* Space between name input and checkboxes */
                 margin-bottom: 1rem;
             }
+            form button[type="submit"] {
+                margin-left: auto; /* Push submit button to the right */
+            }
           </style>
           <form>
             <h3 class="form-title">고객 추가 / 수정</h3>
@@ -827,7 +830,7 @@ class CustomerForm extends HTMLElement {
             </div>
             <div class="form-buttons">
                 <button type="button" id="delete-customer-from-form-btn">고객 삭제</button>
-                <button type="submit" style="margin-left: auto;">고객 추가</button>
+                <button type="submit">고객 추가</button>
             </div>
           </form>
         `;
