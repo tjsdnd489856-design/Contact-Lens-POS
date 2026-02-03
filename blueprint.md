@@ -72,3 +72,6 @@ This section outlines the immediate tasks for the current development cycle.
 20. **DONE:** Group purchase history items by "구매일자" and display them together in `CustomerPurchaseHistory`.
 21. **DONE:** Add "구매수량" header to `CustomerPurchaseHistory` table and display item quantities.
 22. **IN PROGRESS:** For purchases made on the same day, consolidate identical products by summing their quantities and amounts in `CustomerPurchaseHistory`.
+23. **IN PROGRESS:** Change "고객 삭제" button color to red and ensure its position is fixed (or at the start of the `form-buttons` container).
+24. **IN PROGRESS:** Move "고객 수정" button to the far right within the `form-buttons` container.
+25. **IN PROGRESS:** Change "고객 수정" button text to "고객 추가" when adding a new customer in `CustomerForm`.
