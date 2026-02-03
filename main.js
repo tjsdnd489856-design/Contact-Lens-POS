@@ -1206,8 +1206,9 @@ class CustomerPurchaseHistory extends HTMLElement {
                     tbodyContent += `
                         <tr>
                             ${firstRow ? `<td rowspan="${rowspan}">${date}</td>` : ''}
-                            <td>${item.product.brand} ${item.product.model} (${item.quantity}개)</td>
+                            <td>${item.product.brand} ${item.product.model}</td>
                             <td>$${(item.product.price * item.quantity).toFixed(2)}</td>
+                            <td>${item.quantity}</td>
                             ${currentItemIndex === 0 ? `<td rowspan="${rowspan}">$${group.totalAmount.toFixed(2)}</td>` : ''}
                         </tr>
                     `;
@@ -1239,6 +1240,7 @@ class CustomerPurchaseHistory extends HTMLElement {
                             <th>구매일자</th>
                             <th>구매품목</th>
                             <th>금액</th>
+                            <th>구매수량</th>
                             <th>총 금액</th>
                         </tr>
                     </thead>
