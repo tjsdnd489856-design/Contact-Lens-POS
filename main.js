@@ -1175,14 +1175,55 @@ class CustomerPurchaseHistory extends HTMLElement {
     renderHistory(customerId) {
         this.selectedCustomerId = customerId;
         const customer = customerId ? CustomerService.getCustomerById(customerId) : null;
-        let sales = customer ? SalesService.getSalesByCustomerId(customerId) : [];
+        const sales = customer ? SalesService.getSalesByCustomerId(customerId) : [];
+
+        // Group sales by date
+        const groupedSales = {};
+        sales.forEach(sale => {
+            const date = new Date(sale.date).toISOString().split('T')[0]; // YYYY-MM-DD
+            if (!groupedSales[date]) {
+                groupedSales[date] = {
+                    sales: [],
+                    totalAmount: 0,
+                    itemCount: 0
+                };
+            }
+            groupedSales[date].sales.push(sale);
+            groupedSales[date].totalAmount += sale.total;
+            groupedSales[date].itemCount += sale.items.length; // Count of individual items
+        });
+
+        let tbodyContent = '';
+        for (const date in groupedSales) {
+            const group = groupedSales[date];
+            const rowspan = group.itemCount + 1; // +1 for the total row
+
+            let firstRow = true;
+            let currentItemIndex = 0;
+
+            group.sales.forEach(sale => {
+                sale.items.forEach(item => {
+                    tbodyContent += `
+                        <tr>
+                            ${firstRow ? `<td rowspan="${rowspan}">${date}</td>` : ''}
+                            <td>${item.product.brand} ${item.product.model} (${item.quantity}개)</td>
+                            <td>$${(item.product.price * item.quantity).toFixed(2)}</td>
+                            ${currentItemIndex === 0 ? `<td rowspan="${rowspan}">$${group.totalAmount.toFixed(2)}</td>` : ''}
+                        </tr>
+                    `;
+                    firstRow = false;
+                    currentItemIndex++;
+                });
+            });
+        }
+
 
         const template = document.createElement('template');
         template.innerHTML = `
             <style>
                 h4 { margin-top: 2rem; border-top: 1px solid #eee; padding-top: 2rem; }
                 table { width: 100%; border-collapse: collapse; margin-top: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                th, td { border: 1px solid #ddd; padding: 12px; text-align: center; } /* 검색 결과 가운데 정렬 */
                 thead { background-color: #5cb85c; color: white; } /* Green header for purchase history */
                 tbody tr:nth-child(even) { background-color: #f2f2f2; }
                 .message { text-align: center; padding: 1rem; color: #555; }
@@ -1195,21 +1236,14 @@ class CustomerPurchaseHistory extends HTMLElement {
                 <table>
                     <thead>
                         <tr>
-                            <th>판매 ID</th>
-                            <th>판매 날짜</th>
-                            <th>총액</th>
-                            <th>품목 수</th>
+                            <th>구매일자</th>
+                            <th>구매품목</th>
+                            <th>금액</th>
+                            <th>총 금액</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${sales.map(sale => `
-                            <tr>
-                                <td>${sale.id}</td>
-                                <td>${new Date(sale.date).toLocaleString()}</td>
-                                <td>$${sale.total.toFixed(2)}</td>
-                                <td>${sale.items.reduce((sum, item) => sum + item.quantity, 0)}</td>
-                            </tr>
-                        `).join('')}
+                        ${tbodyContent}
                     </tbody>
                 </table>
                 ` : `<p class="message">선택된 고객의 구매 내역이 없습니다.</p>`}
