@@ -60,4 +60,7 @@ This section outlines the immediate tasks for the current development cycle.
 8.  **DONE:** Performed `git push` to synchronize local changes with the remote repository.
 9.  **DONE:** Adjust the `font-size` of `.tab-button` in `style.css` to ensure the "고객 관리" switch appears on a single line.
 10. **IN PROGRESS:** Verify that left eye information is displayed next to right eye information in the customer management popup, and modify `main.js` if necessary.
-11. **IN PROGRESS:** Force update `index.html` and `main.js` by adding comments as requested by user.
+11. **DONE:** Force update `index.html` and `main.js` by adding comments as requested by user.
+12. **IN PROGRESS:** Adjust customer management popup size to prevent left eye data overflow.
+13. **IN PROGRESS:** Reduce font size of customer info edit button (`.edit-customer-btn`) to display on a single line in `CustomerList`.
+14. **IN PROGRESS:** Modify `customer-list` table headers: change individual S, C, AX headers to merged "오른쪽" and "왼쪽" (using colspan), while keeping actual data display unchanged.
