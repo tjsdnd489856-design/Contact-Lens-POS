@@ -61,6 +61,10 @@ This section outlines the immediate tasks for the current development cycle.
 9.  **DONE:** Adjust the `font-size` of `.tab-button` in `style.css` to ensure the "고객 관리" switch appears on a single line.
 10. **IN PROGRESS:** Verify that left eye information is displayed next to right eye information in the customer management popup, and modify `main.js` if necessary.
 11. **DONE:** Force update `index.html` and `main.js` by adding comments as requested by user.
-12. **IN PROGRESS:** Adjust customer management popup size to prevent left eye data overflow.
-13. **IN PROGRESS:** Reduce font size of customer info edit button (`.edit-customer-btn`) to display on a single line in `CustomerList`.
-14. **IN PROGRESS:** Modify `customer-list` table headers: change individual S, C, AX headers to merged "오른쪽" and "왼쪽" (using colspan), while keeping actual data display unchanged.
+12. **DONE:** Adjust customer management popup size to prevent left eye data overflow.
+13. **DONE:** Reduce font size of customer info edit button (`.edit-customer-btn`) to display on a single line in `CustomerList`.
+14. **DONE:** Modify `customer-list` table headers: change individual S, C, AX headers to merged "오른쪽" and "왼쪽" (using colspan), while keeping actual data display unchanged.
+15. **IN PROGRESS:** Prevent S, C, AX headers from changing color on mouse hover in `CustomerList`.
+16. **IN PROGRESS:** Center-align all search results (table content) in `CustomerList`.
+17. **IN PROGRESS:** Move VIP and Caution checkboxes next to the customer name field in `CustomerForm`.
+18. **IN PROGRESS:** Remove the 'D' character from the dose input box formatting in `CustomerForm`, while maintaining other formatting.
