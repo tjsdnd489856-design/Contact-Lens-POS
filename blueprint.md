@@ -70,4 +70,5 @@ This section outlines the immediate tasks for the current development cycle.
 18. **DONE:** Remove the 'D' character from the dose input box formatting in `CustomerForm`, while maintaining other formatting.
 19. **DONE:** Modify `CustomerPurchaseHistory` headers to "구매일자", "구매품목", "금액", "총 금액".
 20. **DONE:** Group purchase history items by "구매일자" and display them together in `CustomerPurchaseHistory`.
-21. **IN PROGRESS:** Add "구매수량" header to `CustomerPurchaseHistory` table and display item quantities.
+21. **DONE:** Add "구매수량" header to `CustomerPurchaseHistory` table and display item quantities.
+22. **IN PROGRESS:** For purchases made on the same day, consolidate identical products by summing their quantities and amounts in `CustomerPurchaseHistory`.
