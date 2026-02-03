@@ -827,7 +827,7 @@ class CustomerForm extends HTMLElement {
             </div>
             <div class="form-buttons">
                 <button type="button" id="delete-customer-from-form-btn">고객 삭제</button>
-                <button type="submit">고객 저장</button>
+                <button type="submit" style="margin-left: auto;">고객 추가</button>
             </div>
           </form>
         `;
@@ -837,7 +837,7 @@ class CustomerForm extends HTMLElement {
     clearForm() {
         this._form.reset();
         this._form.id.value = '';
-        this._form.querySelector('button[type="submit"]').textContent = '고객 저장';
+        this._form.querySelector('button[type="submit"]').textContent = '고객 추가';
         this.shadowRoot.querySelector('#delete-customer-from-form-btn').style.display = 'none'; // Hide delete button for new customer
         this.handleVipCautionChange(); // Reset checkbox states
     }
