@@ -59,7 +59,7 @@ This section outlines the immediate tasks for the current development cycle.
     -   **DONE:** Visually indicate low-stock products.
 8.  **DONE:** Performed `git push` to synchronize local changes with the remote repository.
 9.  **DONE:** Adjust the `font-size` of `.tab-button` in `style.css` to ensure the "고객 관리" switch appears on a single line.
-10. **IN PROGRESS:** Verify that left eye information is displayed next to right eye information in the customer management popup, and modify `main.js` if necessary.
+10. **DONE:** Verify that left eye information is displayed next to right eye information in the customer management popup, and modify `main.js` if necessary.
 11. **DONE:** Force update `index.html` and `main.js` by adding comments as requested by user.
 12. **DONE:** Adjust customer management popup size to prevent left eye data overflow.
 13. **DONE:** Reduce font size of customer info edit button (`.edit-customer-btn`) to display on a single line in `CustomerList`.
@@ -71,7 +71,7 @@ This section outlines the immediate tasks for the current development cycle.
 19. **DONE:** Modify `CustomerPurchaseHistory` headers to "구매일자", "구매품목", "금액", "총 금액".
 20. **DONE:** Group purchase history items by "구매일자" and display them together in `CustomerPurchaseHistory`.
 21. **DONE:** Add "구매수량" header to `CustomerPurchaseHistory` table and display item quantities.
-22. **IN PROGRESS:** For purchases made on the same day, consolidate identical products by summing their quantities and amounts in `CustomerPurchaseHistory`.
-23. **IN PROGRESS:** Change "고객 삭제" button color to red and ensure its position is fixed (or at the start of the `form-buttons` container).
-24. **IN PROGRESS:** Move "고객 수정" button to the far right within the `form-buttons` container.
-25. **IN PROGRESS:** Change "고객 수정" button text to "고객 추가" when adding a new customer in `CustomerForm`.
+22. **DONE:** For purchases made on the same day, consolidate identical products by summing their quantities and amounts in `CustomerPurchaseHistory`.
+23. **DONE:** Change "고객 삭제" button color to red and ensure its position is fixed (or at the start of the `form-buttons` container).
+24. **DONE:** Move "고객 수정" button to the far right within the `form-buttons` container.
+25. **DONE:** Change "고객 수정" button text to "고객 추가" when adding a new customer in `CustomerForm`.
