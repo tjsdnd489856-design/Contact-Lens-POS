@@ -436,7 +436,7 @@ class CustomerList extends HTMLElement {
         tr.selected { background-color: #cce0ff; border: 2px solid #3498db; }
         .actions-cell { text-align: center; } 
         .edit-customer-btn { 
-            cursor: pointer; padding: 6px 10px; margin: 2px; border: none; border-radius: 4px; color: white; font-size: 0.9rem;
+            cursor: pointer; padding: 6px 10px; margin: 2px; border: none; border-radius: 4px; color: white; font-size: 0.7rem;
             background-color: #2980b9; 
         }
         .edit-customer-btn:hover {
@@ -466,17 +466,21 @@ class CustomerList extends HTMLElement {
       <table>
         <thead>
           <tr>
-            <th style="width: 15%;">이름</th>
-            <th style="width: 15%;">연락처</th>
-            <th style="width: 8%;">S</th>
-            <th style="width: 8%;">C</th>
-            <th style="width: 8%;">AX</th>
-            <th style="width: 8%;">S</th>
-            <th style="width: 8%;">C</th>
-            <th style="width: 8%;">AX</th>
-            <th style="width: 10%;">최종 구매일</th>
-            <th style="width: 25%;">비고</th>
-            <th class="actions-cell" style="width: 5%;">관리</th>
+            <th rowspan="2" style="width: 15%;">이름</th>
+            <th rowspan="2" style="width: 15%;">연락처</th>
+            <th colspan="3">오른쪽 눈</th>
+            <th colspan="3">왼쪽 눈</th>
+            <th rowspan="2" style="width: 10%;">최종 구매일</th>
+            <th rowspan="2" style="width: 25%;">비고</th>
+            <th rowspan="2" class="actions-cell" style="width: 5%;">관리</th>
+          </tr>
+          <tr>
+            <th>S</th>
+            <th>C</th>
+            <th>AX</th>
+            <th>S</th>
+            <th>C</th>
+            <th>AX</th>
           </tr>
         </thead>
         <tbody>
