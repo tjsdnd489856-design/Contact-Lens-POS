@@ -1177,47 +1177,50 @@ class CustomerPurchaseHistory extends HTMLElement {
         const customer = customerId ? CustomerService.getCustomerById(customerId) : null;
         const sales = customer ? SalesService.getSalesByCustomerId(customerId) : [];
 
-        // Group sales by date
-        const groupedSales = {};
+        // Group purchases by date and then by product
+        const groupedPurchases = {}; // { date: { totalAmount: X, items: { productId: { ...item, totalQuantity, totalItemAmount } } } }
+
         sales.forEach(sale => {
             const date = new Date(sale.date).toISOString().split('T')[0]; // YYYY-MM-DD
-            if (!groupedSales[date]) {
-                groupedSales[date] = {
-                    sales: [],
+            if (!groupedPurchases[date]) {
+                groupedPurchases[date] = {
                     totalAmount: 0,
-                    itemCount: 0
+                    items: {} // { productId: { product, quantity, itemTotal } }
                 };
             }
-            groupedSales[date].sales.push(sale);
-            groupedSales[date].totalAmount += sale.total;
-            groupedSales[date].itemCount += sale.items.length; // Count of individual items
+
+            sale.items.forEach(item => {
+                if (!groupedPurchases[date].items[item.product.id]) {
+                    groupedPurchases[date].items[item.product.id] = {
+                        product: item.product,
+                        quantity: 0,
+                        itemTotal: 0
+                    };
+                }
+                groupedPurchases[date].items[item.product.id].quantity += item.quantity;
+                groupedPurchases[date].items[item.product.id].itemTotal += (item.product.price * item.quantity);
+            });
+            groupedPurchases[date].totalAmount += sale.total;
         });
 
         let tbodyContent = '';
-        for (const date in groupedSales) {
-            const group = groupedSales[date];
-            const rowspan = group.itemCount + 1; // +1 for the total row
+        for (const date in groupedPurchases) {
+            const dateGroup = groupedPurchases[date];
+            const itemsArray = Object.values(dateGroup.items); // Convert items object to array
+            const rowspan = itemsArray.length; // Number of unique items for this date
 
-            let firstRow = true;
-            let currentItemIndex = 0;
-
-            group.sales.forEach(sale => {
-                sale.items.forEach(item => {
-                    tbodyContent += `
-                        <tr>
-                            ${firstRow ? `<td rowspan="${rowspan}">${date}</td>` : ''}
-                            <td>${item.product.brand} ${item.product.model}</td>
-                            <td>$${(item.product.price * item.quantity).toFixed(2)}</td>
-                            <td>${item.quantity}</td>
-                            ${currentItemIndex === 0 ? `<td rowspan="${rowspan}">$${group.totalAmount.toFixed(2)}</td>` : ''}
-                        </tr>
-                    `;
-                    firstRow = false;
-                    currentItemIndex++;
-                });
+            itemsArray.forEach((item, itemIndex) => {
+                tbodyContent += `
+                    <tr>
+                        ${itemIndex === 0 ? `<td rowspan="${rowspan}">${date}</td>` : ''}
+                        <td>${item.product.brand} ${item.product.model}</td>
+                        <td>$${item.itemTotal.toFixed(2)}</td>
+                        <td>${item.quantity}</td>
+                        ${itemIndex === 0 ? `<td rowspan="${rowspan}">$${dateGroup.totalAmount.toFixed(2)}</td>` : ''}
+                    </tr>
+                `;
             });
         }
-
 
         const template = document.createElement('template');
         template.innerHTML = `
@@ -1233,7 +1236,7 @@ class CustomerPurchaseHistory extends HTMLElement {
             </style>
             <h4>고객 구매 내역</h4>
             ${customer ? `
-                ${sales.length > 0 ? `
+                ${Object.keys(groupedPurchases).length > 0 ? `
                 <table>
                     <thead>
                         <tr>
