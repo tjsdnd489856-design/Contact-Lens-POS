@@ -64,7 +64,9 @@ This section outlines the immediate tasks for the current development cycle.
 12. **DONE:** Adjust customer management popup size to prevent left eye data overflow.
 13. **DONE:** Reduce font size of customer info edit button (`.edit-customer-btn`) to display on a single line in `CustomerList`.
 14. **DONE:** Modify `customer-list` table headers: change individual S, C, AX headers to merged "오른쪽" and "왼쪽" (using colspan), while keeping actual data display unchanged.
-15. **IN PROGRESS:** Prevent S, C, AX headers from changing color on mouse hover in `CustomerList`.
-16. **IN PROGRESS:** Center-align all search results (table content) in `CustomerList`.
-17. **IN PROGRESS:** Move VIP and Caution checkboxes next to the customer name field in `CustomerForm`.
-18. **IN PROGRESS:** Remove the 'D' character from the dose input box formatting in `CustomerForm`, while maintaining other formatting.
+15. **DONE:** Prevent S, C, AX headers from changing color on mouse hover in `CustomerList`.
+16. **DONE:** Center-align all search results (table content) in `CustomerList`.
+17. **DONE:** Move VIP and Caution checkboxes next to the customer name field in `CustomerForm`.
+18. **DONE:** Remove the 'D' character from the dose input box formatting in `CustomerForm`, while maintaining other formatting.
+19. **IN PROGRESS:** Modify `CustomerPurchaseHistory` headers to "구매일자", "구매품목", "금액", "총 금액".
+20. **IN PROGRESS:** Group purchase history items by "구매일자" and display them together in `CustomerPurchaseHistory`.
