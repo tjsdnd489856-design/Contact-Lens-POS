@@ -78,6 +78,7 @@ class ProductList extends HTMLElement {
     const product = ProductService.getProductById(id);
     if (product) {
         document.dispatchEvent(new CustomEvent('editProduct', { detail: product }));
+        document.dispatchEvent(new CustomEvent('openProductModal'));
     }
   }
 
@@ -149,6 +150,7 @@ class ProductForm extends HTMLElement {
         this._form = this.shadowRoot.querySelector('form');
         document.addEventListener('editProduct', this.populateForm);
         this._form.addEventListener('submit', this.handleSubmit);
+        document.addEventListener('clearProductForm', () => this.clearForm());
     }
 
     disconnectedCallback() {
@@ -203,7 +205,6 @@ class ProductForm extends HTMLElement {
         this._form.power.value = product.power;
         this._form.price.value = product.price;
         this._form.stock.value = product.stock;
-        this.scrollIntoView({ behavior: 'smooth' });
         this._form.querySelector('button').textContent = '제품 수정';
     }
 
@@ -226,6 +227,10 @@ class ProductForm extends HTMLElement {
             ProductService.addProduct(product);
         }
 
+        document.dispatchEvent(new CustomEvent('closeProductModal'));
+    }
+
+    clearForm() {
         this._form.reset();
         this._form.id.value = '';
         this._form.querySelector('button').textContent = '제품 저장';
@@ -1279,15 +1284,26 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('DOMContentLoaded fired: Initializing application.');
         const tabButtons = document.querySelectorAll('.tabs-nav .tab-button');
         const tabContents = document.querySelectorAll('main .tab-content');
+        
+        // Customer Modal
         const customerModal = document.getElementById('customer-modal');
-        const closeButton = customerModal ? customerModal.querySelector('.close-button') : null;
+        const closeCustomerButton = customerModal ? customerModal.querySelector('.close-button') : null;
         const addCustomerBtn = document.getElementById('add-customer-btn');
-        const customerSearchInput = document.getElementById('customer-search-input'); // Get search input
+        const customerSearchInput = document.getElementById('customer-search-input');
+
+        // Product Modal
+        const productModal = document.getElementById('product-modal');
+        const closeProductButton = productModal ? productModal.querySelector('.close-button') : null;
+        const addProductBtn = document.getElementById('add-product-btn');
 
         if (!customerModal) console.error('Error: customer-modal element not found.');
-        if (!closeButton) console.error('Error: close-button element not found within customer-modal.');
+        if (!closeCustomerButton) console.error('Error: close-button element not found within customer-modal.');
         if (!addCustomerBtn) console.error('Error: add-customer-btn element not found.');
         if (!customerSearchInput) console.error('Error: customer-search-input element not found.');
+        
+        if (!productModal) console.error('Error: product-modal element not found.');
+        if (!closeProductButton) console.error('Error: close-button element not found within product-modal.');
+        if (!addProductBtn) console.error('Error: add-product-btn element not found.');
 
         function showTab(tabId) {
             tabContents.forEach(content => {
@@ -1307,6 +1323,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(`Tab switched to: ${tabId}`);
         }
         
+        // Customer Modal Logic
         function openCustomerModal() {
             if (customerModal) {
                 customerModal.style.display = 'block';
@@ -1319,16 +1336,36 @@ document.addEventListener('DOMContentLoaded', () => {
         function closeCustomerModal() {
             if (customerModal) {
                 customerModal.style.display = 'none';
-                document.dispatchEvent(new CustomEvent('clearCustomerForm')); // Clear form when modal closes
+                document.dispatchEvent(new CustomEvent('clearCustomerForm'));
                 console.log('Customer modal closed.');
             } else {
                 console.error('Attempted to close customer modal but element not found.');
             }
         }
 
+        // Product Modal Logic
+        function openProductModal() {
+            if (productModal) {
+                productModal.style.display = 'block';
+                console.log('Product modal opened.');
+            } else {
+                console.error('Attempted to open product modal but element not found.');
+            }
+        }
+
+        function closeProductModal() {
+            if (productModal) {
+                productModal.style.display = 'none';
+                document.dispatchEvent(new CustomEvent('clearProductForm'));
+                console.log('Product modal closed.');
+            } else {
+                console.error('Attempted to close product modal but element not found.');
+            }
+        }
+
         tabButtons.forEach(button => {
             button.addEventListener('click', (event) => {
-                event.preventDefault(); // Prevent default anchor behavior
+                event.preventDefault();
                 const tabId = button.dataset.tab;
                 showTab(tabId);
             });
@@ -1339,14 +1376,29 @@ document.addEventListener('DOMContentLoaded', () => {
             addCustomerBtn.addEventListener('click', () => {
                 console.log('Add Customer button clicked.');
                 openCustomerModal();
-                document.dispatchEvent(new CustomEvent('clearCustomerForm')); // Clear form when adding new customer
+                document.dispatchEvent(new CustomEvent('clearCustomerForm'));
             });
         }
-        if (closeButton) {
-            closeButton.addEventListener('click', closeCustomerModal);
+        if (closeCustomerButton) {
+            closeCustomerButton.addEventListener('click', closeCustomerModal);
         }
-        document.addEventListener('closeCustomerModal', closeCustomerModal); // Listen for custom event to close modal
-        document.addEventListener('openCustomerModal', openCustomerModal); // Listen for custom event to open modal
+        document.addEventListener('closeCustomerModal', closeCustomerModal);
+        document.addEventListener('openCustomerModal', openCustomerModal);
+        
+        // Event listeners for product modal
+        if (addProductBtn) {
+            addProductBtn.addEventListener('click', () => {
+                console.log('Add Product button clicked.');
+                openProductModal();
+                document.dispatchEvent(new CustomEvent('clearProductForm'));
+            });
+        }
+        if (closeProductButton) {
+            closeProductButton.addEventListener('click', closeProductModal);
+        }
+        document.addEventListener('closeProductModal', closeProductModal);
+        document.addEventListener('openProductModal', openProductModal);
+
 
         // Event listener for customer search
         if (customerSearchInput) {
