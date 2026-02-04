@@ -1,10 +1,10 @@
 // --- Product Service (Singleton) ---
 const ProductService = {
   _products: [
-    { id: 1, brand: '아큐브', model: '오아시스 원데이', powerS: -1.25, powerC: -0.5, powerAX: 180, price: 55.00, quantity: 20 },
-    { id: 2, brand: '바슈롬', model: '바이오트루 원데이', powerS: -2.50, powerC: 0, powerAX: 0, price: 65.00, quantity: 15 },
-    { id: 3, brand: '알콘', model: '워터렌즈', powerS: -1.75, powerC: 0, powerAX: 0, price: 70.00, quantity: 4 },
-    { id: 4, brand: '쿠퍼비전', model: '클래리티 원데이', powerS: -3.00, powerC: -1.0, powerAX: 90, price: 75.00, quantity: 30 },
+    { id: 1, brand: '아큐브', model: '오아시스 원데이', powerS: -1.25, powerC: -0.5, powerAX: 180, quantity: 20, expirationDate: '2028-12-31', price: 55.00 },
+    { id: 2, brand: '바슈롬', model: '바이오트루 원데이', powerS: -2.50, powerC: 0, powerAX: 0, quantity: 15, expirationDate: '2028-11-30', price: 65.00 },
+    { id: 3, brand: '알콘', model: '워터렌즈', powerS: -1.75, powerC: 0, powerAX: 0, quantity: 4, expirationDate: '2027-06-30', price: 70.00 },
+    { id: 4, brand: '쿠퍼비전', model: '클래리티 원데이', powerS: -3.00, powerC: -1.0, powerAX: 90, quantity: 30, expirationDate: '2029-01-31', price: 75.00 },
   ],
   _nextId: 5,
 
@@ -107,8 +107,9 @@ class ProductList extends HTMLElement {
             <th>S</th>
             <th>C</th>
             <th>AX</th>
-            <th>가격</th>
             <th>수량</th>
+            <th>유통기한</th>
+            <th>가격</th>
             <th class="actions">동작</th>
           </tr>
         </thead>
@@ -121,8 +122,9 @@ class ProductList extends HTMLElement {
               <td>${product.powerS.toFixed(2)}</td>
               <td>${product.powerC.toFixed(2)}</td>
               <td>${product.powerAX}</td>
-              <td>$${product.price.toFixed(2)}</td>
               <td class="${product.quantity < 5 ? 'low-stock' : ''}">${product.quantity}</td>
+              <td>${product.expirationDate}</td>
+              <td>$${product.price.toFixed(2)}</td>
               <td class="actions">
                 <button class="edit-btn" data-id="${product.id}">수정</button>
                 <button class="delete-btn" data-id="${product.id}">삭제</button>
@@ -240,6 +242,10 @@ class ProductForm extends HTMLElement {
               <input type="number" id="quantity" name="quantity" min="0" required>
             </div>
             <div class="form-group">
+              <label for="expirationDate">유통기한</label>
+              <input type="date" id="expirationDate" name="expirationDate" required>
+            </div>
+            <div class="form-group">
               <label for="price">가격</label>
               <input type="number" id="price" name="price" step="0.01" min="0" required>
             </div>
@@ -260,6 +266,7 @@ class ProductForm extends HTMLElement {
         this._form.powerC.value = product.powerC;
         this._form.powerAX.value = product.powerAX;
         this._form.quantity.value = product.quantity;
+        this._form.expirationDate.value = product.expirationDate;
         this._form.price.value = product.price;
         this._form.querySelector('button').textContent = '제품 수정';
     }
@@ -276,6 +283,7 @@ class ProductForm extends HTMLElement {
             powerC: parseFloat(formData.get('powerC')),
             powerAX: parseInt(formData.get('powerAX'), 10),
             quantity: parseInt(formData.get('quantity'), 10),
+            expirationDate: formData.get('expirationDate'),
             price: parseFloat(formData.get('price')),
         };
 
@@ -1427,6 +1435,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <th>C</th>
                             <th>AX</th>
                             <th>수량</th>
+                            <th>유통기한</th>
                             <th>가격</th>
                             <th>삭제</th>
                         </tr>
@@ -1440,6 +1449,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <td>${p.powerC}</td>
                                 <td>${p.powerAX}</td>
                                 <td>${p.quantity}</td>
+                                <td>${p.expirationDate}</td>
                                 <td>${p.price}</td>
                                 <td><button class="remove-temp-product-btn" data-tempid="${p.tempId}">삭제</button></td>
                             </tr>
