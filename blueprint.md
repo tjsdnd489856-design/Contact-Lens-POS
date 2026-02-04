@@ -1,8 +1,8 @@
-# Blueprint: Contact Lens POS
+# Blueprint: Store Management System
 
 ## 1. Project Overview
 
-This document outlines the development plan for the "Contact Lens POS" application. It's a web-based Point of Sale (POS) system designed specifically for contact lens stores. The goal is to create a modern, intuitive, and efficient application for managing sales, customers, products, and inventory.
+This document outlines the development plan for the "Store Management System" application. It's a web-based Point of Sale (POS) system designed specifically for contact lens stores. The goal is to create a modern, intuitive, and efficient application for managing sales, customers, products, and inventory.
 
 ---
 
