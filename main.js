@@ -128,16 +128,67 @@ class ProductList extends HTMLElement {
             color: white;
             border-color: #3498db;
         }
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        thead { background-color: #34495e; color: #ecf0f1; }
-        tr:nth-child(even) { background-color: #f8f9f9; }
-        tr:hover { background-color: #ecf0f1; }
-        .actions { text-align: center; }
-        .actions button { cursor: pointer; padding: 8px 12px; margin-right: 5px; border: none; border-radius: 4px; color: white; transition: background-color 0.3s ease; }
-        .edit-btn { background-color: #2980b9; }
-        .delete-btn { background-color: #c0392b; }
-        .low-stock { color: #c0392b; font-weight: bold; }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* 5 items per row, roughly square */
+            gap: 20px;
+            margin-top: 1rem;
+        }
+        .product-card {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            aspect-ratio: 1 / 1; /* Make it square */
+            position: relative;
+            overflow: hidden;
+        }
+        .product-card.low-stock {
+            border-color: #c0392b;
+            box-shadow: 0 0 8px rgba(192, 57, 43, 0.4);
+        }
+        .product-card h4 {
+            margin: 0 0 5px 0;
+            font-size: 1.1rem;
+            color: #333;
+        }
+        .product-card p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #555;
+        }
+        .product-card .price {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #27ae60;
+            margin-top: 10px;
+        }
+        .product-card .quantity {
+            font-size: 1rem;
+            color: #e67e22;
+        }
+        .product-card .actions {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+        .product-card .actions button {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background-color 0.3s ease;
+        }
+        .product-card .edit-btn { background-color: #2980b9; }
+        .product-card .delete-btn { background-color: #c0392b; }
       </style>
       <div class="brand-filter-buttons">
         ${uniqueBrands.map(brand => `
@@ -146,41 +197,23 @@ class ProductList extends HTMLElement {
             </button>
         `).join('')}
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>브랜드</th>
-            <th>모델명</th>
-            <th>S</th>
-            <th>C</th>
-            <th>AX</th>
-            <th>수량</th>
-            <th>유통기한</th>
-            <th>가격</th>
-            <th class="actions">동작</th>
-          </tr>
-        </thead>
-        <tbody>
+      <div class="product-grid">
           ${products.map(product => `
-            <tr class="${product.quantity < 5 ? 'low-stock-row' : ''}">
-              <td>${product.id}</td>
-              <td>${product.brand}</td>
-              <td>${product.model}</td>
-              <td>${product.powerS.toFixed(2)}</td>
-              <td>${product.powerC.toFixed(2)}</td>
-              <td>${product.powerAX}</td>
-              <td class="${product.quantity < 5 ? 'low-stock' : ''}">${product.quantity}</td>
-              <td>${product.expirationDate}</td>
-              <td>$${product.price.toFixed(2)}</td>
-              <td class="actions">
+            <div class="product-card ${product.quantity < 5 ? 'low-stock' : ''}">
+              <div>
+                <h4>${product.brand} ${product.model}</h4>
+                <p>S: ${product.powerS.toFixed(2)} / C: ${product.powerC.toFixed(2)} / AX: ${product.powerAX}</p>
+                <p>유통기한: ${product.expirationDate}</p>
+                <p class="quantity">수량: ${product.quantity}</p>
+                <p class="price">$${product.price.toFixed(2)}</p>
+              </div>
+              <div class="actions">
                 <button class="edit-btn" data-id="${product.id}">수정</button>
                 <button class="delete-btn" data-id="${product.id}">삭제</button>
-              </td>
-            </tr>
+              </div>
+            </div>
           `).join('')}
-        </tbody>
-      </table>
+      </div>
     `;
     this.shadowRoot.innerHTML = ''; 
     this.shadowRoot.appendChild(template.content.cloneNode(true));
