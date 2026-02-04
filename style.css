@@ -236,3 +236,64 @@ footer {
 #add-product-btn:hover {
   background-color: #0069d9;
 }
+
+/* New styles for product modal layout */
+#product-modal-layout {
+  display: flex;
+  gap: 20px;
+}
+
+#product-form-container {
+  flex: 1;
+}
+
+#temp-product-list-container {
+  flex: 1.5; /* Give more space to the list */
+  border-left: 1px solid #ccc;
+  padding-left: 20px;
+}
+
+#temp-product-list table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#temp-product-list th, 
+#temp-product-list td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+#temp-product-list thead {
+  background-color: #f2f2f2;
+}
+
+.modal-actions {
+  margin-top: 20px;
+  text-align: right;
+}
+
+#save-all-products-btn {
+  background-color: #28a745; /* Green */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+#save-all-products-btn:hover {
+  background-color: #218838;
+}
+
+.remove-temp-product-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+}

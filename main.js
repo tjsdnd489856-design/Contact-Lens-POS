@@ -154,22 +154,58 @@ class ProductForm extends HTMLElement {
     }
 
     disconnectedCallback() {
-        document.removeEventListener('editProduct', this._render);
+        // Clean up event listeners
+        document.removeEventListener('editProduct', this.populateForm);
+        this._form.removeEventListener('submit', this.handleSubmit);
+        // No need to remove clearProductForm listener if it's component-specific
     }
 
     _render() {
         const template = document.createElement('template');
         template.innerHTML = `
           <style>
-            form { background: #fdfdfd; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 2rem; }
-            .form-title { margin-top: 0; margin-bottom: 1.5rem; font-weight: 400; }
-            .form-group { margin-bottom: 1rem; }
-            label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; }
-            input { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-            button { cursor: pointer; padding: 0.8rem 1.5rem; border: none; border-radius: 4px; color: white; background-color: #3498db; font-size: 1rem; }
+            form { 
+              background: #fdfdfd; 
+              padding: 1rem; 
+              border-radius: 8px; 
+              box-shadow: none; 
+              margin-bottom: 1rem;
+            }
+            .form-title { 
+              margin-top: 0; 
+              margin-bottom: 1.5rem; 
+              font-weight: 400; 
+              font-size: 1.2rem;
+            }
+            .form-group { margin-bottom: 0.8rem; }
+            label { 
+              display: block; 
+              margin-bottom: 0.3rem; 
+              font-weight: 500; 
+              color: #555; 
+              font-size: 0.9rem;
+            }
+            input { 
+              width: 100%; 
+              padding: 0.6rem; 
+              border: 1px solid #ccc; 
+              border-radius: 4px; 
+              box-sizing: border-box; 
+            }
+            button { 
+              cursor: pointer; 
+              padding: 0.7rem 1.5rem; 
+              border: none; 
+              border-radius: 4px; 
+              color: white; 
+              background-color: #3498db; 
+              font-size: 1rem; 
+              width: 100%;
+              margin-top: 1rem;
+            }
           </style>
           <form>
-            <h3 class="form-title">제품 추가 / 수정</h3>
+            <h3 class="form-title">제품 추가</h3>
             <input type="hidden" name="id">
             <div class="form-group">
               <label for="brand">브랜드</label>
@@ -191,14 +227,18 @@ class ProductForm extends HTMLElement {
               <label for="stock">재고</label>
               <input type="number" id="stock" name="stock" min="0" required>
             </div>
-            <button type="submit">제품 저장</button>
+            <button type="submit">제품 추가</button>
           </form>
         `;
         this.shadowRoot.appendChild(template.content.cloneNode(true));
     }
 
     populateForm(e) {
+        // This form is now for multi-add, so populating for a single edit is disabled.
+        // In a real-world scenario, we might have different modes.
+        this.clearForm();
         const product = e.detail;
+        this.shadowRoot.querySelector('.form-title').textContent = '제품 수정';
         this._form.id.value = product.id;
         this._form.brand.value = product.brand;
         this._form.model.value = product.model;
@@ -211,8 +251,9 @@ class ProductForm extends HTMLElement {
     handleSubmit(e) {
         e.preventDefault();
         const formData = new FormData(this._form);
+        const id = parseInt(formData.get('id'), 10) || null;
+        
         const product = {
-            id: parseInt(formData.get('id'), 10) || null,
             brand: formData.get('brand'),
             model: formData.get('model'),
             power: parseFloat(formData.get('power')),
@@ -220,20 +261,23 @@ class ProductForm extends HTMLElement {
             stock: parseInt(formData.get('stock'), 10),
         };
 
-        if (product.id) {
-            ProductService.updateProduct(product);
-        } else {
-            delete product.id;
-            ProductService.addProduct(product);
+        if (id) { // Handle edit form submission - directly update the product
+             product.id = id;
+             ProductService.updateProduct(product);
+             document.dispatchEvent(new CustomEvent('closeProductModal'));
+        } else { // Handle add to temporary list
+            // Add a temporary ID for list management
+            product.tempId = Date.now();
+            document.dispatchEvent(new CustomEvent('addProductToModalList', { detail: product }));
+            this.clearForm(); // Clear form for next entry
         }
-
-        document.dispatchEvent(new CustomEvent('closeProductModal'));
     }
 
     clearForm() {
         this._form.reset();
         this._form.id.value = '';
-        this._form.querySelector('button').textContent = '제품 저장';
+        this.shadowRoot.querySelector('.form-title').textContent = '제품 추가';
+        this._form.querySelector('button').textContent = '제품 추가';
     }
 }
 customElements.define('product-form', ProductForm);
@@ -1295,6 +1339,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const productModal = document.getElementById('product-modal');
         const closeProductButton = productModal ? productModal.querySelector('.close-button') : null;
         const addProductBtn = document.getElementById('add-product-btn');
+        const productModalLayout = document.getElementById('product-modal-layout');
+        const saveAllProductsBtn = document.getElementById('save-all-products-btn');
+        const tempProductListDiv = document.getElementById('temp-product-list');
+
+        let productsToAdd = [];
+        let isEditMode = false;
 
         if (!customerModal) console.error('Error: customer-modal element not found.');
         if (!closeCustomerButton) console.error('Error: close-button element not found within customer-modal.');
@@ -1304,6 +1354,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!productModal) console.error('Error: product-modal element not found.');
         if (!closeProductButton) console.error('Error: close-button element not found within product-modal.');
         if (!addProductBtn) console.error('Error: add-product-btn element not found.');
+        if (!saveAllProductsBtn) console.error('Error: save-all-products-btn element not found.');
 
         function showTab(tabId) {
             tabContents.forEach(content => {
@@ -1344,10 +1395,66 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Product Modal Logic
-        function openProductModal() {
+        function renderTempProductList() {
+            if (productsToAdd.length === 0) {
+                tempProductListDiv.innerHTML = '<p>추가할 제품이 없습니다.</p>';
+                return;
+            }
+            let table = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>브랜드</th>
+                            <th>모델명</th>
+                            <th>도수</th>
+                            <th>가격</th>
+                            <th>재고</th>
+                            <th>삭제</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${productsToAdd.map(p => `
+                            <tr>
+                                <td>${p.brand}</td>
+                                <td>${p.model}</td>
+                                <td>${p.power}</td>
+                                <td>${p.price}</td>
+                                <td>${p.stock}</td>
+                                <td><button class="remove-temp-product-btn" data-tempid="${p.tempId}">삭제</button></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            tempProductListDiv.innerHTML = table;
+
+            // Add event listeners to remove buttons
+            tempProductListDiv.querySelectorAll('.remove-temp-product-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const tempId = parseInt(e.target.dataset.tempid, 10);
+                    productsToAdd = productsToAdd.filter(p => p.tempId !== tempId);
+                    renderTempProductList();
+                });
+            });
+        }
+
+
+        function openProductModal(editMode = false) {
+            isEditMode = editMode;
             if (productModal) {
+                if (isEditMode) {
+                    productModalLayout.style.display = 'block';
+                    document.getElementById('temp-product-list-container').style.display = 'none';
+                    saveAllProductsBtn.style.display = 'none';
+                } else {
+                    productModalLayout.style.display = 'flex';
+                    document.getElementById('temp-product-list-container').style.display = 'block';
+                    saveAllProductsBtn.style.display = 'block';
+                    productsToAdd = [];
+                    renderTempProductList();
+                }
                 productModal.style.display = 'block';
-                console.log('Product modal opened.');
+                console.log('Product modal opened in ' + (isEditMode ? 'edit' : 'add') + ' mode.');
             } else {
                 console.error('Attempted to open product modal but element not found.');
             }
@@ -1388,17 +1495,37 @@ document.addEventListener('DOMContentLoaded', () => {
         // Event listeners for product modal
         if (addProductBtn) {
             addProductBtn.addEventListener('click', () => {
-                console.log('Add Product button clicked.');
-                openProductModal();
+                openProductModal(false); // Open in add mode
                 document.dispatchEvent(new CustomEvent('clearProductForm'));
             });
         }
+
+        document.addEventListener('openProductModal', (e) => {
+             openProductModal(true); // Open in edit mode
+        });
+
+
         if (closeProductButton) {
             closeProductButton.addEventListener('click', closeProductModal);
         }
         document.addEventListener('closeProductModal', closeProductModal);
-        document.addEventListener('openProductModal', openProductModal);
 
+        document.addEventListener('addProductToModalList', (e) => {
+            productsToAdd.push(e.detail);
+            renderTempProductList();
+        });
+
+        saveAllProductsBtn.addEventListener('click', () => {
+            if (productsToAdd.length === 0) {
+                alert('추가할 제품이 없습니다.');
+                return;
+            }
+            productsToAdd.forEach(p => {
+                const { tempId, ...product } = p;
+                ProductService.addProduct(product);
+            });
+            closeProductModal();
+        });
 
         // Event listener for customer search
         if (customerSearchInput) {

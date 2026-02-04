@@ -56,7 +56,18 @@
   <div id="product-modal" class="modal">
     <div class="modal-content">
       <span class="close-button">&times;</span>
-      <product-form></product-form>
+      <div id="product-modal-layout">
+        <div id="product-form-container">
+          <product-form></product-form>
+        </div>
+        <div id="temp-product-list-container">
+          <h3>추가할 제품 목록</h3>
+          <div id="temp-product-list"></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button id="save-all-products-btn">선택된 제품 모두 저장</button>
+      </div>
     </div>
   </div>
 
