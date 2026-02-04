@@ -1,10 +1,10 @@
 // --- Product Service (Singleton) ---
 const ProductService = {
   _products: [
-    { id: 1, brand: '아큐브', model: '오아시스 원데이', power: -1.25, price: 55.00, stock: 20 },
-    { id: 2, brand: '바슈롬', model: '바이오트루 원데이', power: -2.50, price: 65.00, stock: 15 },
-    { id: 3, brand: '알콘', model: '워터렌즈', power: -1.75, price: 70.00, stock: 4 },
-    { id: 4, brand: '쿠퍼비전', model: '클래리티 원데이', power: -3.00, price: 75.00, stock: 30 },
+    { id: 1, brand: '아큐브', model: '오아시스 원데이', powerS: -1.25, powerC: -0.5, powerAX: 180, price: 55.00, quantity: 20 },
+    { id: 2, brand: '바슈롬', model: '바이오트루 원데이', powerS: -2.50, powerC: 0, powerAX: 0, price: 65.00, quantity: 15 },
+    { id: 3, brand: '알콘', model: '워터렌즈', powerS: -1.75, powerC: 0, powerAX: 0, price: 70.00, quantity: 4 },
+    { id: 4, brand: '쿠퍼비전', model: '클래리티 원데이', powerS: -3.00, powerC: -1.0, powerAX: 90, price: 75.00, quantity: 30 },
   ],
   _nextId: 5,
 
@@ -38,7 +38,7 @@ const ProductService = {
   decreaseStock(productId, quantity) {
       const product = this.getProductById(productId);
       if (product) {
-          product.stock -= quantity;
+          product.quantity -= quantity;
           this._notify();
       }
   },
@@ -104,21 +104,25 @@ class ProductList extends HTMLElement {
             <th>ID</th>
             <th>브랜드</th>
             <th>모델명</th>
-            <th>도수 (D)</th>
+            <th>S</th>
+            <th>C</th>
+            <th>AX</th>
             <th>가격</th>
-            <th>재고</th>
+            <th>수량</th>
             <th class="actions">동작</th>
           </tr>
         </thead>
         <tbody>
           ${products.map(product => `
-            <tr class="${product.stock < 5 ? 'low-stock-row' : ''}">
+            <tr class="${product.quantity < 5 ? 'low-stock-row' : ''}">
               <td>${product.id}</td>
               <td>${product.brand}</td>
               <td>${product.model}</td>
-              <td>${product.power.toFixed(2)}</td>
+              <td>${product.powerS.toFixed(2)}</td>
+              <td>${product.powerC.toFixed(2)}</td>
+              <td>${product.powerAX}</td>
               <td>$${product.price.toFixed(2)}</td>
-              <td class="${product.stock < 5 ? 'low-stock' : ''}">${product.stock}</td>
+              <td class="${product.quantity < 5 ? 'low-stock' : ''}">${product.quantity}</td>
               <td class="actions">
                 <button class="edit-btn" data-id="${product.id}">수정</button>
                 <button class="delete-btn" data-id="${product.id}">삭제</button>
@@ -178,6 +182,8 @@ class ProductForm extends HTMLElement {
               font-size: 1.2rem;
             }
             .form-group { margin-bottom: 0.8rem; }
+            .power-fields { display: flex; gap: 10px; }
+            .power-fields .form-group { flex: 1; }
             label { 
               display: block; 
               margin-bottom: 0.3rem; 
@@ -215,17 +221,27 @@ class ProductForm extends HTMLElement {
               <label for="model">모델명</label>
               <input type="text" id="model" name="model" required>
             </div>
+            <div class="power-fields">
+              <div class="form-group">
+                <label for="powerS">S</label>
+                <input type="number" id="powerS" name="powerS" step="0.25" required>
+              </div>
+              <div class="form-group">
+                <label for="powerC">C</label>
+                <input type="number" id="powerC" name="powerC" step="0.25" required>
+              </div>
+              <div class="form-group">
+                <label for="powerAX">AX</label>
+                <input type="number" id="powerAX" name="powerAX" step="1" required>
+              </div>
+            </div>
             <div class="form-group">
-              <label for="power">도수 (D)</label>
-              <input type="number" id="power" name="power" step="0.25" required>
+              <label for="quantity">수량</label>
+              <input type="number" id="quantity" name="quantity" min="0" required>
             </div>
             <div class="form-group">
               <label for="price">가격</label>
               <input type="number" id="price" name="price" step="0.01" min="0" required>
-            </div>
-            <div class="form-group">
-              <label for="stock">재고</label>
-              <input type="number" id="stock" name="stock" min="0" required>
             </div>
             <button type="submit">제품 추가</button>
           </form>
@@ -234,17 +250,17 @@ class ProductForm extends HTMLElement {
     }
 
     populateForm(e) {
-        // This form is now for multi-add, so populating for a single edit is disabled.
-        // In a real-world scenario, we might have different modes.
         this.clearForm();
         const product = e.detail;
         this.shadowRoot.querySelector('.form-title').textContent = '제품 수정';
         this._form.id.value = product.id;
         this._form.brand.value = product.brand;
         this._form.model.value = product.model;
-        this._form.power.value = product.power;
+        this._form.powerS.value = product.powerS;
+        this._form.powerC.value = product.powerC;
+        this._form.powerAX.value = product.powerAX;
+        this._form.quantity.value = product.quantity;
         this._form.price.value = product.price;
-        this._form.stock.value = product.stock;
         this._form.querySelector('button').textContent = '제품 수정';
     }
 
@@ -256,20 +272,21 @@ class ProductForm extends HTMLElement {
         const product = {
             brand: formData.get('brand'),
             model: formData.get('model'),
-            power: parseFloat(formData.get('power')),
+            powerS: parseFloat(formData.get('powerS')),
+            powerC: parseFloat(formData.get('powerC')),
+            powerAX: parseInt(formData.get('powerAX'), 10),
+            quantity: parseInt(formData.get('quantity'), 10),
             price: parseFloat(formData.get('price')),
-            stock: parseInt(formData.get('stock'), 10),
         };
 
-        if (id) { // Handle edit form submission - directly update the product
+        if (id) {
              product.id = id;
              ProductService.updateProduct(product);
              document.dispatchEvent(new CustomEvent('closeProductModal'));
-        } else { // Handle add to temporary list
-            // Add a temporary ID for list management
+        } else {
             product.tempId = Date.now();
             document.dispatchEvent(new CustomEvent('addProductToModalList', { detail: product }));
-            this.clearForm(); // Clear form for next entry
+            this.clearForm();
         }
     }
 
@@ -976,8 +993,8 @@ const SalesService = {
   addSale(sale) {
     for (const item of sale.items) {
         const product = ProductService.getProductById(item.product.id);
-        if (!product || product.stock < item.quantity) {
-            alert(`${item.product.brand} ${item.product.model} 제품의 재고가 부족합니다. 현재 재고: ${product.stock}개`);
+        if (!product || product.quantity < item.quantity) {
+            alert(`${item.product.brand} ${item.product.model} 제품의 재고가 부족합니다. 현재 재고: ${product.quantity}개`);
             return false;
         }
     }
@@ -1406,9 +1423,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <tr>
                             <th>브랜드</th>
                             <th>모델명</th>
-                            <th>도수</th>
+                            <th>S</th>
+                            <th>C</th>
+                            <th>AX</th>
+                            <th>수량</th>
                             <th>가격</th>
-                            <th>재고</th>
                             <th>삭제</th>
                         </tr>
                     </thead>
@@ -1417,9 +1436,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             <tr>
                                 <td>${p.brand}</td>
                                 <td>${p.model}</td>
-                                <td>${p.power}</td>
+                                <td>${p.powerS}</td>
+                                <td>${p.powerC}</td>
+                                <td>${p.powerAX}</td>
+                                <td>${p.quantity}</td>
                                 <td>${p.price}</td>
-                                <td>${p.stock}</td>
                                 <td><button class="remove-temp-product-btn" data-tempid="${p.tempId}">삭제</button></td>
                             </tr>
                         `).join('')}
