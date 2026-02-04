@@ -1,10 +1,10 @@
 // --- Product Service (Singleton) ---
 const ProductService = {
   _products: [
-    { id: 1, brand: '아큐브', model: '오아시스 원데이', powerS: -1.25, powerC: -0.5, powerAX: 180, quantity: 20, expirationDate: '2028-12-31', price: 55.00 },
-    { id: 2, brand: '바슈롬', model: '바이오트루 원데이', powerS: -2.50, powerC: 0, powerAX: 0, quantity: 15, expirationDate: '2028-11-30', price: 65.00 },
-    { id: 3, brand: '알콘', model: '워터렌즈', powerS: -1.75, powerC: 0, powerAX: 0, quantity: 4, expirationDate: '2027-06-30', price: 70.00 },
-    { id: 4, brand: '쿠퍼비전', model: '클래리티 원데이', powerS: -3.00, powerC: -1.0, powerAX: 90, quantity: 30, expirationDate: '2029-01-31', price: 75.00 },
+    { id: 1, brand: '아큐브', model: '오아시스 원데이', powerS: -1.25, powerC: -0.5, powerAX: 180, quantity: 20, expirationDate: '2028-12-31', price: 55.00, barcode: '1234567890123' },
+    { id: 2, brand: '바슈롬', model: '바이오트루 원데이', powerS: -2.50, powerC: 0, powerAX: 0, quantity: 15, expirationDate: '2028-11-30', price: 65.00, barcode: '2345678901234' },
+    { id: 3, brand: '알콘', model: '워터렌즈', powerS: -1.75, powerC: 0, powerAX: 0, quantity: 4, expirationDate: '2027-06-30', price: 70.00, barcode: '3456789012345' },
+    { id: 4, brand: '쿠퍼비전', model: '클래리티 원데이', powerS: -3.00, powerC: -1.0, powerAX: 90, quantity: 30, expirationDate: '2029-01-31', price: 75.00, barcode: '4567890123456' },
   ],
   _nextId: 5,
 
@@ -14,6 +14,10 @@ const ProductService = {
 
   getProductById(id) {
     return this._products.find(p => p.id === id);
+  },
+
+  getProductByBarcode(barcode) {
+      return this._products.find(p => p.barcode === barcode);
   },
 
   addProduct(product) {
@@ -149,6 +153,8 @@ class ProductForm extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         this.populateForm = this.populateForm.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.clearForm = this.clearForm.bind(this);
+        this.handleBarcodeScan = this.handleBarcodeScan.bind(this);
     }
 
     connectedCallback() {
@@ -156,14 +162,15 @@ class ProductForm extends HTMLElement {
         this._form = this.shadowRoot.querySelector('form');
         document.addEventListener('editProduct', this.populateForm);
         this._form.addEventListener('submit', this.handleSubmit);
-        document.addEventListener('clearProductForm', () => this.clearForm());
+        document.addEventListener('clearProductForm', this.clearForm);
+        this._form.barcode.addEventListener('change', this.handleBarcodeScan); // Use 'change' event for barcode
     }
 
     disconnectedCallback() {
-        // Clean up event listeners
         document.removeEventListener('editProduct', this.populateForm);
         this._form.removeEventListener('submit', this.handleSubmit);
-        // No need to remove clearProductForm listener if it's component-specific
+        document.removeEventListener('clearProductForm', this.clearForm);
+        this._form.barcode.removeEventListener('change', this.handleBarcodeScan);
     }
 
     _render() {
@@ -216,6 +223,10 @@ class ProductForm extends HTMLElement {
             <h3 class="form-title">제품 추가</h3>
             <input type="hidden" name="id">
             <div class="form-group">
+              <label for="barcode">바코드</label>
+              <input type="text" id="barcode" name="barcode" placeholder="바코드 스캔" required>
+            </div>
+            <div class="form-group">
               <label for="brand">브랜드</label>
               <input type="text" id="brand" name="brand" required>
             </div>
@@ -255,11 +266,41 @@ class ProductForm extends HTMLElement {
         this.shadowRoot.appendChild(template.content.cloneNode(true));
     }
 
+    fillFormWithProductData(product) {
+        this._form.brand.value = product.brand;
+        this._form.model.value = product.model;
+        this._form.powerS.value = product.powerS;
+        this._form.powerC.value = product.powerC;
+        this._form.powerAX.value = product.powerAX;
+        this._form.quantity.value = product.quantity;
+        this._form.expirationDate.value = product.expirationDate;
+        this._form.price.value = product.price;
+    }
+
+    handleBarcodeScan(e) {
+        const barcode = e.target.value;
+        if (barcode) {
+            const product = ProductService.getProductByBarcode(barcode);
+            if (product) {
+                this.fillFormWithProductData(product);
+                // Automatically add to temp list after filling form
+                document.dispatchEvent(new CustomEvent('addProductToModalList', { detail: { ...product, tempId: Date.now() } }));
+                this._form.barcode.value = ''; // Clear barcode input
+            } else {
+                // If barcode not found, clear other fields but keep barcode for manual entry
+                alert('바코드와 일치하는 제품을 찾을 수 없습니다. 수동으로 정보를 입력해 주세요.');
+                this.clearForm();
+                this._form.barcode.value = barcode; // Keep barcode for user to potentially modify or re-enter
+            }
+        }
+    }
+
     populateForm(e) {
         this.clearForm();
         const product = e.detail;
         this.shadowRoot.querySelector('.form-title').textContent = '제품 수정';
         this._form.id.value = product.id;
+        this._form.barcode.value = product.barcode;
         this._form.brand.value = product.brand;
         this._form.model.value = product.model;
         this._form.powerS.value = product.powerS;
@@ -277,6 +318,7 @@ class ProductForm extends HTMLElement {
         const id = parseInt(formData.get('id'), 10) || null;
         
         const product = {
+            barcode: formData.get('barcode'),
             brand: formData.get('brand'),
             model: formData.get('model'),
             powerS: parseFloat(formData.get('powerS')),
@@ -1429,6 +1471,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <table>
                     <thead>
                         <tr>
+                            <th>바코드</th>
                             <th>브랜드</th>
                             <th>모델명</th>
                             <th>S</th>
@@ -1443,6 +1486,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tbody>
                         ${productsToAdd.map(p => `
                             <tr>
+                                <td>${p.barcode || 'N/A'}</td>
                                 <td>${p.brand}</td>
                                 <td>${p.model}</td>
                                 <td>${p.powerS}</td>
