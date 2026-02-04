@@ -20,6 +20,11 @@ const ProductService = {
       return this._products.find(p => p.barcode === barcode);
   },
 
+  getUniqueBrands() {
+    const brands = new Set(this._products.map(p => p.brand));
+    return ['전체', ...Array.from(brands)];
+  },
+
   addProduct(product) {
     product.id = this._nextId++;
     this._products.push(product);
@@ -59,6 +64,8 @@ class ProductList extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.handleDelete = this.handleDelete.bind(this);
     this.handleEdit = this.handleEdit.bind(this);
+    this.filterByBrand = this.filterByBrand.bind(this);
+    this._currentFilterBrand = '전체'; // Default filter
     document.addEventListener('productsUpdated', () => this._render());
   }
     
@@ -86,11 +93,41 @@ class ProductList extends HTMLElement {
     }
   }
 
+  filterByBrand(e) {
+      this._currentFilterBrand = e.target.dataset.brand;
+      this._render();
+  }
+
   _render() {
-    const products = ProductService.getProducts();
+    let products = ProductService.getProducts();
+    const uniqueBrands = ProductService.getUniqueBrands();
+
+    if (this._currentFilterBrand !== '전체') {
+        products = products.filter(p => p.brand === this._currentFilterBrand);
+    }
+
     const template = document.createElement('template');
     template.innerHTML = `
       <style>
+        .brand-filter-buttons {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .brand-filter-button {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .brand-filter-button.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
         table { width: 100%; border-collapse: collapse; margin-top: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         thead { background-color: #34495e; color: #ecf0f1; }
@@ -102,6 +139,13 @@ class ProductList extends HTMLElement {
         .delete-btn { background-color: #c0392b; }
         .low-stock { color: #c0392b; font-weight: bold; }
       </style>
+      <div class="brand-filter-buttons">
+        ${uniqueBrands.map(brand => `
+            <button class="brand-filter-button ${this._currentFilterBrand === brand ? 'active' : ''}" data-brand="${brand}">
+                ${brand}
+            </button>
+        `).join('')}
+      </div>
       <table>
         <thead>
           <tr>
@@ -142,6 +186,7 @@ class ProductList extends HTMLElement {
     this.shadowRoot.appendChild(template.content.cloneNode(true));
     this.shadowRoot.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', this.handleDelete));
     this.shadowRoot.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', this.handleEdit));
+    this.shadowRoot.querySelectorAll('.brand-filter-button').forEach(btn => btn.addEventListener('click', this.filterByBrand));
   }
 }
 customElements.define('product-list', ProductList);

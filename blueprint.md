@@ -11,7 +11,7 @@ This document outlines the development plan for the "Store Management System" ap
 This section details all implemented features, design choices, and styling. It will be updated as the application evolves.
 
 ### Core Features:
-- **Product Management:** Add, edit, and view contact lens products (brand, model, power, price, stock, etc.).
+- **Inventory Management:** Add, edit, and view contact lens products (brand, model, power, price, stock, etc.).
 - **Customer Management:** Manage customer information, including personal details (name, phone), prescription (right/left eye power), last purchase date, purchase history, and notes.
 - **Sales & Ordering:** Create and manage customer orders.
 - **Inventory Tracking:** Automatically track product stock levels.
@@ -32,7 +32,7 @@ This section outlines the immediate tasks for the current development cycle.
 1.  **DONE:** Set up the project environment and Git repository.
 2.  **DONE:** Create the basic HTML structure (`index.html`) for the main application layout.
 3.  **DONE:** Style the main layout (`style.css`) with a modern and clean design, including a header, main content area, and a navigation bar.
-4.  **DONE:** Implement the "Product Management" feature using Web Components.
+4.  **DONE:** Implement the "Inventory Management" feature using Web Components.
     -   **DONE:** Create `product-list` component to display products.
     -   **DONE:** Create `product-form` component to add and edit products.
     -   **DONE:** Implement "delete" functionality.
