@@ -13,17 +13,37 @@ export default class BrandProductListModal extends HTMLElement {
     }
 
     _render() {
-        let products = [];
-        let message = '브랜드를 선택하면 해당 브랜드의 제품 목록이 여기에 표시됩니다.';
+        let products = ProductService.getProducts();
+        let message = '';
+
+        console.log('BrandProductListModal: Rendering with currentBrand:', this._currentBrand);
+        console.log('BrandProductListModal: Products after initial fetch:', products);
+        console.log('BrandProductListModal: Initial message:', message);
 
         if (this._currentBrand) {
-            products = ProductService.getProducts().filter(p => p.brand === this._currentBrand);
+            products = products.filter(p => p.brand === this._currentBrand);
             if (products.length === 0) {
                 message = `${this._currentBrand} 브랜드의 제품이 없습니다.`;
-            } else {
-                message = ''; // Clear message if products are found
             }
+        } else {
+            message = products.length === 0 ? '전체 브랜드의 제품이 없습니다.' : '';
         }
+
+        const tableBodyHtml = products.map(product => `
+            <tr>
+                <td>${product.barcode || 'N/A'}</td>
+                <td>${product.brand}</td>
+                <td>${product.model}</td>
+                <td>${(product.powerS !== null && product.powerS !== undefined) ? (product.powerS > 0 ? '+' : '') + product.powerS.toFixed(2) : 'N/A'}</td>
+                <td>${(product.powerC !== null && product.powerC !== undefined) ? (product.powerC > 0 ? '+' : '') + product.powerC.toFixed(2) : 'N/A'}</td>
+                <td>${product.powerAX !== null ? product.powerAX : 'N/A'}</td>
+                <td>${product.quantity}</td>
+                <td>${product.expirationDate}</td>
+                <td>$${product.price.toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        console.log('BrandProductListModal: Generated table body HTML:', tableBodyHtml);
 
         const template = document.createElement('template');
         template.innerHTML = `
@@ -73,19 +93,7 @@ export default class BrandProductListModal extends HTMLElement {
                             </tr>
                         </thead>
                         <tbody>
-                            ${products.map(product => `
-                                <tr>
-                                    <td>${product.barcode || 'N/A'}</td>
-                                    <td>${product.brand}</td>
-                                    <td>${product.model}</td>
-                                    <td>${product.powerS ? product.powerS.toFixed(2) : 'N/A'}</td>
-                                    <td>${product.powerC ? product.powerC.toFixed(2) : 'N/A'}</td>
-                                    <td>${product.powerAX !== null ? product.powerAX : 'N/A'}</td>
-                                    <td>${product.quantity}</td>
-                                    <td>${product.expirationDate}</td>
-                                    <td>$${product.price.toFixed(2)}</td>
-                                </tr>
-                            `).join('')}
+                            ${tableBodyHtml}
                         </tbody>
                     </table>
                 `}
