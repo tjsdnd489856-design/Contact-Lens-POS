@@ -93,11 +93,18 @@ This section outlines the immediate tasks for the current development cycle.
 - `main.js`: ProductService, CustomerService, SalesService, ProductList, ProductForm, CustomerList, CustomerForm, SaleTransaction, SalesList, CustomerPurchaseHistory, initializeApp의 정의를 제거하고 해당 임포트 문을 추가하도록 여러 번 수정되었습니다. 이전 셸 스크립트 오류로 인해 파일이 손상되어 git restore 후 인메모리 문자열 조작으로 수정되었습니다.
 - `index.html`: `<script src="main.js"></script>`를 `<script type="module" src="main.js"></script>`로 업데이트했습니다.
 - `components/`: UI 컴포넌트를 저장하기 위해 디렉토리가 생성되었습니다.
+- `components/customer-form.component.js` 복구 및 누락된 서비스 import 수정: `CustomerForm` 컴포넌트 파일을 Git 기록에서 복구하고 `CustomerService` import를 추가했습니다.
+- `components/customer-list.component.js` 누락된 서비스 import 수정: `CustomerService` import를 추가했습니다.
+- `components/product-list.component.js` 누락된 서비스 import 수정: `ProductService` import를 추가했습니다.
+- `components/product-form.component.js` 누락된 서비스 import 수정: `ProductService` import를 추가했습니다.
+- `components/sale-transaction.component.js` 누락된 서비스 import 수정: `CustomerService`, `ProductService`, `SalesService` import를 추가했습니다.
+- `components/sales-list.component.js` 누락된 서비스 import 수정: `CustomerService`, `SalesService` import를 추가했습니다.
+- `components/customer-purchase-history.component.js` 누락된 서비스 import 수정: `CustomerService`, `SalesService` import를 추가했습니다.
 
 ### File System State:
 - `cwd`: /home/user/contact-lens-pos/
 - `created`: services/, services/product.service.js, services/customer.service.js, services/sales.service.js, components/, components/product-list.component.js, components/product-form.component.js, components/customer-list.component.js, components/customer-form.component.js, components/sale-transaction.component.js, components/sales-list.component.js, components/customer-purchase-history.component.js, components/app-initializer.js
-- `modified`: main.js, index.html
+- `modified`: main.js, index.html, components/app-initializer.js, components/customer-list.component.js, components/customer-form.component.js, components/product-list.component.js, components/product-form.component.js, components/sale-transaction.component.js, components/sales-list.component.js, components/customer-purchase-history.component.js
 
 ### Recent Actions:
 - ProductService를 main.js에서 services/product.service.js로 추출하고 main.js에 import 문을 추가했습니다.
@@ -114,6 +121,13 @@ This section outlines the immediate tasks for the current development cycle.
 - Tab Switching Logic을 main.js에서 components/app-initializer.js로 추출하고 main.js에 import 문과 initializeApp() 호출을 추가했습니다.
 - index.html의 `<script src="main.js"></script>`를 `<script type="module" src="main.js"></script>`로 업데이트했습니다.
 - components/app-initializer.js에 누락된 서비스 import를 추가했습니다.
+- `CustomerForm` 컴포넌트 파일을 Git 기록에서 복구하고 `CustomerService` import를 추가했습니다.
+- `CustomerList` 컴포넌트에 `CustomerService` import를 추가했습니다.
+- `ProductList` 컴포넌트에 `ProductService` import를 추가했습니다.
+- `ProductForm` 컴포넌트에 `ProductService` import를 추가했습니다.
+- `SaleTransaction` 컴포넌트에 `CustomerService`, `ProductService`, `SalesService` import를 추가했습니다.
+- `SalesList` 컴포넌트에 `CustomerService`, `SalesService` import를 추가했습니다.
+- `CustomerPurchaseHistory` 컴포넌트에 `CustomerService`, `SalesService` import를 추가했습니다.
 
 ### Task State:
 - `DONE`: 'services' 디렉토리 생성.
@@ -130,3 +144,5 @@ This section outlines the immediate tasks for the current development cycle.
 - `DONE`: SalesList 컴포넌트를 'components/sales-list.component.js'로 추출하고 main.js에서 임포트하도록 수정.
 - `DONE`: CustomerPurchaseHistory 컴포넌트를 'components/customer-purchase-history.component.js'로 추출하고 main.js에서 임포트하도록 수정.
 - `DONE`: Tab Switching Logic을 'components/app-initializer.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: 누락된 서비스 import를 모든 구성 요소에 추가하고 CustomerForm을 복구했습니다.
+- `DONE`: Inventory Management 탭에서 재고 목록을 쉽게 볼 수 있도록 브랜드 필터 버튼을 추가했습니다.

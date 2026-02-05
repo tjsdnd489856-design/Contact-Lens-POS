@@ -54,17 +54,24 @@ export default class ProductList extends HTMLElement {
       <style>
         .brand-filter-buttons {
             margin-bottom: 1rem;
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
+            display: grid; /* Use grid for layout */
+            grid-template-columns: repeat(5, 1fr); /* 5 columns, equal width */
+            gap: 10px; /* Space between buttons */
+            flex-wrap: wrap; /* Allow wrapping to next line if needed */
         }
         .brand-filter-button {
             background-color: #f0f0f0;
             border: 1px solid #ccc;
-            padding: 8px 12px;
+            padding: 8px 12px; /* Adjust padding as needed */
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.9rem;
+            display: flex; /* Use flex for centering content */
+            justify-content: center;
+            align-items: center;
+            aspect-ratio: 1 / 1; /* Make it square */
+            text-align: center; /* Fallback for older browsers */
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
         }
         .brand-filter-button.active {
             background-color: #3498db;
