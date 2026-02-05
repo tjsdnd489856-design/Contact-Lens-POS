@@ -78,6 +78,8 @@ This section outlines the immediate tasks for the current development cycle.
 25.  **DONE:** Change "고객 수정" button text to "고객 추가" when adding a new customer in `CustomerForm`.
 26. **DONE:** Re-verify and fix the positioning and color of the "고객 삭제" and "고객 저장/수정" buttons in the customer modification popup. (재시도: `main.js` 내 `<style>`에 `form .form-buttons { justify-content: flex-end; }`와 `#delete-customer-from-form-btn { margin-right: auto; background-color: #c0392b; }` 명시적 추가. `_render()`의 `submit` 버튼 인라인 스타일 제거 및 텍스트 '고객 추가' 확인. `clearForm()`의 `submit` 버튼 텍스트 '고객 추가' 확인.)
 27. **DONE:** Implement a brand-specific product list popup in the inventory management tab. Users can click on a brand button to open a popup that displays the stock status for that brand in a line-by-line format. This includes refactoring the `brand-product-list-modal.component.js` to be a presentational component, updating `app-initializer.js` to handle the modal's logic, and adjusting the brand button styles in `product-list.component.js`.
+28. **DONE:** Resolved regression issues where top tabs, new customer add popup, and search functionality were not working. The root cause was the missing import of `brand-product-list-modal.component.js` in `main.js`, preventing the custom element from being defined. Additionally, corrected the event listener for `closeBrandProductListModalElement` in `app-initializer.js` for proper functionality.
+28. **DONE:** Resolved regression issues where top tabs, new customer add popup, and search functionality were not working. The root cause was the missing import of `brand-product-list-modal.component.js` in `main.js`, preventing the custom element from being defined. Additionally, corrected the event listener for `closeBrandProductListModalElement` in `app-initializer.js` for proper functionality.
 
 ### Artifact Trail:
 - `services/product.service.js`: ProductService 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
@@ -148,3 +150,4 @@ This section outlines the immediate tasks for the current development cycle.
 - `DONE`: 누락된 서비스 import를 모든 구성 요소에 추가하고 CustomerForm을 복구했습니다.
 - `DONE`: Inventory Management 탭에서 재고 목록을 쉽게 볼 수 있도록 브랜드 필터 버튼을 추가했습니다.
 - `DONE`: 브랜드별 제품 목록을 보여주는 팝업을 구현하고, `brand-product-list-modal.component.js`, `app-initializer.js`, `product-list.component.js`를 수정했습니다.
+- `DONE`: 상단 탭, 새 고객 추가 팝업, 검색 기능이 작동하지 않던 회귀 버그를 해결했습니다. 주요 원인은 `main.js`에 `brand-product-list-modal.component.js`가 임포트되지 않아 사용자 정의 요소가 정의되지 않았기 때문입니다. 또한, `app-initializer.js`에서 `closeBrandProductListModalElement` 이벤트 리스너를 올바르게 수정했습니다.

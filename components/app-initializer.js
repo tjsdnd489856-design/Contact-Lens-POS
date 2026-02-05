@@ -24,7 +24,7 @@ export function initializeApp() {
 
         // Brand Product List Modal
         const brandProductListModal = document.getElementById('brand-product-list-modal');
-        const closeBrandProductListModal = document.getElementById('close-brand-product-list-modal');
+        const closeBrandProductListModalElement = document.getElementById('close-brand-product-list-modal');
 
         let productsToAdd = [];
         let isEditMode = false;
@@ -39,7 +39,7 @@ export function initializeApp() {
         if (!addProductBtn) console.error('Error: add-product-btn element not found.');
         if (!saveAllProductsBtn) console.error('Error: save-all-products-btn element not found.');
         if (!brandProductListModal) console.error('Error: brand-product-list-modal element not found.');
-        if (!closeBrandProductListModal) console.error('Error: close-brand-product-list-modal element not found.');
+        if (!closeBrandProductListModalElement) console.error('Error: close-brand-product-list-modal element not found.');
 
         function showTab(tabId) {
             tabContents.forEach(content => {
@@ -245,8 +245,8 @@ export function initializeApp() {
         document.addEventListener('openBrandProductListModal', (e) => {
             openBrandProductListModal(e.detail);
         });
-        if (closeBrandProductListModal) {
-            closeBrandProductListModal.addEventListener('click', closeBrandProductListModal);
+        if (closeBrandProductListModalElement) {
+            closeBrandProductListModalElement.addEventListener('click', closeBrandProductListModal);
         }
 
         // Event listener for customer search
