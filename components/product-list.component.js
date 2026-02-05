@@ -8,12 +8,12 @@ export default class ProductList extends HTMLElement {
     this.handleDelete = this.handleDelete.bind(this);
     this.handleEdit = this.handleEdit.bind(this);
     this.filterByBrand = this.filterByBrand.bind(this);
-    this._currentFilterBrand = '전체'; // Default filter
+    this._currentFilterBrand = null; // Default filter, no brand selected initially
     document.addEventListener('productsUpdated', () => this._render());
   }
     
   connectedCallback() {
-      this._render();
+      this._render(); // Initial render to show message or empty state
   }
 
   disconnectedCallback() {
@@ -38,6 +38,9 @@ export default class ProductList extends HTMLElement {
 
   filterByBrand(e) {
       this._currentFilterBrand = e.target.dataset.brand;
+      if (this._currentFilterBrand === '전체') {
+          this._currentFilterBrand = null; // Set to null to show initial message
+      }
       this._render();
   }
 
@@ -45,9 +48,17 @@ export default class ProductList extends HTMLElement {
     let products = ProductService.getProducts();
     const uniqueBrands = ProductService.getUniqueBrands();
 
-    if (this._currentFilterBrand !== '전체') {
+    let message = '';
+    if (this._currentFilterBrand === null) {
+        products = []; // No products to display initially
+        message = '브랜드를 선택하여 제품 목록을 조회해주세요.';
+    } else if (this._currentFilterBrand !== '전체') {
         products = products.filter(p => p.brand === this._currentFilterBrand);
+        if (products.length === 0) {
+            message = `${this._currentFilterBrand} 브랜드의 제품이 없습니다.`;
+        }
     }
+    // If _currentFilterBrand is '전체', it means show all products, which is handled below.
 
     const template = document.createElement('template');
     template.innerHTML = `
@@ -142,11 +153,12 @@ export default class ProductList extends HTMLElement {
       </style>
       <div class="brand-filter-buttons">
         ${uniqueBrands.map(brand => `
-            <button class="brand-filter-button ${this._currentFilterBrand === brand ? 'active' : ''}" data-brand="${brand}">
+            <button class="brand-filter-button ${this._currentFilterBrand === brand ? 'active' : ''}" data-brand="${brand === '전체' ? '전체' : brand}">
                 ${brand}
             </button>
         `).join('')}
       </div>
+      ${message ? `<div class="message">${message}</div>` : `
       <div class="product-grid">
           ${products.map(product => `
             <div class="product-card ${product.quantity < 5 ? 'low-stock' : ''}">
@@ -164,6 +176,7 @@ export default class ProductList extends HTMLElement {
             </div>
           `).join('')}
       </div>
+      `}
     `;
     this.shadowRoot.innerHTML = ''; 
     this.shadowRoot.appendChild(template.content.cloneNode(true));
