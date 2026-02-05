@@ -220,6 +220,7 @@ footer {
   display: flex;
   justify-content: flex-end; /* Align button to the right */
   margin-bottom: 1rem;
+  gap: 10px; /* Added spacing between buttons */
 }
 
 #add-product-btn {
@@ -231,6 +232,21 @@ footer {
   cursor: pointer;
   font-size: 1rem;
   transition: background-color 0.3s ease;
+}
+
+#discard-inventory-btn {
+  background-color: #dc3545; /* Red for discard */
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+#discard-inventory-btn:hover {
+  background-color: #c82333;
 }
 
 #add-product-btn:hover {
