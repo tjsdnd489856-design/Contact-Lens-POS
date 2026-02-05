@@ -7,7 +7,7 @@ with open(blueprint_path, 'r') as f:
     content = f.read()
 
 # Define the new, correct Task State content
-new_task_state_content = """### Task State:
+new_task_state_content_full = """### Task State:
 - `DONE`: 'services' 디렉토리 생성.
 - `DONE`: ProductService를 'services/product.service.js'로 추출하고 main.js에서 임포트하도록 수정.
 - `DONE`: CustomerService를 'services/customer.service.js'로 추출하고 main.js에서 임포트하도록 수정.
@@ -32,9 +32,14 @@ new_task_state_content = """### Task State:
 # Find the start and end of the Task State section
 task_state_heading = '### Task State:'
 artifact_trail_heading = '### Artifact Trail:'
+file_system_state_heading = '### File System State:'
+recent_actions_heading = '### Recent Actions:'
 
 task_state_start_index = content.find(task_state_heading)
 artifact_trail_start_index = content.find(artifact_trail_heading)
+file_system_state_start_index = content.find(file_system_state_heading)
+recent_actions_start_index = content.find(recent_actions_heading)
+
 
 if task_state_start_index == -1:
     print('Error: "### Task State:" section not found.')
@@ -44,14 +49,25 @@ if task_state_start_index == -1:
 pre_task_state_content = content[:task_state_start_index]
 
 # Extract content after Task State section (starting from Artifact Trail heading)
-post_task_state_content = ''
+post_task_state_content_start_index = -1
 if artifact_trail_start_index != -1:
-    post_task_state_content = content[artifact_trail_start_index:]
+    post_task_state_content_start_index = artifact_trail_start_index
+elif file_system_state_start_index != -1:
+    post_task_state_content_start_index = file_system_state_start_index
+elif recent_actions_start_index != -1:
+    post_task_state_content_start_index = recent_actions_start_index
+
+post_task_state_content = ''
+if post_task_state_content_start_index != -1:
+    post_task_state_content = content[post_task_state_content_start_index:]
 
 # Combine parts
-final_content = pre_task_state_content + new_task_state_content + '\n' + post_task_state_content
+# Ensure there's a blank line before and after the new task state content
+final_content = pre_task_state_content.strip() + '\n\n' + \
+                new_task_state_content_full.strip() + '\n\n' + \
+                post_task_state_content.strip() + '\n'
 
 with open(blueprint_path, 'w') as f:
-    f.write(final_content.strip() + '\n') # Ensure clean file with single final newline
+    f.write(final_content)
 
 print(f'{blueprint_path} completely reconstructed and updated successfully.')

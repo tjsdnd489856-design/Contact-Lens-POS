@@ -16,9 +16,6 @@ export default class BrandProductListModal extends HTMLElement {
         let products = ProductService.getProducts();
         let message = '';
 
-        console.log('BrandProductListModal: Rendering with currentBrand:', this._currentBrand);
-        console.log('BrandProductListModal: Products after initial fetch:', products);
-        console.log('BrandProductListModal: Initial message:', message);
 
         if (this._currentBrand) {
             products = products.filter(p => p.brand === this._currentBrand);
@@ -43,7 +40,7 @@ export default class BrandProductListModal extends HTMLElement {
             </tr>
         `).join('');
 
-        console.log('BrandProductListModal: Generated table body HTML:', tableBodyHtml);
+
 
         const template = document.createElement('template');
         template.innerHTML = `
