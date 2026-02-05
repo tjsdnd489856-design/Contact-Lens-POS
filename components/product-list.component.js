@@ -8,6 +8,7 @@ export default class ProductList extends HTMLElement {
     this.handleDelete = this.handleDelete.bind(this); // These are no longer needed here
     this.handleEdit = this.handleEdit.bind(this);   // These are no longer needed here
     this.filterByBrand = this.filterByBrand.bind(this);
+    this.showExpirationWarning = this.showExpirationWarning.bind(this); // Bind new method
     this._currentFilterBrand = null; // Default filter, no brand selected initially
     document.addEventListener('productsUpdated', () => this._render());
   }
@@ -33,6 +34,10 @@ export default class ProductList extends HTMLElement {
       this._currentFilterBrand = selectedBrand;
       this._render(); // Re-render buttons to update active state
       document.dispatchEvent(new CustomEvent('openBrandProductListModal', { detail: brandToOpenModalWith }));
+  }
+
+  showExpirationWarning() {
+      document.dispatchEvent(new CustomEvent('openExpirationWarningModal'));
   }
 
   _render() {
@@ -70,6 +75,24 @@ export default class ProductList extends HTMLElement {
             color: white;
             border-color: #3498db;
         }
+        .expiration-warning-button {
+            background-color: #ffc107; /* Warning yellow */
+            border: 1px solid #ffc107;
+            color: #333;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: block; /* Take full width */
+            width: 100%;
+            margin-top: 1rem; /* Space from above buttons */
+            box-sizing: border-box;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .expiration-warning-button:hover {
+            background-color: #e0a800;
+            border-color: #e0a800;
+        }
       </style>
       <div class="brand-filter-buttons">
         ${uniqueBrands.map(brand => `
@@ -78,10 +101,14 @@ export default class ProductList extends HTMLElement {
             </button>
         `).join('')}
       </div>
+      <button class="expiration-warning-button" id="expiration-warning-btn">
+          유통 기한 주의
+      </button>
     `;
     this.shadowRoot.innerHTML = ''; 
     this.shadowRoot.appendChild(template.content.cloneNode(true));
     this.shadowRoot.querySelectorAll('.brand-filter-button').forEach(btn => btn.addEventListener('click', this.filterByBrand));
+    this.shadowRoot.getElementById('expiration-warning-btn').addEventListener('click', this.showExpirationWarning);
   }
 }
 customElements.define('product-list', ProductList);

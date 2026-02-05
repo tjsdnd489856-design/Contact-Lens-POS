@@ -10,6 +10,7 @@ import SaleTransaction from './components/sale-transaction.component.js';
 import SalesList from './components/sales-list.component.js';
 import CustomerPurchaseHistory from './components/customer-purchase-history.component.js';
 import BrandProductListModal from './components/brand-product-list-modal.component.js';
+import ExpirationWarningModal from './components/expiration-warning-modal.component.js'; // New import
 import { initializeApp } from './components/app-initializer.js';
 
 document.addEventListener('DOMContentLoaded', () => {
