@@ -6,8 +6,9 @@ export default class BrandProductListModal extends HTMLElement {
         this.attachShadow({ mode: 'open' });
         this._selectedBrand = null;
         this._selectedLensType = null;
+        this._selectedWearType = null; // New state for wear type
         this._selectedModel = null;
-        this._currentView = 'brands'; // 'brands', 'lensTypes', 'models', 'details'
+        this._currentView = 'brands'; // 'brands', 'lensTypes', 'wearTypes', 'models', 'details'
         this._sortBy = null; // 'powerS', 'powerC'
         this._sortDirection = 'asc'; // 'asc', 'desc'
 
@@ -20,11 +21,13 @@ export default class BrandProductListModal extends HTMLElement {
         if (brand === null) {
             this._selectedBrand = null;
             this._selectedLensType = null;
+            this._selectedWearType = null;
             this._selectedModel = null;
             this._currentView = 'brands';
         } else {
             this._selectedBrand = brand;
             this._selectedLensType = null;
+            this._selectedWearType = null;
             this._selectedModel = null;
             this._currentView = 'lensTypes'; // Start directly at lens types for a selected brand
         }
@@ -36,13 +39,20 @@ export default class BrandProductListModal extends HTMLElement {
 
     _getProductsData() {
         let products = ProductService.getProducts();
-        // Filter by selected brand, lensType, model
+        // Filter by selected brand, lensType, wearType, model
         if (this._selectedBrand) {
             products = products.filter(p => p.brand === this._selectedBrand);
             if (this._selectedLensType && this._selectedLensType !== 'N/A') {
                 products = products.filter(p => p.lensType === this._selectedLensType);
-                if (this._selectedModel) {
-                    products = products.filter(p => p.model === this._selectedModel);
+                if (this._selectedWearType && this._selectedWearType !== 'N/A') { // New filter for wear type
+                    products = products.filter(p => p.wearType === this._selectedWearType);
+                    if (this._selectedModel) {
+                        products = products.filter(p => p.model === this._selectedModel);
+                    }
+                } else if (this._currentView === 'models' || this._currentView === 'details') {
+                    // If wearType is not selected yet, but we are in models/details view,
+                    // it means we came from wearType selection, so don't filter by wearType yet.
+                    // This condition handles the case where there is no wearType for some products.
                 }
             }
         }
@@ -57,14 +67,28 @@ export default class BrandProductListModal extends HTMLElement {
 
     _getUniqueLensTypes() {
         // Filter products first by selected brand
-        const products = this._getProductsData().filter(p => p.brand === this._selectedBrand);
+        const products = ProductService.getProducts().filter(p => p.brand === this._selectedBrand);
         const lensTypes = new Set(products.map(p => p.lensType || 'N/A'));
         return Array.from(lensTypes);
     }
 
-    _getUniqueModels() {
+    _getUniqueWearTypes() {
         // Filter products by selected brand and lensType
-        const products = this._getProductsData().filter(p => p.brand === this._selectedBrand && (p.lensType === this._selectedLensType || this._selectedLensType === 'N/A'));
+        const products = ProductService.getProducts().filter(p => 
+            p.brand === this._selectedBrand && 
+            (p.lensType === this._selectedLensType || this._selectedLensType === 'N/A')
+        );
+        const wearTypes = new Set(products.map(p => p.wearType || 'N/A'));
+        return Array.from(wearTypes);
+    }
+
+    _getUniqueModels() {
+        // Filter products by selected brand, lensType, and wearType
+        const products = ProductService.getProducts().filter(p => 
+            p.brand === this._selectedBrand && 
+            (p.lensType === this._selectedLensType || this._selectedLensType === 'N/A') &&
+            (p.wearType === this._selectedWearType || this._selectedWearType === 'N/A')
+        );
         const models = new Set(products.map(p => p.model));
         return Array.from(models);
     }
@@ -97,6 +121,7 @@ export default class BrandProductListModal extends HTMLElement {
     _selectBrand(brand) {
         this._selectedBrand = brand;
         this._selectedLensType = null;
+        this._selectedWearType = null;
         this._selectedModel = null;
         this._currentView = 'lensTypes';
         this._sortBy = null; // Reset sort
@@ -105,8 +130,17 @@ export default class BrandProductListModal extends HTMLElement {
 
     _selectLensType(lensType) {
         this._selectedLensType = lensType;
+        this._selectedWearType = null; // Reset wear type
         this._selectedModel = null;
-        this._currentView = 'models';
+        this._currentView = 'wearTypes'; // Transition to wear type selection
+        this._sortBy = null; // Reset sort
+        this._render();
+    }
+
+    _selectWearType(wearType) { // New selection method
+        this._selectedWearType = wearType;
+        this._selectedModel = null;
+        this._currentView = 'models'; // Transition to model selection
         this._sortBy = null; // Reset sort
         this._render();
     }
@@ -123,7 +157,10 @@ export default class BrandProductListModal extends HTMLElement {
             this._selectedModel = null;
             this._currentView = 'models';
         } else if (this._currentView === 'models') {
-            this._selectedLensType = null;
+            this._selectedWearType = null; // Go back from models to wear types
+            this._currentView = 'wearTypes';
+        } else if (this._currentView === 'wearTypes') {
+            this._selectedLensType = null; // Go back from wear types to lens types
             this._currentView = 'lensTypes';
         } else if (this._currentView === 'lensTypes') {
             this._selectedBrand = null;
@@ -137,12 +174,18 @@ export default class BrandProductListModal extends HTMLElement {
         if (view === 'brands') {
             this._selectedBrand = null;
             this._selectedLensType = null;
+            this._selectedWearType = null;
             this._selectedModel = null;
             this._currentView = 'brands';
         } else if (view === 'lensTypes') {
             this._selectedLensType = null;
+            this._selectedWearType = null;
             this._selectedModel = null;
             this._currentView = 'lensTypes';
+        } else if (view === 'wearTypes') { // New breadcrumb target
+            this._selectedWearType = null;
+            this._selectedModel = null;
+            this._currentView = 'wearTypes';
         } else if (view === 'models') {
             this._selectedModel = null;
             this._currentView = 'models';
@@ -184,6 +227,20 @@ export default class BrandProductListModal extends HTMLElement {
             <ul class="selection-list">
                 ${lensTypes.map(lensType => `
                     <li data-value="${lensType}" class="list-item lensType-item">${lensType}</li>
+                `).join('')}
+            </ul>
+        `;
+    }
+
+    _renderWearTypes() { // New render method for wear types
+        const wearTypes = this._getUniqueWearTypes();
+        if (wearTypes.length === 0) {
+            return '<p class="message">해당 렌즈 유형의 착용 방식이 없습니다.</p>';
+        }
+        return `
+            <ul class="selection-list">
+                ${wearTypes.map(wearType => `
+                    <li data-value="${wearType}" class="list-item wearType-item">${wearType}</li>
                 `).join('')}
             </ul>
         `;
@@ -234,9 +291,9 @@ export default class BrandProductListModal extends HTMLElement {
             <table class="details-table">
                 <thead>
                     <tr>
-                        <th class="sortable" data-sort-by="powerS">도수 S ${getSortIndicator('powerS')}</th>
-                        <th class="sortable" data-sort-by="powerC">도수 C ${getSortIndicator('powerC')}</th>
-                        <th>도수 AX</th>
+                        <th class="sortable" data-sort-by="powerS">S ${getSortIndicator('powerS')}</th>
+                        <th class="sortable" data-sort-by="powerC">C ${getSortIndicator('powerC')}</th>
+                        <th>AX</th>
                         <th>수량</th>
                         <th>유통기한</th>
                     </tr>
@@ -263,12 +320,24 @@ export default class BrandProductListModal extends HTMLElement {
                     <span class="breadcrumb-item">유형 선택</span>
                 </h3>`;
             showBackButton = true;
+        } else if (this._currentView === 'wearTypes') { // New view for wear types
+            titleHtml = `
+                <h3 class="breadcrumb">
+                    <span class="breadcrumb-item clickable" data-view="brands">${this._selectedBrand}</span>
+                    <span class="breadcrumb-separator">></span>
+                    <span class="breadcrumb-item clickable" data-view="lensTypes">${this._selectedLensType}</span>
+                    <span class="breadcrumb-separator">></span>
+                    <span class="breadcrumb-item">착용 방식 선택</span>
+                </h3>`;
+            showBackButton = true;
         } else if (this._currentView === 'models') {
             titleHtml = `
                 <h3 class="breadcrumb">
                     <span class="breadcrumb-item clickable" data-view="brands">${this._selectedBrand}</span>
                     <span class="breadcrumb-separator">></span>
                     <span class="breadcrumb-item clickable" data-view="lensTypes">${this._selectedLensType}</span>
+                    <span class="breadcrumb-separator">></span>
+                    <span class="breadcrumb-item clickable" data-view="wearTypes">${this._selectedWearType}</span>
                     <span class="breadcrumb-separator">></span>
                     <span class="breadcrumb-item">모델 선택</span>
                 </h3>`;
@@ -280,6 +349,8 @@ export default class BrandProductListModal extends HTMLElement {
                     <span class="breadcrumb-separator">></span>
                     <span class="breadcrumb-item clickable" data-view="lensTypes">${this._selectedLensType}</span>
                     <span class="breadcrumb-separator">></span>
+                    <span class="breadcrumb-item clickable" data-view="wearTypes">${this._selectedWearType}</span>
+                    <span class="breadcrumb-separator">></span>
                     <span class="breadcrumb-item clickable" data-view="models">${this._selectedModel}</span>
                 </h3>`; // Removed "세부 정보" suffix
             showBackButton = true;
@@ -289,6 +360,8 @@ export default class BrandProductListModal extends HTMLElement {
             contentHtml = this._renderBrands();
         } else if (this._currentView === 'lensTypes') {
             contentHtml = this._renderLensTypes();
+        } else if (this._currentView === 'wearTypes') { // New content render
+            contentHtml = this._renderWearTypes();
         } else if (this._currentView === 'models') {
             contentHtml = this._renderModels();
         } else if (this._currentView === 'details') {
@@ -407,6 +480,10 @@ export default class BrandProductListModal extends HTMLElement {
         } else if (this._currentView === 'lensTypes') {
             this.shadowRoot.querySelectorAll('.lensType-item').forEach(item => {
                 item.addEventListener('click', (e) => this._selectLensType(e.target.dataset.value));
+            });
+        } else if (this._currentView === 'wearTypes') { // New event listener for wear types
+            this.shadowRoot.querySelectorAll('.wearType-item').forEach(item => {
+                item.addEventListener('click', (e) => this._selectWearType(e.target.dataset.value));
             });
         } else if (this._currentView === 'models') {
             this.shadowRoot.querySelectorAll('.model-item').forEach(item => {
