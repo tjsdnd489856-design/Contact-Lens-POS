@@ -4,17 +4,6 @@ export default class BrandProductListModal extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        this._currentBrand = null;
-    }
-
-    setBrand(brand) {
-        this._currentBrand = brand;
-        this._render();
-    }
-
-    constructor() {
-        super();
-        this.attachShadow({ mode: 'open' });
         this._selectedBrand = null;
         this._selectedLensType = null;
         this._selectedModel = null;
