@@ -51,6 +51,7 @@ This section outlines the immediate tasks for the current development cycle.
     -   **DONE:** Create `sale-transaction` component for creating new sales.
     -   **DONE:** Allow selecting a customer and adding products to a cart.
     -   **DONE:** Calculate total price and record the transaction.
+    -   **DONE:** Decrease stock of sold products.
     -   **DONE:** Display a list of past sales.
 7.  **DONE:** Implement "Inventory Tracking".
     -   **DONE:** Add a 'stock' property to products.
@@ -73,6 +74,58 @@ This section outlines the immediate tasks for the current development cycle.
 21. **DONE:** Add "구매수량" header to `CustomerPurchaseHistory` table and display item quantities.
 22. **DONE:** For purchases made on the same day, consolidate identical products by summing their quantities and amounts in `CustomerPurchaseHistory`.
 23. **DONE:** Change "고객 삭제" button color to red and ensure its position is fixed (or at the start of the `form-buttons` container).
-24. **DONE:** Move "고객 수정" button to the far right within the `form-buttons` container.
-25. **DONE:** Change "고객 수정" button text to "고객 추가" when adding a new customer in `CustomerForm`.
+24.  **DONE:** Move "고객 수정" button to the far right within the `form-buttons` container.
+25.  **DONE:** Change "고객 수정" button text to "고객 추가" when adding a new customer in `CustomerForm`.
 26. **DONE:** Re-verify and fix the positioning and color of the "고객 삭제" and "고객 저장/수정" buttons in the customer modification popup. (재시도: `main.js` 내 `<style>`에 `form .form-buttons { justify-content: flex-end; }`와 `#delete-customer-from-form-btn { margin-right: auto; background-color: #c0392b; }` 명시적 추가. `_render()`의 `submit` 버튼 인라인 스타일 제거 및 텍스트 '고객 추가' 확인. `clearForm()`의 `submit` 버튼 텍스트 '고객 추가' 확인.)
+
+### Artifact Trail:
+- `services/product.service.js`: ProductService 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `services/customer.service.js`: CustomerService 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `services/sales.service.js`: SalesService 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `components/product-list.component.js`: ProductList 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `components/product-form.component.js`: ProductForm 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `components/customer-list.component.js`: CustomerList 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `components/customer-form.component.js`: CustomerForm 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `components/sale-transaction.component.js`: SaleTransaction 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `components/sales-list.component.js`: SalesList 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `components/customer-purchase-history.component.js`: CustomerPurchaseHistory 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `components/app-initializer.js`: initializeApp 함수를 포함하도록 생성했습니다.
+- `main.js`: ProductService, CustomerService, SalesService, ProductList, ProductForm, CustomerList, CustomerForm, SaleTransaction, SalesList, CustomerPurchaseHistory, initializeApp의 정의를 제거하고 해당 임포트 문을 추가하도록 여러 번 수정되었습니다. 이전 셸 스크립트 오류로 인해 파일이 손상되어 git restore 후 인메모리 문자열 조작으로 수정되었습니다.
+- `index.html`: `<script src="main.js"></script>`를 `<script type="module" src="main.js"></script>`로 업데이트했습니다.
+- `components/`: UI 컴포넌트를 저장하기 위해 디렉토리가 생성되었습니다.
+
+### File System State:
+- `cwd`: /home/user/contact-lens-pos/
+- `created`: services/, services/product.service.js, services/customer.service.js, services/sales.service.js, components/, components/product-list.component.js, components/product-form.component.js, components/customer-list.component.js, components/customer-form.component.js, components/sale-transaction.component.js, components/sales-list.component.js, components/customer-purchase-history.component.js, components/app-initializer.js
+- `modified`: main.js, index.html
+
+### Recent Actions:
+- ProductService를 main.js에서 services/product.service.js로 추출하고 main.js에 import 문을 추가했습니다.
+- CustomerService를 main.js에서 services/customer.service.js로 추출하고 main.js에 import 문을 추가했습니다.
+- SalesService를 main.js에서 services/sales.service.js로 추출하고 main.js에 import 문을 추가했습니다.
+- components/ 디렉토리를 생성했습니다.
+- ProductList 컴포넌트를 main.js에서 components/product-list.component.js로 추출하고 main.js에 import 문을 추가했습니다.
+- ProductForm 컴포넌트를 main.js에서 components/product-form.component.js로 추출하고 main.js에 import 문을 추가했습니다.
+- CustomerList 컴포넌트를 main.js에서 components/customer-list.component.js로 추출하고 main.js에 import 문을 추가했습니다.
+- CustomerForm 컴포넌트를 main.js에서 components/customer-form.component.js로 추출하고 main.js에 import 문을 추가했습니다.
+- SaleTransaction 컴포넌트를 main.js에서 components/sale-transaction.component.js로 추출하고 main.js에 import 문을 추가했습니다.
+- SalesList 컴포넌트를 main.js에서 components/sales-list.component.js로 추출하고 main.js에 import 문을 추가했습니다.
+- CustomerPurchaseHistory 컴포넌트를 main.js에서 components/customer-purchase-history.component.js로 추출하고 main.js에 import 문을 추가했습니다.
+- Tab Switching Logic을 main.js에서 components/app-initializer.js로 추출하고 main.js에 import 문과 initializeApp() 호출을 추가했습니다.
+- index.html의 `<script src="main.js"></script>`를 `<script type="module" src="main.js"></script>`로 업데이트했습니다.
+
+### Task State:
+- `DONE`: 'services' 디렉토리 생성.
+- `DONE`: ProductService를 'services/product.service.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: CustomerService를 'services/customer.service.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: SalesService를 'services/sales.service.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: 필요하다면 index.html 업데이트.
+- `DONE`: 'components' 디렉토리 생성.
+- `DONE`: ProductList 컴포넌트를 'components/product-list.component.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: ProductForm 컴포넌트를 'components/product-form.component.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: CustomerList 컴포넌트를 'components/customer-list.component.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: CustomerForm 컴포넌트를 'components/customer-form.component.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: SaleTransaction 컴포넌트를 'components/sale-transaction.component.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: SalesList 컴포넌트를 'components/sales-list.component.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: CustomerPurchaseHistory 컴포넌트를 'components/customer-purchase-history.component.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: Tab Switching Logic을 'components/app-initializer.js'로 추출하고 main.js에서 임포트하도록 수정.
