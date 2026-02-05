@@ -28,19 +28,19 @@ export default class BrandProductListModal extends HTMLElement {
 
         const tableBodyHtml = products.map(product => `
             <tr>
-                <td>${product.barcode || 'N/A'}</td>
                 <td>${product.brand}</td>
+                <td>${product.lensType || 'N/A'}</td>
                 <td>${product.model}</td>
-                <td>${(product.powerS !== null && product.powerS !== undefined) ? (product.powerS > 0 ? '+' : '') + product.powerS.toFixed(2) : 'N/A'}</td>
-                <td>${(product.powerC !== null && product.powerC !== undefined) ? (product.powerC > 0 ? '+' : '') + product.powerC.toFixed(2) : 'N/A'}</td>
-                <td>${product.powerAX !== null ? product.powerAX : 'N/A'}</td>
+                <td>
+                    S:${(product.powerS !== null && product.powerS !== undefined) ? (product.powerS > 0 ? '+' : '') + product.powerS.toFixed(2) : 'N/A'}
+                    C:${(product.powerC !== null && product.powerC !== undefined) ? (product.powerC > 0 ? '+' : '') + product.powerC.toFixed(2) : 'N/A'}
+                    ${product.powerAX !== null ? `AX:${product.powerAX}` : ''}
+                </td>
                 <td>${product.quantity}</td>
                 <td>${product.expirationDate}</td>
                 <td>$${product.price.toFixed(2)}</td>
             </tr>
         `).join('');
-
-
 
         const template = document.createElement('template');
         template.innerHTML = `
@@ -78,12 +78,10 @@ export default class BrandProductListModal extends HTMLElement {
                     <table>
                         <thead>
                             <tr>
-                                <th>바코드</th>
                                 <th>브랜드</th>
-                                <th>모델명</th>
-                                <th>S</th>
-                                <th>C</th>
-                                <th>AX</th>
+                                <th>유형 (투명/컬러)</th>
+                                <th>제품명</th>
+                                <th>도수 (S/C/AX)</th>
                                 <th>수량</th>
                                 <th>유통기한</th>
                                 <th>가격</th>
