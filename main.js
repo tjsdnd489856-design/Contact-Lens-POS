@@ -10,9 +10,29 @@ import SaleTransaction from './components/sale-transaction.component.js';
 import SalesList from './components/sales-list.component.js';
 import CustomerPurchaseHistory from './components/customer-purchase-history.component.js';
 import BrandProductListModal from './components/brand-product-list-modal.component.js';
-// import ExpirationWarningModal from './components/expiration-warning-modal.component.js'; // Removed import
+import DiscardInventoryModal from './components/discard-inventory-modal.component.js';
 import { initializeApp } from './components/app-initializer.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeApp();
+
+    // Get discard inventory button and modal elements
+    const discardInventoryBtn = document.getElementById('discard-inventory-btn');
+    const discardInventoryModal = document.getElementById('discard-inventory-modal');
+    const closeDiscardInventoryModalBtn = document.getElementById('close-discard-inventory-modal');
+    const discardInventoryModalComponent = discardInventoryModal.querySelector('discard-inventory-modal');
+
+    // Open discard inventory modal
+    discardInventoryBtn.addEventListener('click', () => {
+        discardInventoryModalComponent.setProducts(ProductService.getProducts()); // Pass all products
+        discardInventoryModal.style.display = 'block';
+    });
+
+    // Close discard inventory modal
+    closeDiscardInventoryModalBtn.addEventListener('click', () => {
+        discardInventoryModal.style.display = 'none';
+    });
+    document.addEventListener('closeDiscardInventoryModal', () => {
+        discardInventoryModal.style.display = 'none';
+    });
 });

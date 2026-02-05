@@ -34,6 +34,7 @@
           <h2>재고 관리</h2>
           <div class="product-controls">
             <button id="add-product-btn">새 제품 추가</button>
+            <button id="discard-inventory-btn">재고 폐기</button>
           </div>
           <product-list></product-list>
         </div>    <div id="sales-tab" class="tab-content">
@@ -75,6 +76,14 @@
     <div class="modal-content large-modal">
       <span class="close-button" id="close-brand-product-list-modal">&times;</span>
       <brand-product-list-modal></brand-product-list-modal>
+    </div>
+  </div>
+
+  <!-- 재고 폐기 모달 -->
+  <div id="discard-inventory-modal" class="modal">
+    <div class="modal-content large-modal">
+      <span class="close-button" id="close-discard-inventory-modal">&times;</span>
+      <discard-inventory-modal></discard-inventory-modal>
     </div>
   </div>
 
