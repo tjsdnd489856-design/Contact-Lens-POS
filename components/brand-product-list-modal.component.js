@@ -216,13 +216,13 @@ export default class BrandProductListModal extends HTMLElement {
                     list-style: none;
                     padding: 0;
                     display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
                     gap: 10px;
                 }
                 .list-item {
                     background-color: #f0f0f0;
                     border: 1px solid #ccc;
-                    padding: 10px;
+                    padding: 8px;
                     border-radius: 5px;
                     cursor: pointer;
                     text-align: center;
