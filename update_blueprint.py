@@ -1,4 +1,3 @@
-
 import re
 import os
 
@@ -28,6 +27,7 @@ new_task_state_content_full = """### Task State:
 - `DONE`: 브랜드별 제품 목록을 보여주는 팝업을 구현하고, `brand-product-list-modal.component.js`, `app-initializer.js`, `product-list.component.js`를 수정했습니다.
 - `DONE`: 상단 탭, 새 고객 추가 팝업, 검색 기능이 작동하지 않던 회귀 버그를 해결했습니다. 주요 원인은 `main.js`에 `brand-product-list-modal.component.js`가 임포트되지 않아 사용자 정의 요소가 정의되지 않았기 때문입니다. 또한, `app-initializer.js`에서 `closeBrandProductListModalElement` 이벤트 리스너를 올바르게 수정했습니다.
 - `DONE`: 전체 브랜드 제품이 표시되도록 `brand-product-list-modal.component.js`를 수정했습니다.
+- `DONE`: 재고 목록 내부 팝업에서 바코드와 가격을 삭제하고, "브랜드 - 유형 (투명/컬러) - 제품명 - 도수 (S/C/AX)"로 세분화하여 표시하도록 `brand-product-list-modal.component.js`와 `services/product.service.js`를 수정했습니다.
 """
 
 # Find the start and end of the Task State section
