@@ -89,7 +89,7 @@ This section outlines the immediate tasks for the current development cycle.
 - `components/sale-transaction.component.js`: SaleTransaction 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
 - `components/sales-list.component.js`: SalesList 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
 - `components/customer-purchase-history.component.js`: CustomerPurchaseHistory 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
-- `components/app-initializer.js`: initializeApp 함수를 포함하도록 생성했습니다.
+- `components/app-initializer.js`: initializeApp 함수를 포함하도록 생성했으며, 누락된 서비스 import를 추가하여 수정했습니다.
 - `main.js`: ProductService, CustomerService, SalesService, ProductList, ProductForm, CustomerList, CustomerForm, SaleTransaction, SalesList, CustomerPurchaseHistory, initializeApp의 정의를 제거하고 해당 임포트 문을 추가하도록 여러 번 수정되었습니다. 이전 셸 스크립트 오류로 인해 파일이 손상되어 git restore 후 인메모리 문자열 조작으로 수정되었습니다.
 - `index.html`: `<script src="main.js"></script>`를 `<script type="module" src="main.js"></script>`로 업데이트했습니다.
 - `components/`: UI 컴포넌트를 저장하기 위해 디렉토리가 생성되었습니다.
@@ -113,6 +113,7 @@ This section outlines the immediate tasks for the current development cycle.
 - CustomerPurchaseHistory 컴포넌트를 main.js에서 components/customer-purchase-history.component.js로 추출하고 main.js에 import 문을 추가했습니다.
 - Tab Switching Logic을 main.js에서 components/app-initializer.js로 추출하고 main.js에 import 문과 initializeApp() 호출을 추가했습니다.
 - index.html의 `<script src="main.js"></script>`를 `<script type="module" src="main.js"></script>`로 업데이트했습니다.
+- components/app-initializer.js에 누락된 서비스 import를 추가했습니다.
 
 ### Task State:
 - `DONE`: 'services' 디렉토리 생성.

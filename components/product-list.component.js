@@ -1,3 +1,5 @@
+import { ProductService } from '../services/product.service.js';
+
 // --- ProductList Component ---
 export default class ProductList extends HTMLElement {
   constructor() {

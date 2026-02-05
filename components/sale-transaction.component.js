@@ -1,3 +1,7 @@
+import { CustomerService } from '../services/customer.service.js';
+import { ProductService } from '../services/product.service.js';
+import { SalesService } from '../services/sales.service.js';
+
 // --- SaleTransaction Component ---
 export default class SaleTransaction extends HTMLElement {
   constructor() {

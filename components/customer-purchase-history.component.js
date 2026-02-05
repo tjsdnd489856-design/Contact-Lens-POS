@@ -1,3 +1,6 @@
+import { CustomerService } from '../services/customer.service.js';
+import { SalesService } from '../services/sales.service.js';
+
 // --- CustomerPurchaseHistory Component ---
 export default class CustomerPurchaseHistory extends HTMLElement {
     constructor() {

@@ -1,3 +1,7 @@
+import { ProductService } from '../services/product.service.js';
+import { CustomerService } from '../services/customer.service.js';
+import { SalesService } from '../services/sales.service.js';
+
 export function initializeApp() {
     try {
         console.log('DOMContentLoaded fired: Initializing application.');

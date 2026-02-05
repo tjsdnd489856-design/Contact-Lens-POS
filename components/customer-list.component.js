@@ -1,3 +1,5 @@
+import { CustomerService } from '../services/customer.service.js';
+
 // --- CustomerList Component ---
 export default class CustomerList extends HTMLElement {
   constructor() {
