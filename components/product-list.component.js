@@ -5,10 +5,10 @@ export default class ProductList extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this.handleDelete = this.handleDelete.bind(this); // These are no longer needed here
-    this.handleEdit = this.handleEdit.bind(this);   // These are no longer needed here
+    this.handleDelete = this.handleDelete.bind(this);
+    this.handleEdit = this.handleEdit.bind(this);
     this.filterByBrand = this.filterByBrand.bind(this);
-    this.showExpirationWarning = this.showExpirationWarning.bind(this); // Bind new method
+    // showExpirationWarning and its binding removed
     this._currentFilterBrand = null; // Default filter, no brand selected initially
     document.addEventListener('productsUpdated', () => this._render());
   }
@@ -36,12 +36,46 @@ export default class ProductList extends HTMLElement {
       document.dispatchEvent(new CustomEvent('openBrandProductListModal', { detail: brandToOpenModalWith }));
   }
 
-  showExpirationWarning() {
-      document.dispatchEvent(new CustomEvent('openExpirationWarningModal'));
-  }
+  // showExpirationWarning() method removed
 
   _render() {
     const uniqueBrands = ProductService.getUniqueBrands();
+    const expiringProducts = ProductService.getExpiringProducts(); // Get expiring products
+
+    const productListHtml = expiringProducts.length === 0
+        ? '<p class="message">유통기한이 임박한 제품이 없습니다.</p>'
+        : `
+            <table class="expiration-table">
+                <thead>
+                    <tr>
+                        <th>브랜드</th>
+                        <th>모델명</th>
+                        <th>유형</th>
+                        <th>착용 방식</th>
+                        <th>S</th>
+                        <th>C</th>
+                        <th>AX</th>
+                        <th>수량</th>
+                        <th>유통기한</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${expiringProducts.map(product => `
+                        <tr>
+                            <td>${product.brand}</td>
+                            <td>${product.model}</td>
+                            <td>${product.lensType}</td>
+                            <td>${product.wearType || 'N/A'}</td>
+                            <td>${(product.powerS !== null && product.powerS !== undefined) ? (product.powerS > 0 ? '+' : '') + product.powerS.toFixed(2) : 'N/A'}</td>
+                            <td>${(product.powerC !== null && product.powerC !== undefined) ? (product.powerC > 0 ? '+' : '') + product.powerC.toFixed(2) : 'N/A'}</td>
+                            <td>${product.powerAX !== null ? product.powerAX : 'N/A'}</td>
+                            <td>${product.quantity}</td>
+                            <td>${product.expirationDate}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
 
     const template = document.createElement('template');
     template.innerHTML = `
@@ -75,23 +109,36 @@ export default class ProductList extends HTMLElement {
             color: white;
             border-color: #3498db;
         }
-        .expiration-warning-button {
-            background-color: #ffc107; /* Warning yellow */
-            border: 1px solid #ffc107;
-            color: #333;
-            padding: 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            display: block; /* Take full width */
-            width: 100%;
-            margin-top: 1rem; /* Space from above buttons */
-            box-sizing: border-box;
-            transition: background-color 0.2s, border-color 0.2s;
+        .expiration-warning-section {
+            margin-top: 2rem; /* Increased margin to separate from brand buttons */
+            border-top: 1px solid #eee;
+            padding-top: 1.5rem;
         }
-        .expiration-warning-button:hover {
-            background-color: #e0a800;
-            border-color: #e0a800;
+        .expiration-warning-section h3 {
+            text-align: center;
+            color: #d9534f; /* Danger red */
+            margin-bottom: 1rem;
+        }
+        .expiration-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .expiration-table th, .expiration-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        .expiration-table th {
+            background-color: #f2f2f2;
+        }
+        .expiration-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .message {
+            text-align: center;
+            padding: 20px;
+            color: #555;
         }
       </style>
       <div class="brand-filter-buttons">
@@ -101,14 +148,15 @@ export default class ProductList extends HTMLElement {
             </button>
         `).join('')}
       </div>
-      <button class="expiration-warning-button" id="expiration-warning-btn">
-          유통 기한 주의
-      </button>
+      <div class="expiration-warning-section">
+          <h3>유통 기한 임박 제품</h3>
+          ${productListHtml}
+      </div>
     `;
     this.shadowRoot.innerHTML = ''; 
     this.shadowRoot.appendChild(template.content.cloneNode(true));
     this.shadowRoot.querySelectorAll('.brand-filter-button').forEach(btn => btn.addEventListener('click', this.filterByBrand));
-    this.shadowRoot.getElementById('expiration-warning-btn').addEventListener('click', this.showExpirationWarning);
+    // Expiration warning button event listener removed
   }
 }
 customElements.define('product-list', ProductList);

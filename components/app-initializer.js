@@ -26,10 +26,7 @@ export function initializeApp() {
         const brandProductListModal = document.getElementById('brand-product-list-modal');
         const closeBrandProductListModalElement = document.getElementById('close-brand-product-list-modal');
 
-        // Expiration Warning Modal
-        const expirationWarningModal = document.getElementById('expiration-warning-modal');
-        const closeExpirationWarningButton = expirationWarningModal ? expirationWarningModal.querySelector('.close-button') : null;
-
+        // Expiration Warning Modal references removed
 
         let productsToAdd = [];
         let isEditMode = false;
@@ -45,8 +42,7 @@ export function initializeApp() {
         if (!saveAllProductsBtn) console.error('Error: save-all-products-btn element not found.');
         if (!brandProductListModal) console.error('Error: brand-product-list-modal element not found.');
         if (!closeBrandProductListModalElement) console.error('Error: close-brand-product-list-modal element not found.');
-        if (!expirationWarningModal) console.error('Error: expiration-warning-modal element not found.');
-        if (!closeExpirationWarningButton) console.error('Error: close-button element not found within expiration-warning-modal.');
+        // Expiration Warning Modal error checks removed
 
 
         function showTab(tabId) {
@@ -108,27 +104,8 @@ export function initializeApp() {
             }
         }
 
-        // Expiration Warning Modal Logic
-        function openExpirationWarningModal() {
-            const expirationWarningModalComponent = expirationWarningModal.querySelector('expiration-warning-modal');
-            if (expirationWarningModal && expirationWarningModalComponent) {
-                const expiringProducts = ProductService.getExpiringProducts();
-                expirationWarningModalComponent.setProducts(expiringProducts);
-                expirationWarningModal.style.display = 'block';
-                console.log('Expiration warning modal opened.');
-            } else {
-                console.error('Attempted to open expiration warning modal but element not found.');
-            }
-        }
+        // Expiration Warning Modal Logic removed
 
-        function closeExpirationWarningModal() {
-            if (expirationWarningModal) {
-                expirationWarningModal.style.display = 'none';
-                console.log('Expiration warning modal closed.');
-            } else {
-                console.error('Attempted to close expiration warning modal but element not found.');
-            }
-        }
 
         // Product Modal Logic
         function renderTempProductList() {
@@ -279,11 +256,7 @@ export function initializeApp() {
             closeBrandProductListModalElement.addEventListener('click', closeBrandProductListModal);
         }
 
-        // Event listener for expiration warning modal
-        document.addEventListener('openExpirationWarningModal', openExpirationWarningModal);
-        if (closeExpirationWarningButton) {
-            closeExpirationWarningButton.addEventListener('click', closeExpirationWarningModal);
-        }
+        // Expiration Warning Modal event listeners removed
 
 
         // Event listener for customer search
