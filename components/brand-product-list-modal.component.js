@@ -216,13 +216,15 @@ export default class BrandProductListModal extends HTMLElement {
             return '';
         };
 
+        const formatPower = (power) => {
+            return (power !== null && power !== undefined) ? (power > 0 ? '+' : '') + power.toFixed(2) : 'N/A';
+        }
+
         const tableBodyHtml = products.map(product => `
             <tr>
-                <td>
-                    S:${(product.powerS !== null && product.powerS !== undefined) ? (product.powerS > 0 ? '+' : '') + product.powerS.toFixed(2) : 'N/A'}
-                    C:${(product.powerC !== null && product.powerC !== undefined) ? (product.powerC > 0 ? '+' : '') + product.powerC.toFixed(2) : 'N/A'}
-                    ${product.powerAX !== null ? `AX:${product.powerAX}` : ''}
-                </td>
+                <td>${formatPower(product.powerS)}</td>
+                <td>${formatPower(product.powerC)}</td>
+                <td>${product.powerAX !== null ? product.powerAX : 'N/A'}</td>
                 <td>${product.quantity}</td>
                 <td>${product.expirationDate}</td>
             </tr>
@@ -234,6 +236,7 @@ export default class BrandProductListModal extends HTMLElement {
                     <tr>
                         <th class="sortable" data-sort-by="powerS">도수 S ${getSortIndicator('powerS')}</th>
                         <th class="sortable" data-sort-by="powerC">도수 C ${getSortIndicator('powerC')}</th>
+                        <th>도수 AX</th>
                         <th>수량</th>
                         <th>유통기한</th>
                     </tr>
