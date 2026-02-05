@@ -38,7 +38,6 @@ export default class BrandProductListModal extends HTMLElement {
                 </td>
                 <td>${product.quantity}</td>
                 <td>${product.expirationDate}</td>
-                <td>$${product.price.toFixed(2)}</td>
             </tr>
         `).join('');
 
@@ -84,7 +83,6 @@ export default class BrandProductListModal extends HTMLElement {
                                 <th>도수 (S/C/AX)</th>
                                 <th>수량</th>
                                 <th>유통기한</th>
-                                <th>가격</th>
                             </tr>
                         </thead>
                         <tbody>
