@@ -24,23 +24,23 @@ export default class DiscardInventoryModal extends HTMLElement {
         const product = this._products.find(p => p.id === productId);
         if (product) {
             const numQuantity = parseInt(quantity, 10);
-            const card = this.shadowRoot.querySelector(`.product-card[data-product-id="${productId}"]`);
+            const item = this.shadowRoot.querySelector(`.product-list-item[data-product-id="${productId}"]`);
 
             if (!isNaN(numQuantity) && numQuantity >= 0 && numQuantity <= product.quantity) {
                 this._selectedProductsToDiscard.set(productId, numQuantity);
                 product.discardQuantity = numQuantity;
                 if (numQuantity > 0) {
-                    card.classList.add('selected');
+                    item.classList.add('selected');
                 } else {
                     this._selectedProductsToDiscard.delete(productId); // If quantity becomes 0, remove from selected
-                    card.classList.remove('selected');
+                    item.classList.remove('selected');
                 }
             } else {
                 // If invalid input, reset to 0 and deselect
                 this._selectedProductsToDiscard.delete(productId);
                 product.discardQuantity = 0;
-                card.classList.remove('selected');
-                const inputElement = card.querySelector('.discard-quantity-input');
+                item.classList.remove('selected');
+                const inputElement = item.querySelector('.discard-quantity-input');
                 if (inputElement) inputElement.value = 0; // Reset input field visually
                 alert(`폐기 수량은 0 이상 ${product.quantity} 이하로 입력해주세요.`);
             }
@@ -92,22 +92,22 @@ export default class DiscardInventoryModal extends HTMLElement {
                 ? `<p class="message">"${this._currentFilterBrand}" 브랜드의 제품이 없습니다.</p>`
                 : `
                     <button class="back-to-brands-btn">← 전체 브랜드 보기</button>
-                    <div class="product-grid">
+                    <div class="product-list">
                         ${filteredProducts.map(product => `
-                            <div class="product-card ${this._selectedProductsToDiscard.has(product.id) && this._selectedProductsToDiscard.get(product.id) > 0 ? 'selected' : ''}" data-product-id="${product.id}">
-                                <div class="product-info">
-                                    <div class="brand-model">${product.brand} - ${product.model}</div>
-                                    <div class="power-info">
-                                        S: ${(product.powerS !== null && product.powerS !== undefined) ? (product.powerS > 0 ? '+' : '') + product.powerS.toFixed(2) : 'N/A'},
-                                        C: ${(product.powerC !== null && product.powerC !== undefined) ? (product.powerC > 0 ? '+' : '') + product.powerC.toFixed(2) : 'N/A'},
-                                        AX: ${product.powerAX !== null ? product.powerAX : 'N/A'}
-                                    </div>
-                                    <div class="quantity-info">현재 수량: ${product.quantity}</div>
+                            <div class="product-list-item ${this._selectedProductsToDiscard.has(product.id) && this._selectedProductsToDiscard.get(product.id) > 0 ? 'selected' : ''}" data-product-id="${product.id}">
+                                <div class="product-info-main">
+                                    <span class="brand-model">${product.brand} - ${product.model}</span>
+                                    <span class="quantity-display">수량: ${product.quantity}</span>
                                 </div>
-                                <div class="discard-input-wrapper">
-                                    <input type="number" min="0" max="${product.quantity}" value="${this._selectedProductsToDiscard.get(product.id) || 0}"
+                                <div class="product-info-detail">
+                                    <span>S: ${(product.powerS !== null && product.powerS !== undefined) ? (product.powerS > 0 ? '+' : '') + product.powerS.toFixed(2) : 'N/A'}</span>
+                                    <span>C: ${(product.powerC !== null && product.powerC !== undefined) ? (product.powerC > 0 ? '+' : '') + product.powerC.toFixed(2) : 'N/A'}</span>
+                                    <span>AX: ${product.powerAX !== null ? product.powerAX : 'N/A'}</span>
+                                </div>
+                                <div class="discard-control">
+                                    <label for="discard-qty-${product.id}" class="discard-label">폐기 수량:</label>
+                                    <input type="number" id="discard-qty-${product.id}" min="0" max="${product.quantity}" value="${this._selectedProductsToDiscard.get(product.id) || 0}"
                                            data-product-id="${product.id}" class="discard-quantity-input">
-                                    <span class="discard-label">폐기 수량</span>
                                 </div>
                             </div>
                         `).join('')}
@@ -151,7 +151,7 @@ export default class DiscardInventoryModal extends HTMLElement {
                     padding: 20px;
                     color: #555;
                 }
-                .brand-buttons-grid, .product-grid {
+                .brand-buttons-grid {
                     display: grid;
                     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
                     gap: 15px;
@@ -172,40 +172,51 @@ export default class DiscardInventoryModal extends HTMLElement {
                     background-color: #e0e0e0;
                     border-color: #a0a0a0;
                 }
-                .product-card {
+                /* Product List Styles */
+                .product-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    margin-top: 1rem;
+                }
+                .product-list-item {
                     background-color: #f9f9f9;
                     border: 1px solid #eee;
                     border-radius: 8px;
                     padding: 15px;
                     display: flex;
                     flex-direction: column;
-                    gap: 10px;
+                    gap: 5px;
                     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
                     transition: all 0.2s ease-in-out;
-                    position: relative;
+                    cursor: pointer; /* Indicate clickability */
                 }
-                .product-card.selected {
+                .product-list-item:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                }
+                .product-list-item.selected {
                     border-color: #007bff;
                     box-shadow: 0 0 10px rgba(0, 123, 255, 0.2);
                     background-color: #e7f3ff;
                 }
-                .product-card:hover {
-                    transform: translateY(-3px);
-                    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-                }
-                .brand-model {
+                .product-info-main {
+                    display: flex;
+                    justify-content: space-between;
                     font-weight: bold;
                     color: #333;
                     font-size: 1.1em;
                 }
-                .power-info, .quantity-info {
+                .product-info-detail {
+                    display: flex;
+                    gap: 15px;
                     font-size: 0.9em;
                     color: #666;
                 }
-                .discard-input-wrapper {
+                .discard-control {
                     display: flex;
                     align-items: center;
-                    gap: 5px;
+                    gap: 10px;
                     margin-top: 10px;
                 }
                 .discard-label {
@@ -272,24 +283,23 @@ export default class DiscardInventoryModal extends HTMLElement {
 
         // Add event listeners based on the current view
         if (this._currentFilterBrand) {
-            // Product view
-            this.shadowRoot.querySelectorAll('.product-card').forEach(card => {
-                card.addEventListener('click', (e) => {
-                    // Prevent card click from interfering with input interactions
-                    if (e.target.classList.contains('discard-quantity-input')) {
+            // Product view (list items)
+            this.shadowRoot.querySelectorAll('.product-list-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    // Prevent interaction with input from toggling selection
+                    if (e.target.classList.contains('discard-quantity-input') || e.target.tagName === 'LABEL') {
                         return;
                     }
 
-                    const productId = parseInt(card.dataset.productId, 10);
+                    const productId = parseInt(item.dataset.productId, 10);
                     const product = this._products.find(p => p.id === productId);
+                    const inputElement = item.querySelector('.discard-quantity-input');
 
                     if (this._selectedProductsToDiscard.has(productId) && this._selectedProductsToDiscard.get(productId) > 0) {
                         // If already selected with a quantity, deselect it
                         this._selectedProductsToDiscard.delete(productId);
                         product.discardQuantity = 0;
-                        card.classList.remove('selected');
-                        // Update the input field value to 0 when deselected
-                        const inputElement = card.querySelector('.discard-quantity-input');
+                        item.classList.remove('selected');
                         if (inputElement) inputElement.value = 0;
                     } else {
                         // If not selected, select it with a default quantity of 1 (or its current quantity if it was 0)
@@ -297,15 +307,12 @@ export default class DiscardInventoryModal extends HTMLElement {
                         if (quantityToSet <= product.quantity) {
                             this._selectedProductsToDiscard.set(productId, quantityToSet);
                             product.discardQuantity = quantityToSet;
-                            card.classList.add('selected');
-                            // Update the input field value to the selected quantity
-                            const inputElement = card.querySelector('.discard-quantity-input');
+                            item.classList.add('selected');
                             if (inputElement) inputElement.value = quantityToSet;
                         } else {
                             alert(`폐기 수량은 0 이상 ${product.quantity} 이하로 입력해주세요.`);
                         }
                     }
-                     // Update the discard button state
                     this._updateDiscardButtonState();
                 });
             });
@@ -316,27 +323,26 @@ export default class DiscardInventoryModal extends HTMLElement {
                     this._updateDiscardButtonState();
                 });
                 input.addEventListener('input', (e) => {
-                    // This handles continuous input, useful for live updates or validation feedback
                     const productId = parseInt(e.target.dataset.productId, 10);
                     const product = this._products.find(p => p.id === productId);
                     const numQuantity = parseInt(e.target.value, 10);
 
-                    const card = e.target.closest('.product-card');
+                    const item = e.target.closest('.product-list-item');
                     if (!isNaN(numQuantity) && numQuantity >= 0 && numQuantity <= product.quantity) {
                         this._selectedProductsToDiscard.set(productId, numQuantity);
                         product.discardQuantity = numQuantity;
                         if (numQuantity > 0) {
-                            card.classList.add('selected'); // Visually mark as selected
+                            item.classList.add('selected');
                         } else {
-                            this._selectedProductsToDiscard.delete(productId); // If input goes to 0, remove from selection
-                            card.classList.remove('selected'); // Visually unmark
+                            this._selectedProductsToDiscard.delete(productId);
+                            item.classList.remove('selected');
                         }
                     } else if (numQuantity === 0) {
                         this._selectedProductsToDiscard.delete(productId);
                         product.discardQuantity = 0;
-                        card.classList.remove('selected'); // Visually unmark
+                        item.classList.remove('selected');
                     } else {
-                        card.classList.remove('selected');
+                        item.classList.remove('selected');
                     }
                     this._updateDiscardButtonState();
                 });

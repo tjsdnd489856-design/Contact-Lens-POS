@@ -1,4 +1,3 @@
-
 import re
 import os
 
@@ -32,6 +31,7 @@ new_task_state_content_full = """### Task State:
 - `DONE`: 재고 폐기 팝업의 목록을 재고 관리 탭처럼 버튼식 목록으로 변경했습니다.
 - `DONE`: `discard-inventory-modal.component.js`의 구문 오류를 수정했습니다 (불필요한 닫는 중괄호 제거).
 - `DONE`: 재고 폐기 팝업에 브랜드별 목록을 먼저 보여주고, 브랜드 선택 시 해당 브랜드의 제품 목록을 보여주도록 기능을 구현했습니다.
+- `DONE`: 재고 폐기 팝업의 세부 제품 목록을 버튼식이 아닌 리스트 형식으로 변경했습니다.
 """
 
 # Find the start and end of the Task State section
@@ -70,7 +70,7 @@ if post_task_state_content_start_index != -1:
 # Ensure there's a blank line before and after the new task state content
 final_content = pre_task_state_content.strip() + '\n\n' + \
                 new_task_state_content_full.strip() + '\n\n' + \
-                post_task_state_content.strip() + '\n' # Corrected variable name
+                post_task_state_content.strip() + '\n'
 
 with open(blueprint_path, 'w') as f:
     f.write(final_content)
