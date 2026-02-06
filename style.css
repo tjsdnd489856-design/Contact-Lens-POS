@@ -421,3 +421,22 @@ body #product-modal .modal-content {
 .bookmark-button:hover {
     background-color: #c82333;
 }
+
+/* 커서 변경 관련 추가 스타일 */
+*:not(input):not(textarea):not(select):not(button):not(a) { /* input, textarea, select, button, a 태그를 제외한 모든 요소 */
+  cursor: default !important;
+}
+
+button, a { /* 버튼과 링크 태그도 default 커서로 설정 */
+  cursor: default !important;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="email"], /* 이메일 타입 추가 */
+input[type="password"], /* 비밀번호 타입 추가 */
+textarea,
+select {
+  cursor: text !important;
+}
+
