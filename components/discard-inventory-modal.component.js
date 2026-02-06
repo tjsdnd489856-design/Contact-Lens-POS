@@ -9,10 +9,12 @@ export default class DiscardInventoryModal extends HTMLElement {
         this._selectedProductsToDiscard = new Map(); 
         this._currentFilterBrand = null; // Currently selected brand for filtering products
         this._currentFilterProduct = null; // Currently selected product for viewing power options
+        this._sortBy = null; // 's' or 'c'
+        this._sortOrder = 'asc'; // 'asc' or 'desc'
     }
 
     setProducts(products) {
-        // Augment products with powerOptions structure if not already present
+        // Augment products with powerOptions structure if not explicitly available
         this._products = products.map(p => ({
             ...p,
             // Simulate powerOptions if not explicitly available
@@ -27,6 +29,8 @@ export default class DiscardInventoryModal extends HTMLElement {
         this._selectedProductsToDiscard.clear(); // Clear all selections
         this._currentFilterBrand = null; // Reset brand filter
         this._currentFilterProduct = null; // Reset product filter
+        this._sortBy = null; // Reset sort filter
+        this._sortOrder = 'asc'; // Reset sort order
         this._render();
     }
 
@@ -102,6 +106,8 @@ export default class DiscardInventoryModal extends HTMLElement {
             }));
             this._currentFilterBrand = null;
             this._currentFilterProduct = null;
+            this._sortBy = null; // Reset sort filter
+            this._sortOrder = 'asc'; // Reset sort order
             document.dispatchEvent(new CustomEvent('closeDiscardInventoryModal'));
             alert('제품이 성공적으로 폐기되었습니다.');
         }
@@ -110,22 +116,59 @@ export default class DiscardInventoryModal extends HTMLElement {
     _filterByBrand(brand) {
         this._currentFilterBrand = brand;
         this._currentFilterProduct = null; // Clear selected product when changing brand
+        this._sortBy = null; // Reset sort filter
+        this._sortOrder = 'asc'; // Reset sort order
         this._render();
     }
 
     _showAllBrands() {
         this._currentFilterBrand = null;
         this._currentFilterProduct = null;
+        this._sortBy = null; // Reset sort filter
+        this._sortOrder = 'asc'; // Reset sort order
         this._render();
     }
 
     _filterByProduct(productId) {
         this._currentFilterProduct = this._products.find(p => p.id === productId);
+        this._sortBy = null; // Reset sort filter
+        this._sortOrder = 'asc'; // Reset sort order
         this._render();
     }
 
     _showAllProductsForBrand() {
         this._currentFilterProduct = null;
+        this._sortBy = null; // Reset sort filter
+        this._sortOrder = 'asc'; // Reset sort order
+        this._render();
+    }
+
+    _sortPowerOptions(powerOptions) {
+        if (!this._sortBy) return powerOptions;
+
+        return [...powerOptions].sort((a, b) => {
+            let valA = a[this._sortBy];
+            let valB = b[this._sortBy];
+
+            // Handle 'N/A' or null values by pushing them to the end
+            if (valA === 'N/A' || valA === null || valA === undefined) return 1;
+            if (valB === 'N/A' || valB === null || valB === undefined) return -1;
+
+            if (this._sortOrder === 'asc') {
+                return valA - valB;
+            } else {
+                return valB - valA;
+            }
+        });
+    }
+
+    _handleSort(column) {
+        if (this._sortBy === column) {
+            this._sortOrder = (this._sortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            this._sortBy = column;
+            this._sortOrder = 'asc';
+        }
         this._render();
     }
 
@@ -154,12 +197,22 @@ export default class DiscardInventoryModal extends HTMLElement {
             modalTitle = `${this._currentFilterProduct.brand} - ${this._currentFilterProduct.model} 도수 선택`;
             const product = this._currentFilterProduct;
             
+            const sortedPowerOptions = this._sortPowerOptions(product.powerOptions);
+
             contentHtml = product.powerOptions.length === 0
                 ? `<p class="message">"${product.brand} - ${product.model}" 제품에 도수 정보가 없습니다.</p>`
                 : `
                     <button class="back-to-products-btn">← 제품 목록으로</button>
+                    <div class="power-option-list-controls">
+                        <button class="sort-button ${this._sortBy === 's' ? 'active' : ''}" data-sort-by="s">
+                            S ${this._sortBy === 's' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
+                        </button>
+                        <button class="sort-button ${this._sortBy === 'c' ? 'active' : ''}" data-sort-by="c">
+                            C ${this._sortBy === 'c' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
+                        </button>
+                    </div>
                     <div class="power-option-list">
-                        ${product.powerOptions.map(option => {
+                        ${sortedPowerOptions.map(option => {
                             const currentSelectedQty = this._selectedProductsToDiscard.get(product.id)?.get(option.detailId) || 0;
                             return `
                                 <div class="power-option-list-item ${currentSelectedQty > 0 ? 'selected' : ''}" data-product-id="${product.id}" data-detail-id="${option.detailId}">
@@ -372,6 +425,29 @@ export default class DiscardInventoryModal extends HTMLElement {
                 .back-to-brands-btn:hover, .back-to-products-btn:hover {
                     background-color: #5a6268;
                 }
+                .power-option-list-controls {
+                    display: flex;
+                    justify-content: flex-end; /* Align to right */
+                    gap: 10px;
+                    margin-bottom: 10px;
+                }
+                .sort-button {
+                    background-color: #f0f0f0;
+                    border: 1px solid #ccc;
+                    padding: 8px 12px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 0.9em;
+                    transition: background-color 0.2s, border-color 0.2s;
+                }
+                .sort-button:hover {
+                    background-color: #e0e0e0;
+                }
+                .sort-button.active {
+                    background-color: #007bff;
+                    color: white;
+                    border-color: #007bff;
+                }
             </style>
             <div class="discard-container">
                 <h3>${modalTitle}</h3>
@@ -444,6 +520,12 @@ export default class DiscardInventoryModal extends HTMLElement {
             });
             this.shadowRoot.getElementById('discard-confirm-btn').addEventListener('click', this._discardSelectedProducts);
             this.shadowRoot.querySelector('.back-to-products-btn').addEventListener('click', () => this._showAllProductsForBrand());
+            // Add event listeners for sort buttons
+            this.shadowRoot.querySelectorAll('.sort-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    this._handleSort(e.target.dataset.sortBy);
+                });
+            });
         } else if (this._currentFilterBrand) {
             // View 2: Product Selection
             this.shadowRoot.querySelectorAll('.product-selection-list-item').forEach(item => {
