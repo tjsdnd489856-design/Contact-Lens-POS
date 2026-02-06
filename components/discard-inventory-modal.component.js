@@ -46,7 +46,7 @@ export default class DiscardInventoryModal extends HTMLElement {
         if (!powerOption) return;
 
         const numQuantity = parseInt(quantity, 10);
-        const itemElement = this.shadowRoot.querySelector(`.power-option-list-item[data-detail-id="${powerOptionKey}"]`);
+        const itemElement = this.shadowRoot.querySelector(`.power-option-table-row[data-detail-id="${powerOptionKey}"]`);
 
         // Get or create product's selection map
         let productSelections = this._selectedProductsToDiscard.get(productId);
@@ -211,28 +211,34 @@ export default class DiscardInventoryModal extends HTMLElement {
                             C ${this._sortBy === 'c' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
                         </button>
                     </div>
-                    <div class="power-option-list">
-                        ${sortedPowerOptions.map(option => {
-                            const currentSelectedQty = this._selectedProductsToDiscard.get(product.id)?.get(option.detailId) || 0;
-                            return `
-                                <div class="power-option-list-item ${currentSelectedQty > 0 ? 'selected' : ''}" data-product-id="${product.id}" data-detail-id="${option.detailId}">
-                                    <div class="power-option-info-main">
-                                        <span class="power-detail-combined">
-                                            S: ${ (option.s !== null && option.s !== undefined) ? (option.s > 0 ? '+' : '') + option.s.toFixed(2) : 'N/A' } |
-                                            C: ${ (option.c !== null && option.c !== undefined) ? (option.c > 0 ? '+' : '') + option.c.toFixed(2) : 'N/A' } |
-                                            AX: ${ option.ax !== null ? option.ax : 'N/A' }
-                                        </span>
-                                        <span class="quantity-display">수량: ${option.quantity}</span>
-                                    </div>
-                                    <div class="discard-control">
-                                        <label for="discard-qty-${option.detailId}" class="discard-label">폐기 수량:</label>
-                                        <input type="number" id="discard-qty-${option.detailId}" min="0" max="${option.quantity}" value="${currentSelectedQty}"
-                                               data-product-id="${product.id}" data-detail-id="${option.detailId}" class="discard-quantity-input">
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
+                    <table class="power-option-table">
+                        <thead>
+                            <tr>
+                                <th>S</th>
+                                <th>C</th>
+                                <th>AX</th>
+                                <th>수량</th>
+                                <th>폐기 수량</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sortedPowerOptions.map(option => {
+                                const currentSelectedQty = this._selectedProductsToDiscard.get(product.id)?.get(option.detailId) || 0;
+                                return `
+                                    <tr class="power-option-table-row ${currentSelectedQty > 0 ? 'selected' : ''}" data-product-id="${product.id}" data-detail-id="${option.detailId}">
+                                        <td>${(option.s !== null && option.s !== undefined) ? (option.s > 0 ? '+' : '') + option.s.toFixed(2) : 'N/A'}</td>
+                                        <td>${(option.c !== null && option.c !== undefined) ? (option.c > 0 ? '+' : '') + option.c.toFixed(2) : 'N/A'}</td>
+                                        <td>${option.ax !== null ? option.ax : 'N/A'}</td>
+                                        <td>${option.quantity}</td>
+                                        <td>
+                                            <input type="number" min="0" max="${option.quantity}" value="${currentSelectedQty}"
+                                                   data-product-id="${product.id}" data-detail-id="${option.detailId}" class="discard-quantity-input">
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
                     <div class="modal-actions">
                         <button id="discard-confirm-btn">선택 제품 폐기</button>
                     </div>
@@ -323,13 +329,13 @@ export default class DiscardInventoryModal extends HTMLElement {
                     border-color: #a0a0a0;
                 }
                 /* Product Selection List Styles */
-                .product-selection-list, .power-option-list {
+                .product-selection-list {
                     display: flex;
                     flex-direction: column;
                     gap: 10px;
                     margin-top: 1rem;
                 }
-                .product-selection-list-item, .power-option-list-item {
+                .product-selection-list-item {
                     background-color: #f9f9f9;
                     border: 1px solid #eee;
                     border-radius: 8px;
@@ -341,28 +347,28 @@ export default class DiscardInventoryModal extends HTMLElement {
                     transition: all 0.2s ease-in-out;
                     cursor: pointer; /* Indicate clickability */
                 }
-                .product-selection-list-item:hover, .power-option-list-item:hover {
+                .product-selection-list-item:hover {
                     transform: translateY(-2px);
                     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
                 }
-                .product-selection-list-item.selected, .power-option-list-item.selected {
+                .product-selection-list-item.selected {
                     border-color: #007bff;
                     box-shadow: 0 0 10px rgba(0, 123, 255, 0.2);
                     background-color: #e7f3ff;
                 }
-                .product-info-main, .power-option-info-main {
+                .product-info-main {
                     display: flex;
                     justify-content: space-between;
                     font-weight: bold;
                     color: #333;
                     font-size: 1.1em;
                 }
-                .product-info-detail, .power-option-info-detail {
+                .product-info-detail {
                     white-space: nowrap; /* Keep content on a single line */
                     overflow: hidden; /* Hide overflow */
                     text-overflow: ellipsis; /* Add ellipsis for overflow */
                 }
-                .power-axis-combined, .power-detail-combined {
+                .power-axis-combined {
                     font-size: 0.9em;
                     color: #666;
                 }
@@ -448,6 +454,32 @@ export default class DiscardInventoryModal extends HTMLElement {
                     color: white;
                     border-color: #007bff;
                 }
+                /* New table styles */
+                .power-option-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 1rem;
+                }
+                .power-option-table th, .power-option-table td {
+                    border: 1px solid #ddd;
+                    padding: 8px;
+                    text-align: center;
+                }
+                .power-option-table th {
+                    background-color: #f2f2f2;
+                    cursor: pointer; /* Indicate sortability */
+                }
+                .power-option-table tbody tr:nth-child(even) {
+                    background-color: #f9f9f9;
+                }
+                .power-option-table tbody tr:hover {
+                    background-color: #e0e0e0;
+                }
+                .power-option-table-row.selected {
+                    border-color: #007bff;
+                    box-shadow: 0 0 10px rgba(0, 123, 255, 0.2);
+                    background-color: #e7f3ff;
+                }
             </style>
             <div class="discard-container">
                 <h3>${modalTitle}</h3>
@@ -460,17 +492,17 @@ export default class DiscardInventoryModal extends HTMLElement {
         // Add event listeners based on the current view
         if (this._currentFilterProduct) {
             // View 3: Power Option Selection
-            this.shadowRoot.querySelectorAll('.power-option-list-item').forEach(item => {
-                item.addEventListener('click', (e) => {
+            this.shadowRoot.querySelectorAll('.power-option-table-row').forEach(row => {
+                row.addEventListener('click', (e) => {
                     if (e.target.classList.contains('discard-quantity-input') || e.target.tagName === 'LABEL') {
                         return;
                     }
 
-                    const productId = parseInt(item.dataset.productId, 10);
-                    const powerOptionKey = item.dataset.detailId;
+                    const productId = parseInt(row.dataset.productId, 10);
+                    const powerOptionKey = row.dataset.detailId;
                     const product = this._products.find(p => p.id === productId);
                     const powerOption = product?.powerOptions.find(opt => opt.detailId === powerOptionKey);
-                    const inputElement = item.querySelector('.discard-quantity-input');
+                    const inputElement = row.querySelector('.discard-quantity-input');
 
                     if (!product || !powerOption || !inputElement) return; // Should not happen
 
@@ -482,7 +514,7 @@ export default class DiscardInventoryModal extends HTMLElement {
                         if (this._selectedProductsToDiscard.get(productId)?.size === 0) {
                             this._selectedProductsToDiscard.delete(productId);
                         }
-                        item.classList.remove('selected');
+                        row.classList.remove('selected');
                         inputElement.value = 0;
                     } else {
                         // Select with default 1
@@ -494,7 +526,7 @@ export default class DiscardInventoryModal extends HTMLElement {
                                 this._selectedProductsToDiscard.set(productId, productSelections);
                             }
                             productSelections.set(powerOptionKey, quantityToSet);
-                            item.classList.add('selected');
+                            row.classList.add('selected');
                             inputElement.value = quantityToSet;
                         } else {
                             alert(`폐기 수량은 0 이상 ${powerOption.quantity} 이하로 입력해주세요.`);
