@@ -203,19 +203,15 @@ export default class DiscardInventoryModal extends HTMLElement {
                 ? `<p class="message">"${product.brand} - ${product.model}" 제품에 도수 정보가 없습니다.</p>`
                 : `
                     <button class="back-to-products-btn">← 제품 목록으로</button>
-                    <div class="power-option-list-controls">
-                        <button class="sort-button ${this._sortBy === 's' ? 'active' : ''}" data-sort-by="s">
-                            S ${this._sortBy === 's' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
-                        </button>
-                        <button class="sort-button ${this._sortBy === 'c' ? 'active' : ''}" data-sort-by="c">
-                            C ${this._sortBy === 'c' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
-                        </button>
-                    </div>
                     <table class="power-option-table">
                         <thead>
                             <tr>
-                                <th>S</th>
-                                <th>C</th>
+                                <th class="${this._sortBy === 's' ? 'active' : ''}" data-sort-by="s">
+                                    S ${this._sortBy === 's' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
+                                </th>
+                                <th class="${this._sortBy === 'c' ? 'active' : ''}" data-sort-by="c">
+                                    C ${this._sortBy === 'c' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
+                                </th>
                                 <th>AX</th>
                                 <th>수량</th>
                                 <th>폐기 수량</th>
@@ -431,29 +427,6 @@ export default class DiscardInventoryModal extends HTMLElement {
                 .back-to-brands-btn:hover, .back-to-products-btn:hover {
                     background-color: #5a6268;
                 }
-                .power-option-list-controls {
-                    display: flex;
-                    justify-content: flex-end; /* Align to right */
-                    gap: 10px;
-                    margin-bottom: 10px;
-                }
-                .sort-button {
-                    background-color: #f0f0f0;
-                    border: 1px solid #ccc;
-                    padding: 8px 12px;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    font-size: 0.9em;
-                    transition: background-color 0.2s, border-color 0.2s;
-                }
-                .sort-button:hover {
-                    background-color: #e0e0e0;
-                }
-                .sort-button.active {
-                    background-color: #007bff;
-                    color: white;
-                    border-color: #007bff;
-                }
                 /* New table styles */
                 .power-option-table {
                     width: 100%;
@@ -468,6 +441,10 @@ export default class DiscardInventoryModal extends HTMLElement {
                 .power-option-table th {
                     background-color: #f2f2f2;
                     cursor: pointer; /* Indicate sortability */
+                }
+                .power-option-table th.active {
+                    background-color: #007bff;
+                    color: white;
                 }
                 .power-option-table tbody tr:nth-child(even) {
                     background-color: #f9f9f9;
@@ -553,8 +530,8 @@ export default class DiscardInventoryModal extends HTMLElement {
             this.shadowRoot.getElementById('discard-confirm-btn').addEventListener('click', this._discardSelectedProducts);
             this.shadowRoot.querySelector('.back-to-products-btn').addEventListener('click', () => this._showAllProductsForBrand());
             // Add event listeners for sort buttons
-            this.shadowRoot.querySelectorAll('.sort-button').forEach(button => {
-                button.addEventListener('click', (e) => {
+            this.shadowRoot.querySelectorAll('.power-option-table th[data-sort-by]').forEach(header => {
+                header.addEventListener('click', (e) => {
                     this._handleSort(e.target.dataset.sortBy);
                 });
             });
