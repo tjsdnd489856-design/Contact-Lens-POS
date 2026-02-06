@@ -108,10 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initial state setup for bookmark
-    if (abnormalInventoryBookmark) {
-        // The initializeApp() in app-initializer.js sets the initial tab to 'customers'
-        // so the bookmark should be hidden initially.
-        abnormalInventoryBookmark.style.display = 'none';
-    }
+    // The initializeApp() in app-initializer.js sets the initial tab to 'customers'
+    // so the bookmark's visibility will be correctly handled by the 'showTab' listener.
+    // Removed: if (abnormalInventoryBookmark) { abnormalInventoryBookmark.style.display = 'none'; }
 
 });
