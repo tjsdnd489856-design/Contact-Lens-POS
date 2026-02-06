@@ -41,13 +41,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const abnormalInventoryPanel = document.getElementById('abnormal-inventory-panel');
     const toggleAbnormalInventoryPanelBtn = document.getElementById('toggle-abnormal-inventory-panel');
     const abnormalInventoryListComponent = abnormalInventoryPanel.querySelector('abnormal-inventory-list');
+    const abnormalInventoryBookmark = document.getElementById('abnormal-inventory-bookmark'); // Get bookmark element
 
     // Get other modal elements
     const customerModal = document.getElementById('customer-modal');
     const productModal = document.getElementById('product-modal');
     const brandProductListModal = document.getElementById('brand-product-list-modal');
 
-    if (toggleAbnormalInventoryPanelBtn && abnormalInventoryPanel && abnormalInventoryListComponent) {
+    if (toggleAbnormalInventoryPanelBtn && abnormalInventoryPanel && abnormalInventoryListComponent && abnormalInventoryBookmark) { // Include bookmark in check
         toggleAbnormalInventoryPanelBtn.addEventListener('click', (event) => {
             event.stopPropagation(); // Prevent this click from immediately closing the panel
             abnormalInventoryPanel.classList.add('open');
@@ -58,12 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('click', (event) => {
             if (abnormalInventoryPanel.classList.contains('open') &&
                 !abnormalInventoryPanel.contains(event.target) &&
-                !toggleAbnormalInventoryPanelBtn.contains(event.target)) {
+                !toggleAbnormalInventoryPanelBtn.contains(event.target)) { // Also check if click is on the bookmark button itself
                 abnormalInventoryPanel.classList.remove('open');
             }
         });
     } else {
-        console.error('Abnormal inventory panel elements not found. Check index.html and main.js.');
+        console.error('Abnormal inventory panel or its related elements not found. Check index.html and main.js.');
     }
 
     // Close all modals/panels on Escape key press
@@ -90,5 +91,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    // Add logic to show/hide abnormal inventory bookmark based on active tab
+    document.addEventListener('showTab', (e) => {
+        if (abnormalInventoryBookmark) {
+            if (e.detail.tabId === 'products') {
+                abnormalInventoryBookmark.style.display = 'block';
+            } else {
+                abnormalInventoryBookmark.style.display = 'none';
+                // Also ensure the side panel is closed if the tab changes
+                if (abnormalInventoryPanel.classList.contains('open')) {
+                    abnormalInventoryPanel.classList.remove('open');
+                }
+            }
+        }
+    });
+
+    // Initial state setup for bookmark
+    if (abnormalInventoryBookmark) {
+        // The initializeApp() in app-initializer.js sets the initial tab to 'customers'
+        // so the bookmark should be hidden initially.
+        abnormalInventoryBookmark.style.display = 'none';
+    }
 
 });

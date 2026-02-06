@@ -376,19 +376,6 @@ body #product-modal .modal-content {
     position: relative; /* For close button positioning */
 }
 
-.side-panel-header .side-panel-close-button {
-    color: white;
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    font-size: 28px;
-    cursor: pointer;
-}
-
-.side-panel-header .side-panel-close-button:hover {
-    color: #ccc;
-}
-
 .vertical-text {
   writing-mode: vertical-rl; /* Vertical text, right to left */
   text-orientation: mixed; /* Orient characters naturally */
@@ -404,4 +391,29 @@ body #product-modal .modal-content {
     flex-grow: 1; /* Take remaining space */
     padding: 20px;
     overflow-y: auto; /* Scrollable content */
+}
+/* Bookmark Tab for Abnormal Inventory */
+.bookmark-tab {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    z-index: 2999; /* Below side panel, above modals */
+}
+
+.bookmark-button {
+    background-color: #dc3545; /* Red for attention */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px 0 0 5px; /* Rounded left side */
+    cursor: pointer;
+    font-size: 0.9rem;
+    writing-mode: vertical-rl; /* Vertical text */
+    text-orientation: mixed;
+    transition: background-color 0.3s ease;
+}
+
+.bookmark-button:hover {
+    background-color: #c82333;
 }

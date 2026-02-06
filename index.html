@@ -35,7 +35,6 @@
           <div class="product-controls">
             <button id="add-product-btn">새 제품 추가</button>
             <button id="discard-inventory-btn">재고 폐기</button>
-            <button id="toggle-abnormal-inventory-panel" class="product-control-button">이상 재고 보기</button>
           </div>
           <product-list></product-list>
         </div>    <div id="sales-tab" class="tab-content">
@@ -91,12 +90,16 @@
   <!-- Abnormal Inventory Side Panel -->
   <div id="abnormal-inventory-panel" class="side-panel">
     <div class="side-panel-header">
-      <span class="close-button side-panel-close-button">&times;</span>
-      <h2 class="vertical-text">주문/이상재고</h2>
+      <h2 class="vertical-text">이상 재고</h2>
     </div>
     <div class="side-panel-content">
       <abnormal-inventory-list></abnormal-inventory-list>
     </div>
+  </div>
+
+  <!-- Bookmark button for Abnormal Inventory -->
+  <div id="abnormal-inventory-bookmark" class="bookmark-tab">
+    <button id="toggle-abnormal-inventory-panel" class="bookmark-button">이상 재고</button>
   </div>
 
   <footer>
