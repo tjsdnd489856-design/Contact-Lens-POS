@@ -44,13 +44,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const abnormalInventoryListComponent = abnormalInventoryPanel.querySelector('abnormal-inventory-list');
 
     if (toggleAbnormalInventoryPanelBtn && abnormalInventoryPanel && closeAbnormalInventoryPanelBtn && abnormalInventoryListComponent) {
-        toggleAbnormalInventoryPanelBtn.addEventListener('click', () => {
+        toggleAbnormalInventoryPanelBtn.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent this click from immediately closing the panel
             abnormalInventoryPanel.classList.add('open');
             abnormalInventoryListComponent.setAbnormalProducts(ProductService.getAbnormalInventory());
         });
 
         closeAbnormalInventoryPanelBtn.addEventListener('click', () => {
             abnormalInventoryPanel.classList.remove('open');
+        });
+
+        // Close panel when clicking outside
+        document.addEventListener('click', (event) => {
+            if (abnormalInventoryPanel.classList.contains('open') &&
+                !abnormalInventoryPanel.contains(event.target) &&
+                !toggleAbnormalInventoryPanelBtn.contains(event.target)) {
+                abnormalInventoryPanel.classList.remove('open');
+            }
         });
     } else {
         console.error('Abnormal inventory panel elements not found. Check index.html and main.js.');
