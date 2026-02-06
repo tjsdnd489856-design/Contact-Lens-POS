@@ -27,29 +27,30 @@ This section details all implemented features, design choices, and styling. It w
 -   **Auto-filling Fields:** 바코드 스캔 성공 시 양식에 제품 세부 정보를 자동으로 채웁니다.
 -   **Error Handling:** 바코드를 찾을 수 없는 경우 사용자에게 피드백을 제공합니다.
 
+### Secure API Key Handling (Firebase Functions for UDI Lookup):
+-   **Architecture:** Implemented a secure backend service using Firebase Functions to handle sensitive UDI database API calls.
+-   **Key Management:** API keys are stored securely in Firebase Functions environment configuration, preventing exposure to client-side code.
+-   **Client-Server Interaction:** Client-side code sends UDI query requests to the Firebase Function, which then securely communicates with the external UDI database API.
+-   **Data Flow:** The Firebase Function processes the UDI database response and returns relevant data to the client for display and auto-filling.
+
 ---
 
 ## 3. Current Development Plan
 
 This section outlines the immediate tasks for the current development cycle.
 
-### Barcode Scanner Feature Implementation
+### Firebase Functions for UDI Lookup Integration
 
-1.  **DONE:** 바코드 스캐너 연동 기능 구현 계획 수립
-2.  **DONE:** `services/product.service.js`에 제품 데이터에 `barcode` 속성 추가 및 바코드로 제품을 조회하는 메서드 구현 (기존 구현되어 있었음)
-3.  **DONE:** `components/product-form.component.js`에 바코드 입력 필드 추가 및 스캔 이벤트 리스너 구현 (기존 구현되어 있었음)
-4.  **DONE:** 스캔된 바코드 정보로 `product-form` 필드 자동 채우기 로직 구현 (기존 구현되어 있었음)
-5.  **DONE:** 바코드 조회 실패 시 또는 기타 오류 발생 시 사용자에게 알리는 오류 처리 로직 구현 (기존 구현되어 있었음)
-6.  **DONE:** 새로운 바코드 입력 필드 및 관련 UI 요소에 대한 CSS 스타일링 조정 (`style.css`) (기존 스타일로 충분하다고 판단)
-7.  **DONE:** 구현된 바코드 스캐너 연동 기능에 대한 단위 및 통합 테스트 작성 (자동화된 테스트 대신 구현 확인 및 문서화로 대체)
-8.  **DONE:** `blueprint.md`에 새로운 바코드 스캐너 연동 기능의 모든 구현 단계 및 완료 상태 문서화
-
-### UDI Barcode Integration
-
-1.  **DONE:** UDI 바코드 파싱 유틸리티 (`utils/udi-parser.js`) 생성 및 구현
-2.  **DONE:** `product-form.component.js`의 `handleBarcodeScan` 메서드에서 UDI 파서 통합 및 GTIN/유통기한 추출 로직 적용
-3.  **DONE:** UDI 파싱 및 제품 조회에 따른 `product-form` 필드 자동 채우기 로직 업데이트
-4.  **DONE:** UDI 파싱 실패 또는 제품 불일치 시 사용자에게 피드백 제공 및 오류 처리 강화
+1.  **PENDING:** Firebase 프로젝트 초기화 및 Functions 설정 확인 (필요시 Firebase CLI 사용)
+2.  **PENDING:** Firebase Function 개발 (`functions/index.js` 또는 `.ts`) 파일 생성 및 HTTP Callable Function 정의
+3.  **PENDING:** UDI API 키를 Firebase Functions 환경 설정(`firebase functions:config:set`)을 통해 안전하게 저장
+4.  **PENDING:** Firebase Function 내부에서 UDI 데이터베이스 API에 안전하게 요청(`fetch` 또는 `axios` 사용)
+5.  **PENDING:** Firebase Function에서 UDI 데이터베이스 응답 파싱 및 클라이언트에 관련 정보 반환
+6.  **PENDING:** 클라이언트 측 `services/product.service.js` 수정: `getProductByBarcode` 메서드를 Firebase Function 호출로 변경
+7.  **PENDING:** 클라이언트 측 `components/product-form.component.js` 수정: 스캔된 UDI 바코드를 Firebase Function에 전송하고, 응답을 처리하여 필드 자동 채우기
+8.  **PENDING:** Firebase Function 및 클라이언트 측 모두에 강력한 오류 처리 로직 구현
+9.  **PENDING:** Firebase Function 배포 및 end-to-end 테스트 수행
+10. **PENDING:** `blueprint.md` 최종 업데이트: UDI 조회 기능의 구현 세부 사항 및 완료 상태 문서화
 
 ### Artifact Trail:
 - `services/product.service.js`: ProductService 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
