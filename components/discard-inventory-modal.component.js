@@ -100,9 +100,11 @@ export default class DiscardInventoryModal extends HTMLElement {
                                     <span class="quantity-display">수량: ${product.quantity}</span>
                                 </div>
                                 <div class="product-info-detail">
-                                    <span>S: ${(product.powerS !== null && product.powerS !== undefined) ? (product.powerS > 0 ? '+' : '') + product.powerS.toFixed(2) : 'N/A'}</span>
-                                    <span>C: ${(product.powerC !== null && product.powerC !== undefined) ? (product.powerC > 0 ? '+' : '') + product.powerC.toFixed(2) : 'N/A'}</span>
-                                    <span>AX: ${product.powerAX !== null ? product.powerAX : 'N/A'}</span>
+                                    <span class="power-axis-combined">
+                                        S: ${(product.powerS !== null && product.powerS !== undefined) ? (product.powerS > 0 ? '+' : '') + product.powerS.toFixed(2) : 'N/A'} |
+                                        C: ${(product.powerC !== null && product.powerC !== undefined) ? (product.powerC > 0 ? '+' : '') + product.powerC.toFixed(2) : 'N/A'} |
+                                        AX: ${product.powerAX !== null ? product.powerAX : 'N/A'}
+                                    </span>
                                 </div>
                                 <div class="discard-control">
                                     <label for="discard-qty-${product.id}" class="discard-label">폐기 수량:</label>
@@ -208,8 +210,11 @@ export default class DiscardInventoryModal extends HTMLElement {
                     font-size: 1.1em;
                 }
                 .product-info-detail {
-                    display: flex;
-                    gap: 15px;
+                    white-space: nowrap; /* Keep content on a single line */
+                    overflow: hidden; /* Hide overflow */
+                    text-overflow: ellipsis; /* Add ellipsis for overflow */
+                }
+                .power-axis-combined {
                     font-size: 0.9em;
                     color: #666;
                 }
