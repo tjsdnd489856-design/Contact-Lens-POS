@@ -16,12 +16,32 @@ header {
   padding: 1.5rem 0;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center; /* Align items vertically */
+  gap: 20px; /* Space between h1 and button */
+  position: relative; /* Needed for positioning side panel trigger */
 }
 
 header h1 {
   margin: 0;
   font-size: 2.5rem;
   font-weight: 300;
+}
+
+.header-button {
+  background-color: #3498db; /* Blue */
+  color: white;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+}
+
+.header-button:hover {
+  background-color: #217dbb;
 }
 
 /* Navigation Styles - Tabbed Interface */
@@ -313,4 +333,69 @@ footer {
     padding: 5px 10px;
     cursor: pointer;
     border-radius: 3px;
+}
+
+/* Side Panel Styles */
+.side-panel {
+  height: 100%;
+  width: 0; /* Hidden by default */
+  position: fixed;
+  z-index: 3000; /* Higher than modals */
+  top: 0;
+  right: 0;
+  background-color: #fefefe;
+  overflow-x: hidden;
+  transition: 0.5s; /* Smooth transition effect */
+  box-shadow: -4px 0 8px rgba(0,0,0,0.2);
+  display: flex; /* Use flex for layout */
+}
+
+.side-panel.open {
+  width: 400px; /* Adjust width as needed */
+}
+
+@media (max-width: 768px) {
+  .side-panel.open {
+    width: 100%; /* Full width on small screens */
+  }
+}
+
+.side-panel-header {
+    display: flex;
+    flex-direction: column; /* For vertical text */
+    align-items: center;
+    padding: 20px 0;
+    background-color: #2c3e50;
+    color: white;
+    position: relative; /* For close button positioning */
+}
+
+.side-panel-header .side-panel-close-button {
+    color: white;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.side-panel-header .side-panel-close-button:hover {
+    color: #ccc;
+}
+
+.vertical-text {
+  writing-mode: vertical-rl; /* Vertical text, right to left */
+  text-orientation: mixed; /* Orient characters naturally */
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: bold;
+  white-space: nowrap; /* Prevent text wrapping */
+  padding: 10px 0;
+  color: #fefefe;
+}
+
+.side-panel-content {
+    flex-grow: 1; /* Take remaining space */
+    padding: 20px;
+    overflow-y: auto; /* Scrollable content */
 }

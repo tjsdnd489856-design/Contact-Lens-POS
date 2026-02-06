@@ -11,6 +11,7 @@ import SalesList from './components/sales-list.component.js';
 import CustomerPurchaseHistory from './components/customer-purchase-history.component.js';
 import BrandProductListModal from './components/brand-product-list-modal.component.js';
 import DiscardInventoryModal from './components/discard-inventory-modal.component.js';
+import AbnormalInventoryList from './components/abnormal-inventory-list.component.js'; // New Import
 import { initializeApp } from './components/app-initializer.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -35,4 +36,24 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('closeDiscardInventoryModal', () => {
         discardInventoryModal.style.display = 'none';
     });
+
+    // Abnormal Inventory Side Panel Logic
+    const abnormalInventoryPanel = document.getElementById('abnormal-inventory-panel');
+    const toggleAbnormalInventoryPanelBtn = document.getElementById('toggle-abnormal-inventory-panel');
+    const closeAbnormalInventoryPanelBtn = abnormalInventoryPanel.querySelector('.side-panel-close-button');
+    const abnormalInventoryListComponent = abnormalInventoryPanel.querySelector('abnormal-inventory-list');
+
+    if (toggleAbnormalInventoryPanelBtn && abnormalInventoryPanel && closeAbnormalInventoryPanelBtn && abnormalInventoryListComponent) {
+        toggleAbnormalInventoryPanelBtn.addEventListener('click', () => {
+            abnormalInventoryPanel.classList.add('open');
+            abnormalInventoryListComponent.setAbnormalProducts(ProductService.getAbnormalInventory());
+        });
+
+        closeAbnormalInventoryPanelBtn.addEventListener('click', () => {
+            abnormalInventoryPanel.classList.remove('open');
+        });
+    } else {
+        console.error('Abnormal inventory panel elements not found. Check index.html and main.js.');
+    }
+
 });

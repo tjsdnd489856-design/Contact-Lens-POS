@@ -68,6 +68,10 @@ export const ProductService = {
     }).sort((a, b) => new Date(a.expirationDate) - new Date(b.expirationDate)); // Sort by expiration date
   },
 
+  getAbnormalInventory() {
+    return this._products.filter(p => p.quantity < 0);
+  },
+
   _notify() {
     document.dispatchEvent(new CustomEvent('productsUpdated'));
   }
