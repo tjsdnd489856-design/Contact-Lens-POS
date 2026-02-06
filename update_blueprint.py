@@ -1,4 +1,3 @@
-
 import re
 import os
 
@@ -49,6 +48,7 @@ new_task_state_content_full = """### Task State:
 - `DONE`: "이상 재고" 버튼을 재고 관리 탭이 활성화되었을 때 오른쪽 끝에 책갈피처럼 보이도록 만들고, 텍스트를 "이상 재고"로 변경했습니다.
 - `DONE`: "이상 재고" 버튼이 사라지는 버그를 수정했습니다. `abnormalInventoryBookmark`의 초기 `display: none` 설정이 `showTab` 이벤트 리스너와 충돌하지 않도록 변경했습니다.
 - `DONE`: "새 제품 추가" 팝업을 열거나 제품을 추가한 후 바코드 입력란에 자동으로 커서가 설정되도록 기능을 추가했습니다.
+- `DONE`: "새 제품 추가" 팝업 내 "추가할 제품 목록" 테이블의 모든 텍스트를 가운데 정렬하고, 가격 열만 오른쪽 정렬했습니다.
 """
 
 # Find the start and end of the Task State section

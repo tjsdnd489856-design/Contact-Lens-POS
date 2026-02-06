@@ -304,8 +304,12 @@ body #product-modal .modal-content {
 #temp-product-list td {
   border: 1px solid #ddd;
   padding: 8px;
-  text-align: left;
+  text-align: center; /* Center align all text */
   font-size: 0.9rem;
+}
+
+#temp-product-list tbody tr td:last-child { /* Right align the price column */
+  text-align: right;
 }
 
 #temp-product-list thead {
