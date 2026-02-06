@@ -246,6 +246,7 @@ export default class ProductForm extends HTMLElement {
             product.tempId = Date.now();
             document.dispatchEvent(new CustomEvent('addProductToModalList', { detail: product }));
             this.clearForm();
+            this.focusBarcodeInput(); // Focus barcode after adding product
         }
     }
 
@@ -254,6 +255,13 @@ export default class ProductForm extends HTMLElement {
         this._form.id.value = '';
         this.shadowRoot.querySelector('.form-title').textContent = '제품 추가';
         this._form.querySelector('button').textContent = '제품 추가';
+    }
+
+    focusBarcodeInput() {
+        // Delay focusing to ensure the modal is fully rendered and input is available
+        setTimeout(() => {
+            this._form.barcode.focus();
+        }, 0); 
     }
 }
 customElements.define('product-form', ProductForm);

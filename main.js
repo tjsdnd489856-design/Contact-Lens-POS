@@ -48,6 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const productModal = document.getElementById('product-modal');
     const brandProductListModal = document.getElementById('brand-product-list-modal');
 
+    // Get product form instance for focusing
+    const productForm = productModal.querySelector('product-form');
+
+
     if (toggleAbnormalInventoryPanelBtn && abnormalInventoryPanel && abnormalInventoryListComponent && abnormalInventoryBookmark) { // Include bookmark in check
         toggleAbnormalInventoryPanelBtn.addEventListener('click', (event) => {
             event.stopPropagation(); // Prevent this click from immediately closing the panel
@@ -66,6 +70,13 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.error('Abnormal inventory panel or its related elements not found. Check index.html and main.js.');
     }
+
+    // Open product modal
+    document.getElementById('add-product-btn').addEventListener('click', () => {
+        productModal.style.display = 'block';
+        productForm.focusBarcodeInput(); // Focus barcode after opening modal
+    });
+
 
     // Close all modals/panels on Escape key press
     document.addEventListener('keydown', (event) => {
