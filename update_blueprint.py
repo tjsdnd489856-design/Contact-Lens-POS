@@ -31,6 +31,7 @@ new_task_state_content_full = """### Task State:
 - `DONE`: 재고 목록 팝업에서 바코드와 가격을 삭제하고, "브랜드 - 유형 (투명/컬러) - 제품명 - 도수 (S/C/AX)"로 세분화하여 표시하는 다단계 드릴다운 선택을 구현했습니다. 이를 위해 `brand-product-list-modal.component.js`와 `services/product.service.js`를 수정하고 모달 크기를 키웠습니다.
 - `DONE`: 재고 폐기 팝업의 목록을 재고 관리 탭처럼 버튼식 목록으로 변경했습니다.
 - `DONE`: `discard-inventory-modal.component.js`의 구문 오류를 수정했습니다 (불필요한 닫는 중괄호 제거).
+- `DONE`: 재고 폐기 팝업에 브랜드별 목록을 먼저 보여주고, 브랜드 선택 시 해당 브랜드의 제품 목록을 보여주도록 기능을 구현했습니다.
 """
 
 # Find the start and end of the Task State section
@@ -69,7 +70,7 @@ if post_task_state_content_start_index != -1:
 # Ensure there's a blank line before and after the new task state content
 final_content = pre_task_state_content.strip() + '\n\n' + \
                 new_task_state_content_full.strip() + '\n\n' + \
-                post_task_state_content.strip() + '\n'
+                post_task_state_content.strip() + '\n' # Corrected variable name
 
 with open(blueprint_path, 'w') as f:
     f.write(final_content)
