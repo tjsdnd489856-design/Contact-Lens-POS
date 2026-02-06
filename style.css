@@ -161,6 +161,12 @@ footer {
   animation-duration: 0.4s
 }
 
+/* Specific size for the product modal */
+body #product-modal .modal-content {
+    width: 90%;
+    max-width: 1200px; /* 1.5 times original */
+}
+
 /* Add Animation */
 @keyframes animatetop {
   from {top: -300px; opacity: 0}

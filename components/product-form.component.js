@@ -31,6 +31,16 @@ export default class ProductForm extends HTMLElement {
         const template = document.createElement('template');
         template.innerHTML = `
           <style>
+            /* Remove spinner buttons from number inputs within Shadow DOM */
+            input[type="number"]::-webkit-outer-spin-button,
+            input[type="number"]::-webkit-inner-spin-button {
+              -webkit-appearance: none;
+              margin: 0;
+            }
+            input[type="number"] {
+              -moz-appearance: textfield; /* Firefox */
+            }
+
             form { 
               background: #fdfdfd; 
               padding: 1rem; 
