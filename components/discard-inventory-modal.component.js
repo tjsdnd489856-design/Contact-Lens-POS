@@ -289,7 +289,4 @@ export default class DiscardInventoryModal extends HTMLElement {
         // instead, directly update the selected class if needed.
     }
 }
-
-}
-
 customElements.define('discard-inventory-modal', DiscardInventoryModal);

@@ -1,3 +1,4 @@
+
 import re
 import os
 
@@ -29,6 +30,7 @@ new_task_state_content_full = """### Task State:
 - `DONE`: 전체 브랜드 제품이 표시되도록 `brand-product-list-modal.component.js`를 수정했습니다.
 - `DONE`: 재고 목록 팝업에서 바코드와 가격을 삭제하고, "브랜드 - 유형 (투명/컬러) - 제품명 - 도수 (S/C/AX)"로 세분화하여 표시하는 다단계 드릴다운 선택을 구현했습니다. 이를 위해 `brand-product-list-modal.component.js`와 `services/product.service.js`를 수정하고 모달 크기를 키웠습니다.
 - `DONE`: 재고 폐기 팝업의 목록을 재고 관리 탭처럼 버튼식 목록으로 변경했습니다.
+- `DONE`: `discard-inventory-modal.component.js`의 구문 오류를 수정했습니다 (불필요한 닫는 중괄호 제거).
 """
 
 # Find the start and end of the Task State section
