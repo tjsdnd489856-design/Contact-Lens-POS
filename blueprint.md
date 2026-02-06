@@ -174,6 +174,101 @@ This section outlines the immediate tasks for the current development cycle.
 - `DONE`: "이상 재고" 버튼이 사라지는 버그를 수정했습니다. `abnormalInventoryBookmark`의 초기 `display: none` 설정이 `showTab` 이벤트 리스너와 충돌하지 않도록 변경했습니다.
 - `DONE`: "새 제품 추가" 팝업을 열거나 제품을 추가한 후 바코드 입력란에 자동으로 커서가 설정되도록 기능을 추가했습니다.
 - `DONE`: "새 제품 추가" 팝업 내 "추가할 제품 목록" 테이블의 모든 텍스트를 가운데 정렬하고, 가격 열만 오른쪽 정렬했습니다.
+- `DONE`: 제품 추가 시 바코드 입력란이 필수 필드가 아니도록 변경했습니다.
+
+### Artifact Trail:
+- `services/product.service.js`: ProductService 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `services/customer.service.js`: CustomerService 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `services/sales.service.js`: SalesService 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `components/product-list.component.js`: ProductList 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `components/product-form.component.js`: ProductForm 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `components/customer-list.component.js`: CustomerList 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `components/customer-form.component.js`: CustomerForm 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `components/sale-transaction.component.js`: SaleTransaction 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `components/sales-list.component.js`: SalesList 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `components/customer-purchase-history.component.js`: CustomerPurchaseHistory 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
+- `components/app-initializer.js`: initializeApp 함수를 포함하도록 생성했으며, 누락된 서비스 import를 추가하여 수정했습니다.
+- `main.js`: ProductService, CustomerService, SalesService, ProductList, ProductForm, CustomerList, CustomerForm, SaleTransaction, SalesList, CustomerPurchaseHistory, initializeApp의 정의를 제거하고 해당 임포트 문을 추가하도록 여러 번 수정되었습니다. 이전 셸 스크립트 오류로 인해 파일이 손상되어 git restore 후 인메모리 문자열 조작으로 수정되었습니다.
+- `index.html`: `<script src="main.js"></script>`를 `<script type="module" src="main.js"></script>`로 업데이트했습니다.
+- `components/`: UI 컴포넌트를 저장하기 위해 디렉토리가 생성되었습니다.
+- `components/customer-form.component.js` 복구 및 누락된 서비스 import 수정: `CustomerForm` 컴포넌트 파일을 Git 기록에서 복구하고 `CustomerService` import를 추가했습니다.
+- `components/customer-list.component.js` 누락된 서비스 import 수정: `CustomerService` import를 추가했습니다.
+- `components/product-list.component.js` 누락된 서비스 import 수정: `ProductService` import를 추가했습니다.
+- `components/product-form.component.js` 누락된 서비스 import 수정: `ProductService` import를 추가했습니다.
+- `components/sale-transaction.component.js` 누락된 서비스 import 수정: `CustomerService`, `ProductService`, `SalesService` import를 추가했습니다.
+- `components/sales-list.component.js` 누락된 서비스 import 수정: `CustomerService`, `SalesService` import를 추가했습니다.
+- `components/customer-purchase-history.component.js` 누락된 서비스 import 수정: `CustomerService`, `SalesService` import를 추가했습니다.
+
+### File System State:
+- `cwd`: /home/user/contact-lens-pos/
+- `created`: services/, services/product.service.js, services/customer.service.js, services/sales.service.js, components/, components/product-list.component.js, components/product-form.component.js, components/customer-list.component.js, components/customer-form.component.js, components/sale-transaction.component.js, components/sales-list.component.js, components/customer-purchase-history.component.js, components/app-initializer.js
+- `modified`: main.js, index.html, components/app-initializer.js, components/customer-list.component.js, components/customer-form.component.js, components/product-list.component.js, components/product-form.component.js, components/sale-transaction.component.js, components/sales-list.component.js, components/customer-purchase-history.component.js
+
+### Recent Actions:
+- ProductService를 main.js에서 services/product.service.js로 추출하고 main.js에 import 문을 추가했습니다.
+- CustomerService를 main.js에서 services/customer.service.js로 추출하고 main.js에 import 문을 추가했습니다.
+- SalesService를 main.js에서 services/sales.service.js로 추출하고 main.js에 import 문을 추가했습니다.
+- components/ 디렉토리를 생성했습니다.
+- ProductList 컴포넌트를 main.js에서 components/product-list.component.js로 추출하고 main.js에 import 문을 추가했습니다.
+- ProductForm 컴포넌트를 main.js에서 components/product-form.component.js로 추출하고 main.js에 import 문을 추가했습니다.
+- CustomerList 컴포넌트를 main.js에서 components/customer-list.component.js로 추출하고 main.js에 import 문을 추가했습니다.
+- CustomerForm 컴포넌트를 main.js에서 components/customer-form.component.js로 추출하고 main.js에 import 문을 추가했습니다.
+- SaleTransaction 컴포넌트를 main.js에서 components/sale-transaction.component.js로 추출하고 main.js에 import 문을 추가했습니다.
+- SalesList 컴포넌트를 main.js에서 components/sales-list.component.js로 추출하고 main.js에 import 문을 추가했습니다.
+- CustomerPurchaseHistory 컴포넌트를 main.js에서 components/customer-purchase-history.component.js로 추출하고 main.js에 import 문을 추가했습니다.
+- Tab Switching Logic을 main.js에서 components/app-initializer.js로 추출하고 main.js에 import 문과 initializeApp() 호출을 추가했습니다.
+- index.html의 `<script src="main.js"></script>`를 `<script type="module" src="main.js"></script>`로 업데이트했습니다.
+- components/app-initializer.js에 누락된 서비스 import를 추가했습니다.
+- `CustomerForm` 컴포넌트 파일을 Git 기록에서 복구하고 `CustomerService` import를 추가했습니다.
+- `CustomerList` 컴포넌트에 `CustomerService` import를 추가했습니다.
+- `ProductList` 컴포넌트에 `ProductService` import를 추가했습니다.
+- `ProductForm` 컴по넌트에 `ProductService` import를 추가했습니다.
+- `SaleTransaction` 컴포넌트에 `CustomerService`, `ProductService`, `SalesService` import를 추가했습니다.
+- `SalesList` 컴포넌트에 `CustomerService`, `SalesService` import를 추가했습니다.
+- `CustomerPurchaseHistory` 컴포넌트에 `CustomerService`, `SalesService` import를 추가했습니다.
+
+### Task State:
+- `DONE`: 'services' 디렉토리 생성.
+- `DONE`: ProductService를 'services/product.service.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: CustomerService를 'services/customer.service.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: SalesService를 'services/sales.service.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: 필요하다면 index.html 업데이트.
+- `DONE`: 'components' 디렉토리 생성.
+- `DONE`: ProductList 컴포넌트를 'components/product-list.component.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: ProductForm 컴포넌트를 'components/product-form.component.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: CustomerList 컴포넌트를 'components/customer-list.component.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: CustomerForm 컴포넌트를 'components/customer-form.component.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: SaleTransaction 컴포넌트를 'components/sale-transaction.component.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: SalesList 컴포넌트를 'components/sales-list.component.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: CustomerPurchaseHistory 컴포넌트를 'components/customer-purchase-history.component.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: Tab Switching Logic을 'components/app-initializer.js'로 추출하고 main.js에서 임포트하도록 수정.
+- `DONE`: 누락된 서비스 import를 모든 구성 요소에 추가하고 CustomerForm을 복구했습니다.
+- `DONE`: Inventory Management 탭에서 재고 목록을 쉽게 볼 수 있도록 브랜드 필터 버튼을 추가했습니다.
+- `DONE`: 브랜드별 제품 목록을 보여주는 팝업을 구현하고, `brand-product-list-modal.component.js`, `app-initializer.js`, `product-list.component.js`를 수정했습니다.
+- `DONE`: 상단 탭, 새 고객 추가 팝업, 검색 기능이 작동하지 않던 회귀 버그를 해결했습니다. 주요 원인은 `main.js`에 `brand-product-list-modal.component.js`가 임포트되지 않아 사용자 정의 요소가 정의되지 않았기 때문입니다. 또한, `app-initializer.js`에서 `closeBrandProductListModalElement` 이벤트 리스너를 올바르게 수정했습니다.
+- `DONE`: 전체 브랜드 제품이 표시되도록 `brand-product-list-modal.component.js`를 수정했습니다.
+- `DONE`: 재고 목록 팝업에서 바코드와 가격을 삭제하고, "브랜드 - 유형 (투명/컬러) - 제품명 - 도수 (S/C/AX)"로 세분화하여 표시하는 다단계 드릴다운 선택을 구현했습니다. 이를 위해 `brand-product-list-modal.component.js`와 `services/product.service.js`를 수정하고 모달 크기를 키웠습니다.
+- `DONE`: 재고 폐기 팝업의 목록을 재고 관리 탭처럼 버튼식 목록으로 변경했습니다.
+- `DONE`: `discard-inventory-modal.component.js`의 구문 오류를 수정했습니다 (불필요한 닫는 중괄호 제거).
+- `DONE`: 재고 폐기 팝업에 브랜드별 목록을 먼저 보여주고, 브랜드 선택 시 해당 브랜드의 제품 목록을 보여주도록 기능을 구현했습니다.
+- `DONE`: 재고 폐기 팝업의 세부 제품 목록을 버튼식이 아닌 리스트 형식으로 변경했습니다.
+- `DONE`: 재고 폐기 팝업의 세부 제품 목록에서 도수와 축 정보를 한 줄로 간결하게 표시하도록 변경했습니다.
+- `DONE`: 재고 폐기 팝업에 브랜드 선택, 제품 선택, 제품의 세부 도수 선택을 포함하는 3단계 드릴다운 선택 기능을 구현했습니다.
+- `DONE`: 재고 폐기 팝업의 최종 세부 목록(도수 옵션)을 S(구면), C(원주면) 값으로 오름차순/내림차순 정렬할 수 있는 기능을 추가했습니다.
+- `DONE`: 재고 폐기 팝업의 최종 세부 목록(도수 옵션)을 표 형식으로 한눈에 볼 수 있도록 변경했습니다.
+- `DONE`: 재고 폐기 팝업의 세부 목록(도수 옵션)에서 오름/내림차순 필터를 표 헤더 클릭으로 적용할 수 있도록 변경했습니다.
+- `DONE`: 우측에 "주문/이상재고"라는 제목의 사이드 패널을 추가하고, 재고 수량이 음수인 제품을 표 형식으로 목록화하는 기능을 구현했습니다.
+- `DONE`: "이상 재고 보기" 버튼을 재고관리 탭 안 오른쪽 끝으로 이동하고, 사이드 패널이 외부 클릭 시 자연스럽게 닫히도록 설정했습니다.
+- `DONE`: "이상 재고 보기" 버튼 텍스트와 사이드 패널 내부의 "주문/이상재고" 제목을 "이상 재고"로 변경하고, 사이드 패널의 X 닫기 버튼을 제거했습니다.
+- `DONE`: "새 제품 추가" 팝업의 크기를 기존 대비 2배로 확장했습니다.
+- `DONE`: "새 제품 추가" 팝업 내 "추가할 제품 목록" 테이블의 헤더를 가운데 정렬하고, S, C, AX 입력 필드에서 스피너 버튼을 제거했습니다.
+- `DONE`: "새 제품 추가" 팝업만 크기를 1.5배로 키우고 다른 팝업들은 원래 크기로 되돌렸습니다. 또한, 모든 숫자 입력 필드에서 스피너 버튼이 완전히 제거되도록 수정했습니다.
+- `DONE`: "새 제품 추가" 팝업 안의 도수를 입력하는 칸에 서식을 x=-x/100로 입력되게 하고 x 앞에 +가 붙으면 +x/100이 입력되게 했습니다.
+- `DONE`: 도수 입력란의 서식 변환이 입력 완료 시(change 이벤트) 이루어지도록 변경하고, 모든 팝업이 Esc 키로 닫히도록 기능을 추가했습니다.
+- `DONE`: "이상 재고" 버튼을 재고 관리 탭이 활성화되었을 때 오른쪽 끝에 책갈피처럼 보이도록 만들고, 텍스트를 "이상 재고"로 변경했습니다.
+- `DONE`: "이상 재고" 버튼이 사라지는 버그를 수정했습니다. `abnormalInventoryBookmark`의 초기 `display: none` 설정이 `showTab` 이벤트 리스너와 충돌하지 않도록 변경했습니다.
+- `DONE`: "새 제품 추가" 팝업을 열거나 제품을 추가한 후 바코드 입력란에 자동으로 커서가 설정되도록 기능을 추가했습니다.
+- `DONE`: "새 제품 추가" 팝업 내 "추가할 제품 목록" 테이블의 모든 텍스트를 가운데 정렬하고, 가격 열만 오른쪽 정렬했습니다.
 
 ### Artifact Trail:
 - `services/product.service.js`: ProductService 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.

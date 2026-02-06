@@ -133,7 +133,7 @@ export default class ProductForm extends HTMLElement {
             <input type="hidden" name="id">
             <div class="form-group">
               <label for="barcode">바코드</label>
-              <input type="text" id="barcode" name="barcode" placeholder="바코드 스캔" required>
+              <input type="text" id="barcode" name="barcode" placeholder="바코드 스캔">
             </div>
             <div class="form-group">
               <label for="brand">브랜드</label>
