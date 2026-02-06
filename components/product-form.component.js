@@ -57,8 +57,8 @@ export default class ProductForm extends HTMLElement {
         this._form.barcode.addEventListener('change', this.handleBarcodeScan); // Use 'change' event for barcode
 
         // Add event listeners for power input formatting
-        this._form.powerS.addEventListener('input', (e) => formatPowerValue(e.target));
-        this._form.powerC.addEventListener('input', (e) => formatPowerValue(e.target));
+        this._form.powerS.addEventListener('change', (e) => formatPowerValue(e.target)); // Changed from 'input' to 'change'
+        this._form.powerC.addEventListener('change', (e) => formatPowerValue(e.target)); // Changed from 'input' to 'change'
     }
 
     disconnectedCallback() {
@@ -68,8 +68,8 @@ export default class ProductForm extends HTMLElement {
         this._form.barcode.removeEventListener('change', this.handleBarcodeScan);
 
         // Remove event listeners for power input formatting
-        this._form.powerS.removeEventListener('input', (e) => formatPowerValue(e.target));
-        this._form.powerC.removeEventListener('input', (e) => formatPowerValue(e.target));
+        this._form.powerS.removeEventListener('change', (e) => formatPowerValue(e.target)); // Changed from 'input' to 'change'
+        this._form.powerC.removeEventListener('change', (e) => formatPowerValue(e.target)); // Changed from 'input' to 'change'
     }
 
     _render() {
