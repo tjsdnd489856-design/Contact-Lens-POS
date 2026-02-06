@@ -1,5 +1,42 @@
 import { ProductService } from '../services/product.service.js';
 
+// Add a helper function to format power values
+function formatPowerValue(inputElement) {
+    let value = inputElement.value.trim();
+
+    if (!value) {
+        return;
+    }
+
+    // Remove any non-numeric characters except for '+' or '-' at the beginning
+    let cleanValue = value.replace(/[^0-9+\-.]/g, '');
+
+    // Check if it starts with '+'
+    const startsWithPlus = cleanValue.startsWith('+');
+    if (startsWithPlus) {
+        cleanValue = cleanValue.substring(1); // Remove '+' for parsing
+    } else if (cleanValue.startsWith('-')) {
+        cleanValue = cleanValue.substring(1); // Remove '-' for parsing
+    }
+
+    let num = parseFloat(cleanValue);
+
+    if (isNaN(num)) {
+        inputElement.value = ''; // Clear if not a valid number
+        return;
+    }
+
+    // Apply the formatting: x / 100
+    let formattedValue = (num / 100).toFixed(2); // Keep two decimal places
+
+    if (startsWithPlus) {
+        inputElement.value = `+${formattedValue}`;
+    } else {
+        // Automatically add '-' if no sign was given for negative power, or keep existing '-'
+        inputElement.value = formattedValue.startsWith('-') ? formattedValue : `-${formattedValue}`;
+    }
+}
+
 // --- ProductForm Component ---
 export default class ProductForm extends HTMLElement {
     constructor() {
@@ -18,6 +55,10 @@ export default class ProductForm extends HTMLElement {
         this._form.addEventListener('submit', this.handleSubmit);
         document.addEventListener('clearProductForm', this.clearForm);
         this._form.barcode.addEventListener('change', this.handleBarcodeScan); // Use 'change' event for barcode
+
+        // Add event listeners for power input formatting
+        this._form.powerS.addEventListener('input', (e) => formatPowerValue(e.target));
+        this._form.powerC.addEventListener('input', (e) => formatPowerValue(e.target));
     }
 
     disconnectedCallback() {
@@ -25,6 +66,10 @@ export default class ProductForm extends HTMLElement {
         this._form.removeEventListener('submit', this.handleSubmit);
         document.removeEventListener('clearProductForm', this.clearForm);
         this._form.barcode.removeEventListener('change', this.handleBarcodeScan);
+
+        // Remove event listeners for power input formatting
+        this._form.powerS.removeEventListener('input', (e) => formatPowerValue(e.target));
+        this._form.powerC.removeEventListener('input', (e) => formatPowerValue(e.target));
     }
 
     _render() {
