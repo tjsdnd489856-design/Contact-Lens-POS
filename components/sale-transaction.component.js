@@ -41,40 +41,50 @@ export default class SaleTransaction extends HTMLElement {
   }
   
   async _processBarcodeString(barcodeString) {
-    console.log(`Scanned UDI: ${barcodeString}`);
+    console.log(`Scanned Barcode: ${barcodeString}`);
     const udiData = parseUdiBarcode(barcodeString);
-    console.log('Parsed UDI:', udiData);
+    console.log('Parsed UDI Data:', udiData);
+
+    let product = null;
 
     if (udiData.gtin) {
-        let product = ProductService.getProductByGtin(udiData.gtin);
+        // First, try to find product locally using the parsed GTIN
+        product = ProductService.getProductByGtin(udiData.gtin);
 
         if (!product) {
             // If not found locally, try to fetch from external API via Firebase Function
-            console.log('Product not found locally, fetching from external API...');
+            console.log('Product not found locally by GTIN, fetching from external API...');
             const externalProduct = await ProductService.fetchProductDetailsFromExternalApi(udiData.gtin);
             
-            if (externalProduct && externalProduct.productName) {
-                // Assuming externalProduct comes with necessary details
+            if (externalProduct && externalProduct.productFound) { // Check productFound flag
                 // Add to local service
                 ProductService.addProduct({
                     ...externalProduct,
                     id: ProductService._nextId, // Assign new local ID
                     barcode: udiData.gtin, // Use GTIN as barcode for consistency
                     gtin: udiData.gtin,
+                    // Assume default power and wearType if not provided by external API
+                    powerS: externalProduct.power || 0,
+                    powerC: 0,
+                    powerAX: 0,
+                    quantity: 1, // Default to 1
+                    expirationDate: '2099-12-31', // Placeholder
+                    price: 0.00, // Placeholder
                 });
                 product = ProductService.getProductByGtin(udiData.gtin); // Get the newly added product
                 alert(`외부 API에서 제품 정보를 가져왔습니다: ${product.model}`);
-            } else {
-                alert(`GTIN ${udiData.gtin}에 해당하는 제품을 로컬 및 외부 API에서 찾을 수 없습니다.`);
             }
         }
-        
-        if (product) {
-            this._addProductToCart(product, 1); // Default quantity to 1
-        }
-
     } else {
-        alert('스캔된 바코드에서 유효한 GTIN을 찾을 수 없습니다.');
+        // If no valid GTIN found from UDI parsing, try as a legacy barcode
+        console.log('Not a UDI formatted string with GTIN, trying as legacy barcode...');
+        product = ProductService.getProductByLegacyBarcode(barcodeString);
+    }
+    
+    if (product) {
+        this._addProductToCart(product, 1); // Default quantity to 1
+    } else {
+        alert(`바코드 "${barcodeString}"에 해당하는 제품을 로컬 및 외부 API에서 찾을 수 없습니다.`);
     }
   }
 
