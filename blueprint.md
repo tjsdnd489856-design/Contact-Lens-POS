@@ -1,62 +1,78 @@
-# Blueprint: Store Management System
+# Blueprint for Contact Lens POS System
 
-## 1. Project Overview
+## Overview
+This document outlines the architecture, features, and ongoing development plan for a Contact Lens Point-of-Sale (POS) system within the Firebase Studio environment. The system focuses on managing customer, product (contact lens inventory), and sales data, utilizing modern web standards and Firebase services.
 
-This document outlines the development plan for the "Store Management System" application. It's a web-based Point of Sale (POS) system designed specifically for contact lens stores. The goal is to create a modern, intuitive, and efficient application for managing sales, customers, products, and inventory.
+## Detailed Outline
 
----
+### 1. Core Application Structure
+*   **`index.html`**: The single-page application entry point, structuring the main layout with tab-based navigation for Customers, Products, and Sales.
+*   **`main.js`**: The main JavaScript file orchestrating component loading, event handling, and application logic.
+*   **`style.css`**: Global styles for the application, adhering to modern CSS practices.
+*   **`components/`**: Directory for Web Components, encapsulating reusable UI elements and their logic.
+*   **`services/`**: Directory for JavaScript modules providing data access and business logic (e.g., `ProductService`, `CustomerService`, `SalesService`).
+*   **`utils/`**: Utility functions, such as `udi-parser.js`.
+*   **`functions/`**: Firebase Cloud Functions for backend logic, including secure external API interactions.
 
-## 2. Application Blueprint: Features & Design
+### 2. Data Management and Services
+*   **`ProductService`**: Manages contact lens product inventory, including adding, updating, deleting products, and fetching product details. It integrates with a Firebase Cloud Function for external UDI API lookups.
+*   **`CustomerService`**: Handles customer data, including creation, retrieval, and purchase history tracking.
+*   **`SalesService`**: Manages sales transactions and records.
 
-This section details all implemented features, design choices, and styling. It will be updated as the application evolves.
+### 3. Key Features
 
-### Core Features:
-- **Inventory Management:** Add, edit, and view contact lens products (brand, model, power, price, stock, etc.).
-- **Customer Management:** Manage customer information, including personal details (name, phone), prescription (right/left eye power), last purchase date, purchase history, and notes.
-- **Sales & Ordering:** Create and manage customer orders.
-- **Inventory Tracking:** Automatically track product stock levels.
+#### a. Tab-based Navigation
+*   Allows users to switch between "고객 관리" (Customer Management), "재고 관리" (Inventory Management), and "판매 및 주문" (Sales and Orders) sections.
 
-### Design & Style:
-- **UI:** Modern, clean, and responsive interface using Web Components.
-- **Styling:** Adherence to modern CSS practices for a visually appealing and maintainable design.
-- **Accessibility:** Implementation of a11y standards to ensure the application is usable by everyone.
+#### b. Customer Management
+*   **Customer List (`customer-list.component.js`)**: Displays a list of customers.
+*   **Customer Form (`customer-form.component.js`)**: Provides functionality to add or edit customer details.
+*   **Customer Purchase History (`customer-purchase-history.component.js`)**: Shows past purchases for a selected customer.
+*   **Search**: Customers can be searched by name or the last four digits of their contact number.
 
-### UDI Barcode Scanning
-- **HID (USB) Barcode Scanner Input:** The camera-based `html5-qrcode` integration has been replaced with a dedicated text input field in the sales transaction screen. This field is designed to work with traditional USB barcode scanners that emulate keyboard input. When a barcode is scanned, the data is "typed" into this field, and an Enter keypress triggers the UDI parsing and product lookup.
-- **Robust UDI Parsing:** Implemented a sophisticated UDI parser (`udi-parser.js`) that can extract GTIN, expiration date, lot number, and serial number from a GS1-128 barcode string. It includes logic to handle common challenges like 2-digit year ambiguity.
-- **Seamless Sales Workflow:** An input field for USB barcode scanners has been added to the sales transaction screen. On a successful scan, the system automatically parses the UDI, looks up the product by its GTIN in the `ProductService`, and adds it to the cart.
-- **Data Consistency:** Updated the product data model and forms to include a `gtin` field, ensuring that products can be reliably looked up via their GTIN. New products have their GTIN automatically generated from their barcode.
+#### c. Product/Inventory Management
+*   **Product List (`product-list.component.js`)**: Displays the current inventory of contact lenses.
+*   **Product Form (`product-form.component.js`)**: Used for manually adding or editing product details.
+*   **Discard Inventory Modal (`discard-inventory-modal.component.js`)**: Allows for recording discarded inventory.
+*   **Abnormal Inventory Panel (`abnormal-inventory-list.component.js`)**: A side panel displaying products with abnormal (e.g., negative) quantities.
+*   **Brand Product List Modal (`brand-product-list-modal.component.js`)**: Displays products filtered by brand.
 
-### External API Integration with Firebase Functions
-- **Purpose:** To securely access external public APIs (e.g., `data.go.kr` for medical device information) to retrieve detailed product information that might not be available locally.
-- **Architecture:** Firebase Cloud Functions are used as a secure proxy layer. Client-side requests are sent to a Firebase Function, which then makes the actual call to the external API, processes the response, and returns the relevant data to the client. This prevents exposing API keys directly on the client.
-- **Security:** External API keys are stored securely in Firebase Functions environment variables (`functions.config()`), ensuring they are not hardcoded or exposed in client-side code or version control.
-- **Product Enrichment:** When a product is scanned via UDI but not found locally, the system attempts to fetch its details from the external medical device API via the Firebase Function. If successful, the product is added to the local inventory for future use.
+#### d. Sales and Orders
+*   **Sale Transaction (`sale-transaction.component.js`)**: Handles the process of recording a sale.
+*   **Sales List (`sales-list.component.js`)**: Displays a history of sales transactions.
 
----
+#### e. UDI-based Product Addition Feature
+*   **Purpose**: To allow adding new contact lens products to inventory using UDI (Unique Device Identification) barcode information, by parsing the UDI and fetching additional details from an external API (Korean Ministry of Food and Drug Safety's Medical Device Standard Code Unity Information Service).
+*   **Components Involved**:
+    *   `index.html`: Provides the "UDI로 제품 추가" button and the `udi-scanner-modal` UI for UDI input, product details display, and "재고에 추가" button.
+    *   `main.js`: Orchestrates the interaction, including opening/closing the modal, calling `udi-parser.js`, calling `ProductService` for external API lookup, updating the UI, and adding the product to inventory.
+    *   `udi-parser.js`: Utility function to parse GS1-128 UDI barcode strings, extracting GTIN (UDI-DI), expiration date, lot number, and serial number.
+    *   `product.service.js`: Contains `fetchProductDetailsFromExternalApi` which calls a Firebase Cloud Function to securely interact with the external UDI API.
+    *   `functions/src/index.ts`: The `getMedicalDeviceDetails` Firebase Cloud Function acts as a secure proxy to the `https://apis.data.go.kr` external API, handling the API key and returning structured medical device information.
+*   **Workflow**:
+    1.  User navigates to the "재고 관리" tab.
+    2.  User clicks the "UDI로 제품 추가" button.
+    3.  The `udi-scanner-modal` opens.
+    4.  User enters or scans a UDI barcode into the input field.
+    5.  User clicks the "제품 정보 조회" button.
+    6.  `main.js` calls `parseUdiBarcode` from `udi-parser.js` to extract relevant UDI components, especially the GTIN (UDI-DI).
+    7.  `main.js` then calls `ProductService.fetchProductDetailsFromExternalApi(gtin)`.
+    8.  `ProductService` invokes the `getMedicalDeviceDetails` Firebase Cloud Function with the GTIN.
+    9.  The Firebase Function makes a secure API call to `https://apis.data.go.kr/1471000/MdeqStdCdUnityInfoService01/getMdeqStdCdUnityInfoList` using the configured `med_device_api.key`.
+    10. The Firebase Function processes the external API response and returns a structured product object (brand, model, product name, etc.) to the frontend.
+    11. `main.js` updates the `udi-scanner-modal` UI with the retrieved product details.
+    12. The "재고에 추가" button becomes enabled. The user can adjust quantity and price fields.
+    13. User clicks the "재고에 추가" button.
+    14. `main.js` collects all product details from the modal (including user-adjusted quantity/price and UDI-parsed expiration/lot/serial numbers).
+    15. `ProductService.addProduct(newProduct)` is called to add the new product to the in-memory inventory.
+    16. An alert confirms the addition, and the `udi-scanner-modal` closes, clearing its state.
+*   **Error Handling**: The system provides feedback for invalid UDI input, API lookup failures, and cases where no product details are found.
 
-## 3. Current Development Plan
+## Current Plan & Next Steps
 
-This section outlines the tasks for the current development cycle.
+This section will be updated with each new development task.
 
-### UDI Barcode Feature Implementation (Phase 1: Client-Side Scanning & Parsing)
+**Current Task**: Implementation of the UDI-based Product Addition Feature.
+**Status**: Implemented.
 
-1.  **COMPLETED:** Improve `udi-parser.js` to handle date ambiguity and improve regex robustness.
-2.  **COMPLETED:** Integrate `html5-qrcode` library for barcode scanning.
-3.  **COMPLETED:** Implement barcode scanning UI and logic in `sale-transaction.component.js`.
-4.  **COMPLETED:** Update `product.service.js` and `product-form.component.js` to support product lookup by GTIN.
-5.  **COMPLETED:** Update `blueprint.md` with the new implementation plan for Phase 1.
-
-### UDI Barcode Feature Implementation (Phase 2: External API Integration)
-
-1.  **COMPLETED:** Set up Firebase Function environment and configure API key.
-2.  **COMPLETED:** Create Firebase Function to fetch medical device details from `data.go.kr` API.
-3.  **COMPLETED:** Modify `ProductService` to call the Firebase Function.
-4.  **COMPLETED:** Modify `sale-transaction.component.js` to use the updated `ProductService` for external API lookup.
-5.  **COMPLETED:** Update `blueprint.md` with the new API integration details for Phase 2.
-
-### Environment Configuration Updates
-
-1.  **COMPLETED**: Removed `functions-emulator` configuration from `.idx/dev.nix` to resolve environment build errors.
-2.  **COMPLETED**: Removed `google.gemini-cli-vscode-ide-companion` from `idx.extensions` in `.idx/dev.nix`.
-3.  **COMPLETED**: Added Firebase MCP server configuration to `.idx/mcp.json`.
+**Next Steps**: Awaiting further user instructions.

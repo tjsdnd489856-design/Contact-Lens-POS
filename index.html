@@ -36,6 +36,7 @@
           <div class="product-controls">
             <button id="add-product-btn">새 제품 추가</button>
             <button id="discard-inventory-btn">재고 폐기</button>
+            <button id="open-udi-scanner-btn">UDI로 제품 추가</button>
           </div>
           <product-list></product-list>
         </div>    <div id="sales-tab" class="tab-content">
@@ -93,7 +94,28 @@
     <div class="modal-content">
       <span class="close-button" id="close-udi-scanner-modal">&times;</span>
       <h3>UDI 바코드 스캔</h3>
-      <div id="scanner-viewport" style="width: 100%; height: 300px;"></div>
+      <div id="udi-input-section">
+        <input type="text" id="udi-input" placeholder="UDI 바코드를 스캔하거나 입력하세요">
+        <button id="lookup-udi-btn">제품 정보 조회</button>
+      </div>
+      <div id="udi-product-details">
+        <h4>조회된 제품 정보:</h4>
+        <div id="udi-product-info">
+          <p><strong>브랜드:</strong> <span id="udi-brand"></span></p>
+          <p><strong>모델명:</strong> <span id="udi-model"></span></p>
+          <p><strong>UDI-DI:</strong> <span id="udi-gtin"></span></p>
+          <p><strong>유통기한:</strong> <span id="udi-expiration-date"></span></p>
+          <p><strong>로트 번호:</strong> <span id="udi-lot-number"></span></p>
+          <p><strong>일련 번호:</strong> <span id="udi-serial-number"></span></p>
+          <p><strong>렌즈 타입:</strong> <span id="udi-lens-type"></span></p>
+          <p><strong>착용 주기:</strong> <span id="udi-wear-type"></span></p>
+          <p><strong>수량:</strong> <input type="number" id="udi-quantity" value="1" min="1"></p>
+          <p><strong>가격:</strong> <input type="number" id="udi-price" value="0.00" min="0"></p>
+        </div>
+        <p id="udi-status-message" style="color: red;"></p>
+        <button id="add-udi-product-btn" disabled>재고에 추가</button>
+      </div>
+      <div id="scanner-viewport" style="width: 100%; height: 0px; overflow: hidden;"></div> <!-- Hide scanner-viewport for now -->
     </div>
   </div>
 
