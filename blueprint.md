@@ -12,10 +12,10 @@ This document outlines the architecture, features, and ongoing development plan 
 *   **`components/`**: Directory for Web Components, encapsulating reusable UI elements and their logic.
 *   **`services/`**: Directory for JavaScript modules providing data access and business logic (e.g., `ProductService`, `CustomerService`, `SalesService`).
 *   **`utils/`**: Utility functions, such as `udi-parser.js`.
-*   **`functions/`**: Firebase Cloud Functions for backend logic, including secure external API interactions.
+*   **`lambda/`**: AWS Lambda function and related deployment scripts for backend logic, including secure external API interactions.
 
 ### 2. Data Management and Services
-*   **`ProductService`**: Manages contact lens product inventory, including adding, updating, deleting products, and fetching product details. It integrates with a Firebase Cloud Function for external UDI API lookups.
+*   **`ProductService`**: Manages contact lens product inventory, including adding, updating, deleting products, and fetching product details. It integrates with an AWS Lambda function via API Gateway for external UDI API lookups.
 *   **`CustomerService`**: Handles customer data, including creation, retrieval, and purchase history tracking.
 *   **`SalesService`**: Manages sales transactions and records.
 
@@ -48,7 +48,10 @@ This document outlines the architecture, features, and ongoing development plan 
     *   `main.js`: Orchestrates the interaction, including opening/closing the modal, calling `udi-parser.js`, calling `ProductService` for external API lookup, updating the UI, and adding the product to inventory.
     *   `udi-parser.js`: Utility function to parse GS1-128 UDI barcode strings, extracting GTIN (UDI-DI), expiration date, lot number, and serial number.
     *   `product.service.js`: Contains `fetchProductDetailsFromExternalApi` which calls a Firebase Cloud Function to securely interact with the external UDI API.
-    *   `functions/src/index.ts`: The `getMedicalDeviceDetails` Firebase Cloud Function acts as a secure proxy to the `https://apis.data.go.kr` external API, handling the API key and returning structured medical device information.
+    *   `lambda/get_medical_device_details.py`: The Python AWS Lambda function containing the core logic for fetching medical device details.
+    *   `lambda/requirements.txt`: Lists Python dependencies for the Lambda function (e.g., `requests`, `boto3`).
+    *   `lambda/package_lambda.sh`: A shell script to package the Lambda function and its dependencies into a deployable `.zip` file.
+    *   `lambda/lambda_deployment_guide.md`: Provides instructions for deploying the Lambda function, setting up API Gateway, and configuring AWS Secrets Manager.
 *   **Workflow**:
     1.  User navigates to the "재고 관리" tab.
     2.  User clicks the "UDI로 제품 추가" button.
@@ -56,10 +59,10 @@ This document outlines the architecture, features, and ongoing development plan 
     4.  User enters or scans a UDI barcode into the input field.
     5.  User clicks the "제품 정보 조회" button.
     6.  `main.js` calls `parseUdiBarcode` from `udi-parser.js` to extract relevant UDI components, especially the GTIN (UDI-DI).
-    7.  `main.js` then calls `ProductService.fetchProductDetailsFromExternalApi(gtin)`.
-    8.  `ProductService` invokes the `getMedicalDeviceDetails` Firebase Cloud Function with the GTIN.
-    9.  The Firebase Function makes a secure API call to `https://apis.data.go.kr/1471000/MdeqStdCdUnityInfoService01/getMdeqStdCdUnityInfoList` using the configured `med_device_api.key`.
-    10. The Firebase Function processes the external API response and returns a structured product object (brand, model, product name, etc.) to the frontend.
+    7.  `main.js` then calls `ProductService.fetchProductDetailsFromExternalApi(gtin), targeting the AWS API Gateway endpoint.`
+    8.  The API Gateway endpoint triggers the `getMedicalDeviceDetails` AWS Lambda function with the GTIN.
+    9.  The AWS Lambda function makes a secure API call to `https://apis.data.go.kr/1471000/MdeqStdCdUnityInfoService01/getMdeqStdCdUnityInfoList` using the API key retrieved from AWS Secrets Manager.
+    10. The AWS Lambda function processes the external API response and returns a structured product object (brand, model, product name, etc.) to the frontend.
     11. `main.js` updates the `udi-scanner-modal` UI with the retrieved product details.
     12. The "재고에 추가" button becomes enabled. The user can adjust quantity and price fields.
     13. User clicks the "재고에 추가" button.

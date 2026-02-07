@@ -62,39 +62,51 @@ export const ProductService = {
   },
 
   async fetchProductDetailsFromExternalApi(gtin) {
-    if (typeof window.firebaseFunctions === 'undefined') {
-        console.error('Firebase Functions not initialized. Cannot call external API.');
-        return null;
-    }
+    // IMPORTANT: Replace this with your actual AWS API Gateway endpoint URL
+    const API_GATEWAY_URL = 'https://YOUR_API_GATEWAY_ENDPOINT.execute-api.AWS_REGION.amazonaws.com/default/getMedicalDeviceDetails'; 
 
     try {
-        const getMedicalDeviceDetails = window.firebaseFunctions.httpsCallable('getMedicalDeviceDetails');
-        const result = await getMedicalDeviceDetails({ udiDi: gtin });
-        console.log('Firebase Function response:', result.data);
+        const response = await fetch(API_GATEWAY_URL, {
+            method: 'POST', // API Gateway usually expects POST for Lambda proxy integration
+            headers: {
+                'Content-Type': 'application/json',
+                // Add any necessary authorization headers here if your API Gateway requires them
+            },
+            body: JSON.stringify({ udiDi: gtin }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('API Gateway Error:', errorData);
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error || 'Unknown error'}`);
+        }
+
+        const result = await response.json();
+        console.log('AWS Lambda Function response:', result);
         
-        if (result.data && result.data.productFound) {
+        if (result && result.productFound) {
             // Map the external API fields to our internal product structure
+            // The Lambda function now returns a more complete set of details.
             return {
-                brand: result.data.brand || 'N/A',
-                model: result.data.model || result.data.productName || 'N/A', // Use model, fallback to productName
-                // The UDI-DI API provides standardized device info, not inventory details.
-                // Fields like power, price, and quantity must be sourced elsewhere
-                // or entered manually after the product is added.
-                powerS: 0,
+                brand: result.brand || 'N/A',
+                model: result.model || result.productName || 'N/A',
+                // UDI-DI API does not provide power, quantity, price, expirationDate.
+                // These must be sourced elsewhere or entered manually.
+                powerS: 0, 
                 powerC: 0,
                 powerAX: 0,
                 quantity: 1, // Default to 1
-                expirationDate: '2099-12-31', // Placeholder
+                expirationDate: '2099-12-31', // Placeholder (can be overridden by UDI parser)
                 price: 0.00, // Placeholder
                 barcode: gtin, // Use GTIN as barcode
                 gtin: gtin,
-                lensType: '투명', // Default
-                wearType: 'N/A' // Default
+                lensType: '투명', // Default (can be refined manually)
+                wearType: 'N/A' // Default (can be refined manually)
             };
         }
         return null;
     } catch (error) {
-        console.error('Error calling Firebase Function getMedicalDeviceDetails:', error);
+        console.error('Error calling AWS Lambda Function:', error);
         return null;
     }
   },
