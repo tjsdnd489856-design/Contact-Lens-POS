@@ -1,7 +1,7 @@
 import * as functions from "firebase-functions";
 import * as logger from "firebase-functions/logger";
 import axios from "axios";
-import * as cors from "cors";
+import cors from "cors"; // Fix: Use default import for cors
 
 // Initialize CORS middleware
 // Allowing all origins for simplicity in this development context.
@@ -15,6 +15,9 @@ export const getMedicalDeviceDetails = functions.https.onRequest(
   (request, response) => {
     // Wrap the function logic with the CORS handler
     corsHandler(request, response, async () => {
+      // Fix: Re-declare the udiDi constant
+      const udiDi = request.body.data?.udiDi;
+
       if (!udiDi) {
         logger.error("Function called without udiDi in the body data.");
         response.status(400).send({
@@ -26,8 +29,8 @@ export const getMedicalDeviceDetails = functions.https.onRequest(
         return;
       }
 
-      // Access the API key securely from Firebase environment configuration.
-      const serviceKey = functions.config().med_device_api?.key;
+      // Fix: Correctly access the function configuration
+      const serviceKey = functions.config().med_device_api.key;
       if (!serviceKey) {
         logger.error(
           "API key not configured. Run 'firebase " +
