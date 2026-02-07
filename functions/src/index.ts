@@ -6,7 +6,7 @@ import cors from "cors"; // Fix: Use default import for cors
 // Initialize CORS middleware
 // Allowing all origins for simplicity in this development context.
 // For production, you should restrict this to your app's actual domain.
-const corsHandler = cors({origin: true});
+const corsHandler = cors({origin: '*'});
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
