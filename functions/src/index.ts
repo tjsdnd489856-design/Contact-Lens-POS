@@ -15,9 +15,6 @@ export const getMedicalDeviceDetails = functions.https.onRequest(
   (request, response) => {
     // Wrap the function logic with the CORS handler
     corsHandler(request, response, async () => {
-      // For onRequest functions, data sent from a callable client is in `request.body.data`
-      const udiDi = request.body.data?.udiDi;
-
       if (!udiDi) {
         logger.error("Function called without udiDi in the body data.");
         response.status(400).send({
@@ -32,8 +29,10 @@ export const getMedicalDeviceDetails = functions.https.onRequest(
       // Access the API key securely from Firebase environment configuration.
       const serviceKey = functions.config().med_device_api?.key;
       if (!serviceKey) {
-        logger.error("API key not configured. Run \"firebase " +
-          "functions:config:set med_device_api.key=YOUR_API_KEY\"");
+        logger.error(
+          "API key not configured. Run 'firebase " +
+          "functions:config:set med_device_api.key=YOUR_API_KEY'"
+        );
         response.status(500).send({
           error: {message: "API key not configured on the server."},
         });
@@ -41,7 +40,8 @@ export const getMedicalDeviceDetails = functions.https.onRequest(
       }
 
       // Construct the external API URL.
-      const apiUrl = "https://apis.data.go.kr/1471000/MdeqStdCdUnityInfoService01/" +
+      const apiUrl =
+        "https://apis.data.go.kr/1471000/MdeqStdCdUnityInfoService01/" +
         "getMdeqStdCdUnityInfoList";
 
       try {
@@ -78,7 +78,7 @@ export const getMedicalDeviceDetails = functions.https.onRequest(
           productFound: true,
           udiDi: productInfo.diCd || udiDi,
           productName: productInfo.prdlstNm || "N/A", // 제품명
-          brand: productInfo.bsshNm || "N/A", // 제조/수입사 명칭 (often acts as brand)
+          brand: productInfo.bsshNm || "N/A", // 제조/수입사 명칭
           model: productInfo.mdlNm || "N/A", // 모델명
           permitNum: productInfo.prmitNo || "N/A", // 허가번호
           itemNo: productInfo.itemNo || "N/A", // 품목 번호
@@ -88,18 +88,25 @@ export const getMedicalDeviceDetails = functions.https.onRequest(
 
         logger.info("Extracted Product Details:", extractedDetails);
         // Cloud Functions onRequest should send a response.
-        // The data is wrapped in a 'data' object to match the callable client's expectation.
+        // The data is wrapped in a 'data' object to match the callable client's
+        // expectation.
         response.status(200).send({data: extractedDetails});
-      } catch (error: any) {
+      } catch (error: unknown) {
+        let errorMessage = "An unknown error occurred.";
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+
+        const axiosError = error as any; // Type assertion for axios error
         logger.error(
           "Error calling data.go.kr API:",
-          error.message,
-          error.response?.data
+          errorMessage,
+          axiosError.response?.data
         );
         response.status(500).send({
           error: {
             message: "Failed to retrieve product details from external API.",
-            originalError: error.message,
+            originalError: errorMessage,
           },
         });
       }
