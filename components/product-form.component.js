@@ -131,6 +131,7 @@ export default class ProductForm extends HTMLElement {
           <form>
             <h3 class="form-title">제품 추가</h3>
             <input type="hidden" name="id">
+            <input type="hidden" name="gtin">
             <div class="form-group">
               <label for="barcode">바코드</label>
               <input type="text" id="barcode" name="barcode" placeholder="바코드 스캔">
@@ -189,7 +190,7 @@ export default class ProductForm extends HTMLElement {
     handleBarcodeScan(e) {
         const barcode = e.target.value;
         if (barcode) {
-            const product = ProductService.getProductByBarcode(barcode);
+            const product = ProductService.getProductByLegacyBarcode(barcode);
             if (product) {
                 this.fillFormWithProductData(product);
                 // Automatically add to temp list after filling form
@@ -210,6 +211,7 @@ export default class ProductForm extends HTMLElement {
         this.shadowRoot.querySelector('.form-title').textContent = '제품 수정';
         this._form.id.value = product.id;
         this._form.barcode.value = product.barcode;
+        this._form.gtin.value = product.gtin;
         this._form.brand.value = product.brand;
         this._form.model.value = product.model;
         this._form.powerS.value = product.powerS;
@@ -226,8 +228,13 @@ export default class ProductForm extends HTMLElement {
         const formData = new FormData(this._form);
         const id = parseInt(formData.get('id'), 10) || null;
         
+        const barcode = formData.get('barcode');
+        // Simple GTIN generation: pad with leading zero if it's a 13-digit barcode
+        const gtin = barcode && barcode.length === 13 ? `0${barcode}` : barcode;
+
         const product = {
-            barcode: formData.get('barcode'),
+            barcode: barcode,
+            gtin: gtin,
             brand: formData.get('brand'),
             model: formData.get('model'),
             powerS: parseFloat(formData.get('powerS')),
@@ -253,6 +260,7 @@ export default class ProductForm extends HTMLElement {
     clearForm() {
         this._form.reset();
         this._form.id.value = '';
+        this._form.gtin.value = '';
         this.shadowRoot.querySelector('.form-title').textContent = '제품 추가';
         this._form.querySelector('button').textContent = '제품 추가';
     }

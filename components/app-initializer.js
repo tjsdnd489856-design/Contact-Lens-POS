@@ -2,6 +2,27 @@ import { ProductService } from '../services/product.service.js';
 import { CustomerService } from '../services/customer.service.js';
 import { SalesService } from '../services/sales.service.js';
 
+// TODO: Replace with your actual Firebase project configuration
+// You can find this in your Firebase project settings -> Project settings -> General -> Your apps -> Firebase SDK snippet -> Config
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+// Initialize Firebase
+if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+    // Initialize Cloud Functions
+    window.firebaseFunctions = firebase.functions();
+    console.log('Firebase initialized.');
+} else {
+    console.warn('Firebase was already initialized or firebase object is not available.');
+}
+
 export function initializeApp() {
     try {
         console.log('DOMContentLoaded fired: Initializing application.');

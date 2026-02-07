@@ -21,56 +21,36 @@ This section details all implemented features, design choices, and styling. It w
 - **Styling:** Adherence to modern CSS practices for a visually appealing and maintainable design.
 - **Accessibility:** Implementation of a11y standards to ensure the application is usable by everyone.
 
-### Barcode Scanner Integration:
--   **Barcode Input:** 제품 양식에 바코드 스캔 전용 입력 필드를 추가했습니다.
--   **Automatic Product Lookup:** `ProductService.getProductByBarcode`를 사용하여 바코드를 통한 실시간 제품 조회를 구현했습니다.
--   **Auto-filling Fields:** 바코드 스캔 성공 시 양식에 제품 세부 정보를 자동으로 채웁니다.
--   **Error Handling:** 바코드를 찾을 수 없는 경우 사용자에게 피드백을 제공합니다.
+### UDI Barcode Scanning
+- **Client-Side Scanning:** Integrated the `html5-qrcode` library to enable direct barcode scanning using the device's camera, without requiring a server-side component for the scanning itself.
+- **Robust UDI Parsing:** Implemented a sophisticated UDI parser (`udi-parser.js`) that can extract GTIN, expiration date, lot number, and serial number from a GS1-128 barcode string. It includes logic to handle common challenges like 2-digit year ambiguity.
+- **Seamless Sales Workflow:** Added a "Scan UDI" button to the sales transaction screen. On a successful scan, the system automatically parses the UDI, looks up the product by its GTIN in the `ProductService`, and adds it to the cart.
+- **Data Consistency:** Updated the product data model and forms to include a `gtin` field, ensuring that products can be reliably looked up via their GTIN. New products have their GTIN automatically generated from their barcode.
 
-### Secure API Key Handling (Firebase Functions for UDI Lookup):
--   **Architecture:** Implemented a secure backend service using Firebase Functions to handle sensitive UDI database API calls.
--   **Key Management:** API keys are stored securely in Firebase Functions environment configuration, preventing exposure to client-side code.
--   **Client-Server Interaction:** Client-side code sends UDI query requests to the Firebase Function, which then securely communicates with the external UDI database API.
--   **Data Flow:** The Firebase Function processes the UDI database response and returns relevant data to the client for display and auto-filling.
+### External API Integration with Firebase Functions
+- **Purpose:** To securely access external public APIs (e.g., `data.go.kr` for medical device information) to retrieve detailed product information that might not be available locally.
+- **Architecture:** Firebase Cloud Functions are used as a secure proxy layer. Client-side requests are sent to a Firebase Function, which then makes the actual call to the external API, processes the response, and returns the relevant data to the client. This prevents exposing API keys directly on the client.
+- **Security:** External API keys are stored securely in Firebase Functions environment variables (`functions.config()`), ensuring they are not hardcoded or exposed in client-side code or version control.
+- **Product Enrichment:** When a product is scanned via UDI but not found locally, the system attempts to fetch its details from the external medical device API via the Firebase Function. If successful, the product is added to the local inventory for future use.
 
 ---
 
 ## 3. Current Development Plan
 
-This section outlines the immediate tasks for the current development cycle.
+This section outlines the tasks for the current development cycle.
 
-### Firebase Functions for UDI Lookup Integration
+### UDI Barcode Feature Implementation (Phase 1: Client-Side Scanning & Parsing)
 
-1.  **PENDING:** Firebase 프로젝트 초기화 및 Functions 설정 확인 (필요시 Firebase CLI 사용)
-2.  **PENDING:** Firebase Function 개발 (`functions/index.js` 또는 `.ts`) 파일 생성 및 HTTP Callable Function 정의
-3.  **PENDING:** UDI API 키를 Firebase Functions 환경 설정(`firebase functions:config:set`)을 통해 안전하게 저장
-4.  **PENDING:** Firebase Function 내부에서 UDI 데이터베이스 API에 안전하게 요청(`fetch` 또는 `axios` 사용)
-5.  **PENDING:** Firebase Function에서 UDI 데이터베이스 응답 파싱 및 클라이언트에 관련 정보 반환
-6.  **PENDING:** 클라이언트 측 `services/product.service.js` 수정: `getProductByBarcode` 메서드를 Firebase Function 호출로 변경
-7.  **PENDING:** 클라이언트 측 `components/product-form.component.js` 수정: 스캔된 UDI 바코드를 Firebase Function에 전송하고, 응답을 처리하여 필드 자동 채우기
-8.  **PENDING:** Firebase Function 및 클라이언트 측 모두에 강력한 오류 처리 로직 구현
-9.  **PENDING:** Firebase Function 배포 및 end-to-end 테스트 수행
-10. **PENDING:** `blueprint.md` 최종 업데이트: UDI 조회 기능의 구현 세부 사항 및 완료 상태 문서화
+1.  **COMPLETED:** Improve `udi-parser.js` to handle date ambiguity and improve regex robustness.
+2.  **COMPLETED:** Integrate `html5-qrcode` library for barcode scanning.
+3.  **COMPLETED:** Implement barcode scanning UI and logic in `sale-transaction.component.js`.
+4.  **COMPLETED:** Update `product.service.js` and `product-form.component.js` to support product lookup by GTIN.
+5.  **COMPLETED:** Update `blueprint.md` with the new implementation plan for Phase 1.
 
-### Artifact Trail:
-- `services/product.service.js`: ProductService 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
-- `services/customer.service.js`: CustomerService 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
-- `services/sales.service.js`: SalesService 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
-- `components/product-list.component.js`: ProductList 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
-- `components/product-form.component.js`: ProductForm 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
-- `components/customer-list.component.js`: CustomerList 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
-- `components/customer-form.component.js`: CustomerForm 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
-- `components/sale-transaction.component.js`: SaleTransaction 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
-- `components/sales-list.component.js`: SalesList 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
-- `components/customer-purchase-history.component.js`: CustomerPurchaseHistory 클래스를 포함하도록 생성하고, main.js에서 임포트하도록 수정했습니다.
-- `components/app-initializer.js`: initializeApp 함수를 포함하도록 생성했으며, 누락된 서비스 import를 추가하여 수정했습니다.
-- `main.js`: ProductService, CustomerService, SalesService, ProductList, ProductForm, CustomerList, CustomerForm, SaleTransaction, SalesList, CustomerPurchaseHistory, initializeApp의 정의를 제거하고 해당 임포트 문을 추가하도록 여러 번 수정되었습니다. 이전 셸 스크립트 오류로 인해 파일이 손상되어 git restore 후 인메모리 문자열 조작으로 수정되었습니다.
-- `index.html`: `<script src="main.js"></script>`를 `<script type="module" src="main.js"></script>`로 업데이트했습니다.
-- `components/`: UI 컴포넌트를 저장하기 위해 디렉토리가 생성되었습니다.
-- `components/customer-form.component.js` 복구 및 누락된 서비스 import 수정: `CustomerForm` 컴포넌트 파일을 Git 기록에서 복구하고 `CustomerService` import를 추가했습니다.
-- `components/customer-list.component.js` 누락된 서비스 import 수정: `CustomerService` import를 추가했습니다.
-- `components/product-list.component.js` 누락된 서비스 import 수정: `ProductService` import를 추가했습니다.
-- `components/product-form.component.js` 누락된 서비스 import 수정: `ProductService` import를 추가했습니다.
-- `components/sale-transaction.component.js` 누락된 서비스 import 수정: `CustomerService`, `ProductService`, `SalesService` import를 추가했습니다.
-- `components/sales-list.component.js` 누락된 서비스 import 수정: `CustomerService`, `SalesService` import를 추가했습니다.
-- `components/customer-purchase-history.component.js` 누락된 서비스 import 수정: `CustomerService`, `SalesService` import를 추가했습니다.
+### UDI Barcode Feature Implementation (Phase 2: External API Integration)
+
+1.  **COMPLETED:** Set up Firebase Function environment and configure API key.
+2.  **COMPLETED:** Create Firebase Function to fetch medical device details from `data.go.kr` API.
+3.  **COMPLETED:** Modify `ProductService` to call the Firebase Function.
+4.  **COMPLETED:** Modify `sale-transaction.component.js` to use the updated `ProductService` for external API lookup.
+5.  **COMPLETED:** Update `blueprint.md` with the new API integration details for Phase 2.

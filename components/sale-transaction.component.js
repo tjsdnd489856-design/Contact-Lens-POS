@@ -1,6 +1,7 @@
 import { CustomerService } from '../services/customer.service.js';
 import { ProductService } from '../services/product.service.js';
 import { SalesService } from '../services/sales.service.js';
+import { parseUdiBarcode } from '../utils/udi-parser.js';
 
 // --- SaleTransaction Component ---
 export default class SaleTransaction extends HTMLElement {
@@ -8,31 +9,124 @@ export default class SaleTransaction extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
     this.cart = [];
+    this.html5Qrcode = null;
+
     this.rerender = this.rerender.bind(this);
-    this.addToCart = this.addToCart.bind(this);
+    this._addToCartFromSelect = this._addToCartFromSelect.bind(this);
+    this._addProductToCart = this._addProductToCart.bind(this);
     this.completeSale = this.completeSale.bind(this);
     this.setSelectedCustomer = this.setSelectedCustomer.bind(this);
+    this._initScanner = this._initScanner.bind(this);
+    this._startScanner = this._startScanner.bind(this);
+    this._onScanSuccess = this._onScanSuccess.bind(this);
+
     document.addEventListener('selectCustomerForSale', (e) => this.setSelectedCustomer(e.detail.customerId));
   }
 
   connectedCallback() {
-      this._render();
-      document.addEventListener('productsUpdated', this.rerender);
-      document.addEventListener('customersUpdated', this.rerender);
+    this._render();
+    this._initScanner();
+    document.addEventListener('productsUpdated', this.rerender);
+    document.addEventListener('customersUpdated', this.rerender);
   }
-    
+
   disconnectedCallback() {
-      document.removeEventListener('productsUpdated', this.rerender);
-      document.removeEventListener('customersUpdated', this.rerender);
+    document.removeEventListener('productsUpdated', this.rerender);
+    document.removeEventListener('customersUpdated', this.rerender);
+    if (this.html5Qrcode && this.html5Qrcode.isScanning) {
+      this.html5Qrcode.stop();
+    }
   }
-    
+
   rerender() {
-      this._render();
+    this._render();
   }
 
   setSelectedCustomer(customerId) {
-      this.shadowRoot.querySelector('#customer-select').value = customerId;
+    this.shadowRoot.querySelector('#customer-select').value = customerId;
   }
+  
+  _initScanner() {
+    const scannerModal = document.getElementById('udi-scanner-modal');
+    const closeScannerBtn = document.getElementById('close-udi-scanner-modal');
+
+    this.html5Qrcode = new Html5Qrcode("scanner-viewport");
+
+    closeScannerBtn.addEventListener('click', () => {
+        if (this.html5Qrcode && this.html5Qrcode.isScanning) {
+            this.html5Qrcode.stop().then(() => {
+                scannerModal.style.display = 'none';
+            }).catch(err => console.error("Failed to stop scanner:", err));
+        } else {
+            scannerModal.style.display = 'none';
+        }
+    });
+  }
+
+  _startScanner() {
+      const scannerModal = document.getElementById('udi-scanner-modal');
+      scannerModal.style.display = 'block';
+
+      this.html5Qrcode.start(
+          { facingMode: "environment" }, // use back camera
+          {
+              fps: 10,
+              qrbox: { width: 250, height: 250 } 
+          },
+          this._onScanSuccess,
+          (errorMessage) => {
+              // console.log(`QR Code no longer in front of camera.`);
+          }
+      ).catch((err) => {
+          alert(`스캐너를 시작할 수 없습니다: ${err}`);
+          scannerModal.style.display = 'none';
+      });
+  }
+
+  async _onScanSuccess(decodedText, decodedResult) {
+    if (this.html5Qrcode && this.html5Qrcode.isScanning) {
+        await this.html5Qrcode.stop();
+        const scannerModal = document.getElementById('udi-scanner-modal');
+        scannerModal.style.display = 'none';
+        
+        console.log(`Scanned UDI: ${decodedText}`);
+        const udiData = parseUdiBarcode(decodedText);
+        console.log('Parsed UDI:', udiData);
+
+        if (udiData.gtin) {
+            let product = ProductService.getProductByGtin(udiData.gtin);
+
+            if (!product) {
+                // If not found locally, try to fetch from external API via Firebase Function
+                console.log('Product not found locally, fetching from external API...');
+                const externalProduct = await ProductService.fetchProductDetailsFromExternalApi(udiData.gtin);
+                
+                if (externalProduct && externalProduct.productName) {
+                    // Assuming externalProduct comes with necessary details
+                    // Add to local service
+                    ProductService.addProduct({
+                        ...externalProduct,
+                        id: ProductService._nextId, // Assign new local ID
+                        barcode: udiData.gtin, // Use GTIN as barcode for consistency
+                        gtin: udiData.gtin,
+                    });
+                    product = ProductService.getProductByGtin(udiData.gtin); // Get the newly added product
+                    alert(`외부 API에서 제품 정보를 가져왔습니다: ${product.model}`);
+                } else {
+                    alert(`GTIN ${udiData.gtin}에 해당하는 제품을 로컬 및 외부 API에서 찾을 수 없습니다.`);
+                }
+            }
+            
+            if (product) {
+                this._addProductToCart(product, 1); // Default quantity to 1
+            }
+
+        } else {
+            alert('스캔된 바코드에서 유효한 GTIN을 찾을 수 없습니다.');
+        }
+    }
+  }
+
 
   _render() {
     const customers = CustomerService.getCustomers();
@@ -48,11 +142,14 @@ export default class SaleTransaction extends HTMLElement {
         select, input, button { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         button { cursor: pointer; color: white; font-size: 1rem; }
         #add-to-cart-btn { background-color: #3498db; margin-top: 1rem; }
+        #scan-udi-btn { background-color: #9b59b6; margin-top: 0.5rem; }
         #complete-sale-btn { background-color: #27ae60; margin-top: 1rem; }
         .cart-title { margin-top: 2rem; border-top: 1px solid #eee; padding-top: 2rem; }
         .cart-items table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
         .cart-items th, .cart-items td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         .total { font-size: 1.5rem; font-weight: bold; text-align: right; margin-top: 1rem; }
+        .product-selection-group { display: flex; gap: 1rem; align-items: flex-end; }
+        .product-selection-group > div { flex-grow: 1; }
       </style>
       <div class="transaction-form">
         <h3 class="form-title">새로운 판매</h3>
@@ -63,12 +160,15 @@ export default class SaleTransaction extends HTMLElement {
             ${customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
           </select>
         </div>
-        <div class="form-group">
-          <label for="product-select">제품 선택</label>
-          <select id="product-select">
-            <option value="">--제품을 선택하세요--</option>
-            ${products.map(p => `<option value="${p.id}">${p.brand} ${p.model} - $${p.price.toFixed(2)}</option>`).join('')}
-          </select>
+        <div class="product-selection-group">
+            <div class="form-group">
+                <label for="product-select">제품 선택</label>
+                <select id="product-select">
+                    <option value="">--제품을 선택하세요--</option>
+                    ${products.map(p => `<option value="${p.id}">${p.brand} ${p.model} - $${p.price.toFixed(2)}</option>`).join('')}
+                </select>
+            </div>
+            <button id="scan-udi-btn" style="width: auto; flex-shrink: 0;">UDI 스캔</button>
         </div>
         <div class="form-group">
             <label for="quantity">수량</label>
@@ -85,23 +185,31 @@ export default class SaleTransaction extends HTMLElement {
     `;
     this.shadowRoot.innerHTML = '';
     this.shadowRoot.appendChild(template.content.cloneNode(true));
-    this.shadowRoot.querySelector('#add-to-cart-btn').addEventListener('click', this.addToCart);
+    this.shadowRoot.querySelector('#add-to-cart-btn').addEventListener('click', this._addToCartFromSelect);
+    this.shadowRoot.querySelector('#scan-udi-btn').addEventListener('click', this._startScanner);
     this.shadowRoot.querySelector('#complete-sale-btn').addEventListener('click', this.completeSale);
     this._renderCart();
   }
 
-  addToCart() {
+  _addToCartFromSelect() {
     const productId = parseInt(this.shadowRoot.querySelector('#product-select').value, 10);
     const quantity = parseInt(this.shadowRoot.querySelector('#quantity').value, 10);
     const product = ProductService.getProductById(productId);
 
-    if (!product || !quantity || quantity <= 0) {
-        alert('유효한 제품과 수량을 선택해주세요.');
+    if (!product) {
+        alert('유효한 제품을 선택해주세요.');
         return;
     }
-    
-    const cartItem = this.cart.find(item => item.product.id === productId);
-    if(cartItem) {
+    this._addProductToCart(product, quantity);
+  }
+
+  _addProductToCart(product, quantity) {
+    if (!quantity || quantity <= 0) {
+        alert('유효한 수량을 입력해주세요.');
+        return;
+    }
+    const cartItem = this.cart.find(item => item.product.id === product.id);
+    if (cartItem) {
         cartItem.quantity += quantity;
     } else {
         this.cart.push({ product, quantity });
