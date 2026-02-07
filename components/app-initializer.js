@@ -18,14 +18,6 @@ if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
     // Initialize Cloud Functions
     window.firebaseFunctions = firebase.functions();
-    
-    // 🔥 FUNCTIONS EMULATOR 설정 (로컬 개발용) 🔥
-    // Functions Emulator가 실행 중일 때만 이 코드를 사용하세요.
-    // 배포 시에는 반드시 이 줄을 주석 처리하거나 제거해야 합니다.
-    if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-        window.firebaseFunctions.useEmulator("127.0.0.1", 5001); // 5001은 기본 Functions Emulator 포트입니다.
-        console.log('Firebase Functions Emulator is being used.');
-    }
     console.log('Firebase initialized.');
 } else {
     console.warn('Firebase was already initialized or firebase object is not available.');

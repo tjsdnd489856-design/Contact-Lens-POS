@@ -22,9 +22,9 @@ This section details all implemented features, design choices, and styling. It w
 - **Accessibility:** Implementation of a11y standards to ensure the application is usable by everyone.
 
 ### UDI Barcode Scanning
-- **Client-Side Scanning:** Integrated the `html5-qrcode` library to enable direct barcode scanning using the device's camera, without requiring a server-side component for the scanning itself.
+- **HID (USB) Barcode Scanner Input:** The camera-based `html5-qrcode` integration has been replaced with a dedicated text input field in the sales transaction screen. This field is designed to work with traditional USB barcode scanners that emulate keyboard input. When a barcode is scanned, the data is "typed" into this field, and an Enter keypress triggers the UDI parsing and product lookup.
 - **Robust UDI Parsing:** Implemented a sophisticated UDI parser (`udi-parser.js`) that can extract GTIN, expiration date, lot number, and serial number from a GS1-128 barcode string. It includes logic to handle common challenges like 2-digit year ambiguity.
-- **Seamless Sales Workflow:** Added a "Scan UDI" button to the sales transaction screen. On a successful scan, the system automatically parses the UDI, looks up the product by its GTIN in the `ProductService`, and adds it to the cart.
+- **Seamless Sales Workflow:** An input field for USB barcode scanners has been added to the sales transaction screen. On a successful scan, the system automatically parses the UDI, looks up the product by its GTIN in the `ProductService`, and adds it to the cart.
 - **Data Consistency:** Updated the product data model and forms to include a `gtin` field, ensuring that products can be reliably looked up via their GTIN. New products have their GTIN automatically generated from their barcode.
 
 ### External API Integration with Firebase Functions
