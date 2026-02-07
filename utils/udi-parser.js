@@ -46,12 +46,10 @@ export function parseUdiBarcode(udiString) {
         const expirationDateMatch = remainingString.match(new RegExp(`^\\(?${AIS.EXPIRATION_DATE}\\)?(\\d{6})`));
         if (expirationDateMatch) {
             const dateStr = expirationDateMatch[1];
-            const month = dateStr.substring(2, 4);
-            const day = dateStr.substring(4, 6);
+            const monthStr = dateStr.substring(2, 4);
+            const dayStr = dateStr.substring(4, 6);
             
             // Handle 2-digit year (YY) ambiguity using a sliding window.
-            // If the expiration year is more than 20 years in the future,
-            // assume it's in the last century. Otherwise, current century.
             let year = parseInt(dateStr.substring(0, 2), 10);
             const currentYear = new Date().getFullYear();
             const currentCentury = Math.floor(currentYear / 100) * 100;
@@ -62,9 +60,24 @@ export function parseUdiBarcode(udiString) {
             } else {
                 year = yearGuess;
             }
+            
+            const month = parseInt(monthStr, 10);
+            let day;
 
-            if (parseInt(month) >= 1 && parseInt(month) <= 12 && parseInt(day) >= 1 && parseInt(day) <= 31) {
-                parsedData.expirationDate = `${year}-${month}-${day}`;
+            // Per GS1 spec, a day of '00' means the item expires on the last day of that month.
+            if (dayStr === '00') {
+                // To get the last day of the current month, we get the 0th day of the *next* month.
+                // Date's month is 0-indexed, so `month` (which is 1-12) is correct here.
+                day = new Date(year, month, 0).getDate();
+            } else {
+                day = parseInt(dayStr, 10);
+            }
+
+            if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                // Pad month and day with leading zero if needed
+                const paddedMonth = month.toString().padStart(2, '0');
+                const paddedDay = day.toString().padStart(2, '0');
+                parsedData.expirationDate = `${year}-${paddedMonth}-${paddedDay}`;
             } else {
                 console.warn(`Invalid expiration date format from UDI: ${dateStr}`);
             }
