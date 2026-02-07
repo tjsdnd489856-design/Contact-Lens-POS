@@ -15,22 +15,21 @@ export const getMedicalDeviceDetails = functions.https.onRequest(
   (request, response) => {
     // Wrap the function logic with the CORS handler
     corsHandler(request, response, async () => {
-      // Fix: Re-declare the udiDi constant
+      // For onRequest functions, data sent from a callable client is in `request.body.data`
       const udiDi = request.body.data?.udiDi;
 
       if (!udiDi) {
         logger.error("Function called without udiDi in the body data.");
-        response.status(400).send({
-          error: {
-            message: "The function must be called with a JSON body " +
-                     "containing { data: { udiDi: 'your_code' } }.",
-          },
-        });
+        // eslint-disable-next-line max-len
+        response.status(400).send({error: {message: "The function must be called with a JSON body containing { data: { udiDi: 'your_code' } }."}});
         return;
       }
 
-      // Fix: Correctly access the function configuration
-      const serviceKey = functions.config().med_device_api.key;
+      // Access the API key securely from Firebase environment configuration.
+      // The `as any` cast is a workaround for type definition issues between
+      // the Firebase Functions SDK and the current TypeScript version.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const serviceKey = (functions.config() as any).med_device_api.key;
       if (!serviceKey) {
         logger.error(
           "API key not configured. Run 'firebase " +
