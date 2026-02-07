@@ -15,6 +15,7 @@ export const getMedicalDeviceDetails = functions.https.onRequest(
   (request, response) => {
     // Wrap the function logic with the CORS handler
     corsHandler(request, response, async () => {
+      // eslint-disable-next-line max-len
       // For onRequest functions, data sent from a callable client is in `request.body.data`
       const udiDi = request.body.data?.udiDi;
 
