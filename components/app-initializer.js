@@ -25,7 +25,7 @@ if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     const isCloudWorkstations = location.hostname.includes('cloudworkstations.dev');
     const isLocalhost = location.hostname === "localhost" || location.hostname === "127.0.0.1";
     if (isLocalhost || isCloudWorkstations) {
-        window.firebaseFunctions.useEmulator("127.0.0.1", 5001); // 5001은 기본 Functions Emulator 포트입니다.
+        window.firebaseFunctions.useEmulator("127.0.0.1", 5002); // 5002는 Firebase Functions Emulator의 새 포트입니다.
         console.log('Firebase Functions Emulator is being used.');
     }
 } else {
