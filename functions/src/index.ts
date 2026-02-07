@@ -21,18 +21,17 @@ export const getMedicalDeviceDetails = functions.https.onRequest(
 
       if (!udiDi) {
         logger.error("Function called without udiDi in the body data.");
-        response.status(400).send(
-          // eslint-disable-next-line max-len
-          {error: {message: "The function must be called with a JSON body containing { data: { udiDi: 'your_code' } }."}}
-        );
+        response.status(400).send({
+          error: {
+            message: "The function must be called with a JSON body " +
+                     "containing { data: { udiDi: 'your_code' } }.",
+          },
+        });
         return;
       }
 
       // Access the API key securely from Firebase environment configuration.
-      // The `as any` cast is a workaround for type definition issues between
-      // the Firebase Functions SDK and the current TypeScript version.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const serviceKey = (functions.config() as any).med_device_api.key;
+      const serviceKey = functions.config().med_device_api.key;
       if (!serviceKey) {
         logger.error(
           "API key not configured. Run 'firebase " +
