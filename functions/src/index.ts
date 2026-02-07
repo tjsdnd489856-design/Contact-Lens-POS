@@ -20,8 +20,10 @@ export const getMedicalDeviceDetails = functions.https.onRequest(
 
       if (!udiDi) {
         logger.error("Function called without udiDi in the body data.");
-        // eslint-disable-next-line max-len
-        response.status(400).send({error: {message: "The function must be called with a JSON body containing { data: { udiDi: 'your_code' } }."}});
+        response.status(400).send(
+          // eslint-disable-next-line max-len
+          {error: {message: "The function must be called with a JSON body containing { data: { udiDi: 'your_code' } }."}}
+        );
         return;
       }
 
