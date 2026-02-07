@@ -54,3 +54,9 @@ This section outlines the tasks for the current development cycle.
 3.  **COMPLETED:** Modify `ProductService` to call the Firebase Function.
 4.  **COMPLETED:** Modify `sale-transaction.component.js` to use the updated `ProductService` for external API lookup.
 5.  **COMPLETED:** Update `blueprint.md` with the new API integration details for Phase 2.
+
+### Environment Configuration Updates
+
+1.  **COMPLETED**: Removed `functions-emulator` configuration from `.idx/dev.nix` to resolve environment build errors.
+2.  **COMPLETED**: Removed `google.gemini-cli-vscode-ide-companion` from `idx.extensions` in `.idx/dev.nix`.
+3.  **COMPLETED**: Added Firebase MCP server configuration to `.idx/mcp.json`.

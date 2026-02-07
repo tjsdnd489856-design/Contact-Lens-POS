@@ -7,7 +7,7 @@ import { SalesService } from '../services/sales.service.js';
 const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
+    projectId: "contectlenspos", // Corrected project ID
     storageBucket: "YOUR_STORAGE_BUCKET",
     messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
     appId: "YOUR_APP_ID"
@@ -18,7 +18,16 @@ if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
     // Initialize Cloud Functions
     window.firebaseFunctions = firebase.functions();
-    console.log('Firebase initialized.');
+    
+    // 🔥 FUNCTIONS EMULATOR 설정 (로컬 개발용) 🔥
+    // Functions Emulator가 실행 중일 때만 이 코드를 사용하세요.
+    // 배포 시에는 반드시 이 줄을 주석 처리하거나 제거해야 합니다.
+    const isCloudWorkstations = location.hostname.includes('cloudworkstations.dev');
+    const isLocalhost = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+    if (isLocalhost || isCloudWorkstations) {
+        window.firebaseFunctions.useEmulator("127.0.0.1", 5001); // 5001은 기본 Functions Emulator 포트입니다.
+        console.log('Firebase Functions Emulator is being used.');
+    }
 } else {
     console.warn('Firebase was already initialized or firebase object is not available.');
 }

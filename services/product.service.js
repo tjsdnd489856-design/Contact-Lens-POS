@@ -76,9 +76,10 @@ export const ProductService = {
             // Map the external API fields to our internal product structure
             return {
                 brand: result.data.brand || 'N/A',
-                model: result.data.productName || 'N/A', // Using productName as model for now
-                // Assuming default values for power, quantity, price, expirationDate
-                // These would ideally come from the external API or require manual input
+                model: result.data.model || result.data.productName || 'N/A', // Use model, fallback to productName
+                // The UDI-DI API provides standardized device info, not inventory details.
+                // Fields like power, price, and quantity must be sourced elsewhere
+                // or entered manually after the product is added.
                 powerS: 0,
                 powerC: 0,
                 powerAX: 0,
