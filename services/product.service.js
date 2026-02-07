@@ -63,7 +63,7 @@ export const ProductService = {
 
   async fetchProductDetailsFromExternalApi(gtin) {
     // IMPORTANT: Replace this with your actual AWS API Gateway endpoint URL
-    const API_GATEWAY_URL = 'https://YOUR_API_GATEWAY_ENDPOINT.execute-api.AWS_REGION.amazonaws.com/default/getMedicalDeviceDetails'; 
+    const API_GATEWAY_URL = 'https://oupi92eoc7.execute-api.ap-southeast-2.amazonaws.com/default/getMedicalDeviceDetails'; 
 
     try {
         const response = await fetch(API_GATEWAY_URL, {
