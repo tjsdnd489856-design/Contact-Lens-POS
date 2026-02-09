@@ -528,6 +528,11 @@ export default class SaleTransaction extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>
+        :host {
+          display: flex; /* Make the host element a flex container */
+          flex-direction: column; /* Stack children vertically */
+          height: 100%; /* Ensure it takes full height of its parent */
+        }
         /* Layout for the whole sale transaction component */
         .sale-transaction-container {
             display: flex;
@@ -537,16 +542,19 @@ export default class SaleTransaction extends HTMLElement {
             background: #fdfdfd; /* Background moved to container */
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
+            margin-bottom: 0; /* Remove bottom margin to allow full height */
+            flex-grow: 1; /* Allow the container to grow vertically */
         }
 
         .main-content {
-            flex: 1; /* Main content takes less space */
+            flex: 1; /* Main content takes less space horizontally */
             min-width: 300px; /* Minimum width for main content */
+            display: flex; /* Make main-content a flex container */
+            flex-direction: column; /* Stack its children vertically */
         }
 
         .cart-section {
-            flex: 2; /* Cart takes more space */
+            flex: 2; /* Cart takes more space horizontally */
             min-width: 280px; /* Minimum width for cart */
             display: flex;
             flex-direction: column;
@@ -554,6 +562,12 @@ export default class SaleTransaction extends HTMLElement {
             padding: 2rem; /* Padding matching the main form */
             border-radius: 8px; /* Border radius matching the main form */
             box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Box shadow matching the main form */
+        }
+
+        customer-purchase-history {
+            flex-grow: 1; /* Allow the purchase history component to grow vertically */
+            display: flex; /* Make it a flex container to manage its own content */
+            flex-direction: column;
         }
 
         /* Responsive adjustments */
