@@ -80,15 +80,18 @@ export default class CustomerPurchaseHistory extends HTMLElement {
             }
 
             sale.items.forEach(item => {
-                if (!groupedPurchases[date].items[item.product.id]) {
-                    groupedPurchases[date].items[item.product.id] = {
-                        product: item.product,
+                const product = ProductService.getProductById(item.productId); // Fetch full product details
+                if (!product) return; // Skip if product not found
+
+                if (!groupedPurchases[date].items[item.productId]) {
+                    groupedPurchases[date].items[item.productId] = {
+                        product: product, // Store the full product object
                         quantity: 0,
                         itemTotal: 0
                     };
                 }
-                groupedPurchases[date].items[item.product.id].quantity += item.quantity;
-                groupedPurchases[date].items[item.product.id].itemTotal += (item.product.price * item.quantity);
+                groupedPurchases[date].items[item.productId].quantity += item.quantity;
+                groupedPurchases[date].items[item.productId].itemTotal += (product.price * item.quantity);
             });
             groupedPurchases[date].totalAmount += sale.total;
         });

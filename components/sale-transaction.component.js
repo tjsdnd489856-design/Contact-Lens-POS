@@ -56,6 +56,15 @@ export default class SaleTransaction extends HTMLElement {
   }
 
   /**
+   * Dispatches a custom event to notify listeners that a customer has been selected for history.
+   * @param {number|null} customerId - The ID of the selected customer, or null if no customer is selected.
+   * @private
+   */
+  _dispatchCustomerSelectionEvent(customerId) {
+    document.dispatchEvent(new CustomEvent('customerSelectedForHistory', { detail: customerId }));
+  }
+
+  /**
    * Handles the 'customersUpdated' event, often triggered after search or modification.
    * Re-renders the customer search results if a query is present.
    * @param {CustomEvent} event - The custom event containing filtered customers and query.
@@ -75,6 +84,7 @@ export default class SaleTransaction extends HTMLElement {
               this.selectedCustomer = null;
           }
           this._updateSelectedCustomerDisplay();
+          this._dispatchCustomerSelectionEvent(this.selectedCustomer ? this.selectedCustomer.id : null);
       }
   }
 
@@ -86,6 +96,7 @@ export default class SaleTransaction extends HTMLElement {
     const customerId = event.detail.customerId;
     this.selectedCustomer = CustomerService.getCustomerById(customerId);
     this._updateSelectedCustomerDisplay();
+    this._dispatchCustomerSelectionEvent(this.selectedCustomer ? this.selectedCustomer.id : null);
   }
 
   /**
@@ -264,6 +275,7 @@ export default class SaleTransaction extends HTMLElement {
       if (customerSearchInput) customerSearchInput.value = `${customer.name} (${customer.phone})`; // Display selected customer in input
       if (searchResultsDiv) searchResultsDiv.innerHTML = ''; // Clear search results
       this._updateSelectedCustomerDisplay(); // Update internal state and clear button visibility
+      this._dispatchCustomerSelectionEvent(this.selectedCustomer ? this.selectedCustomer.id : null);
   }
 
   /**
@@ -275,6 +287,7 @@ export default class SaleTransaction extends HTMLElement {
       const customerSearchInput = this.shadowRoot.querySelector('#customer-search-input-sale');
       if (customerSearchInput) customerSearchInput.value = ''; // Clear the input field
       this._updateSelectedCustomerDisplay();
+      this._dispatchCustomerSelectionEvent(null);
   }
 
   /**
@@ -498,6 +511,7 @@ export default class SaleTransaction extends HTMLElement {
         this.cart = [];
         this.selectedCustomer = null; // Clear selected customer after sale
         this._render(); // Re-render to clear cart and customer display
+        this._dispatchCustomerSelectionEvent(null);
       })
       .catch(error => {
         alert(`판매 실패: ${error.message}`);
@@ -774,6 +788,7 @@ export default class SaleTransaction extends HTMLElement {
           </div>
           
           <button id="complete-sale-btn">판매 완료</button>
+          <customer-purchase-history></customer-purchase-history>
         </div>
         <div class="cart-section transaction-form">
             <h4 class="cart-title">장바구니</h4>
