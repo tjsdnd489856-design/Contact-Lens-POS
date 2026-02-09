@@ -429,7 +429,7 @@ export default class SaleTransaction extends HTMLElement {
       price: item.product.price
     }));
 
-    SalesService.addSale(this.selectedCustomer.id, saleItems)
+    SalesService.addSale({ customerId: this.selectedCustomer.id, items: saleItems })
       .then(() => {
         alert(ALERT_MESSAGES.SALE_SUCCESS);
         this.cart = [];
