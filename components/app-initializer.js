@@ -45,16 +45,6 @@ export function initializeApp() {
  * @private
  */
 function _setupGlobalEventListeners() {
-    // Event listener for customer search
-    if (customerSearchInput) {
-        customerSearchInput.addEventListener('input', (event) => {
-            const query = event.target.value;
-            console.log(`Customer search input: "${query}"`);
-            // This event is now dispatched for CustomerListComponent to handle
-            document.dispatchEvent(new CustomEvent('searchCustomers', { detail: query }));
-        });
-    }
-
     // Event listener for tab switching to reset search and purchase history views
     document.addEventListener('showTab', (e) => {
         // Handle tab-specific resets
@@ -64,14 +54,7 @@ function _setupGlobalEventListeners() {
         if (e.detail.tabId === 'customers') {
             if (customerSearchInput) customerSearchInput.value = '';
             // Dispatch a generic customersUpdated event to clear/reset list
-            document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: [], query: '' } }));
+            document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: CustomerService.getCustomers(), query: '' } }));
         }
-    });
-
-    // Handle customer search event (dispatched from customer-modal-handler or customer search input)
-    document.addEventListener('searchCustomers', (e) => {
-        const query = e.detail;
-        const filteredCustomers = CustomerService.searchCustomers(query);
-        document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: filteredCustomers, query: query } }));
     });
 }

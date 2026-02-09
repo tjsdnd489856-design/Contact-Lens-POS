@@ -54,40 +54,53 @@ export default class CustomerList extends HTMLElement {
     
     // Bind event handlers
     this._handleCustomersUpdated = this._handleCustomersUpdated.bind(this);
-    this._openEditModal = this._openEditModal.bind(this);
-    this._selectCustomerRow = this._selectCustomerRow.bind(this);
-  }
+        this._openEditModal = this._openEditModal.bind(this);
+        this._selectCustomerRow = this._selectCustomerRow.bind(this);
+        this._handleSearchCustomers = this._handleSearchCustomers.bind(this);
+      }
+        
+      connectedCallback() {
+          this._render([]); // Render with an empty list initially
+          document.addEventListener('customersUpdated', this._handleCustomersUpdated);
+          document.addEventListener('customerSelectedForHistory', this._handleCustomerSelectedForHistory.bind(this));
+          document.addEventListener('searchCustomers', this._handleSearchCustomers);
+      }
     
-  connectedCallback() {
-      this._render([]); // Render with an empty list initially
-      document.addEventListener('customersUpdated', this._handleCustomersUpdated);
-      document.addEventListener('customerSelectedForHistory', this._handleCustomerSelectedForHistory.bind(this));
-  }
-
-  disconnectedCallback() {
-    document.removeEventListener('customersUpdated', this._handleCustomersUpdated);
-    document.removeEventListener('customerSelectedForHistory', this._handleCustomerSelectedForHistory);
-  }
-
-  /**
-   * Handles the 'customersUpdated' event to re-render the list.
-   * @param {CustomEvent} e - The event containing filtered customers and query.
-   * @private
-   */
-  _handleCustomersUpdated(e) {
-    const { filteredCustomers, query } = e.detail;
-    // If no query and filteredCustomers is empty, it means search was cleared or initialized
-    if (!query && (!filteredCustomers || filteredCustomers.length === 0)) {
-        this._render([]); // Render empty state
-        this.selectedCustomerId = null; // Clear selection
-    } else {
-        this._render(filteredCustomers, query);
-    }
-  }
-
-  /**
-   * Handles 'customerSelectedForHistory' event, primarily to keep selection state in sync.
-   * @param {CustomEvent} e - Event with customerId.
+      disconnectedCallback() {
+        document.removeEventListener('customersUpdated', this._handleCustomersUpdated);
+        document.removeEventListener('customerSelectedForHistory', this._handleCustomerSelectedForHistory);
+        document.removeEventListener('searchCustomers', this._handleSearchCustomers);
+      }
+    
+      /**
+       * Handles the 'customersUpdated' event to re-render the list.
+       * @param {CustomEvent} e - The event containing filtered customers and query.
+       * @private
+       */
+      _handleCustomersUpdated(e) {
+        const { filteredCustomers, query } = e.detail;
+        // If no query and filteredCustomers is empty, it means search was cleared or initialized
+        if (!query && (!filteredCustomers || filteredCustomers.length === 0)) {
+            this._render([]); // Render empty state
+            this.selectedCustomerId = null; // Clear selection
+        } else {
+            this._render(filteredCustomers, query);
+        }
+      }
+    
+      /**
+       * Handles the 'searchCustomers' event, performs the search, and notifies updates.
+       * @param {CustomEvent} e - The event containing the search query.
+       * @private
+       */
+      _handleSearchCustomers(e) {
+          const query = e.detail;
+          const results = CustomerService.searchCustomers(query);
+          CustomerService._notify(results, query); // Notify listeners with filtered results
+      }
+    
+      /**
+       * Handles 'customerSelectedForHistory' event, primarily to keep selection state in sync.   * @param {CustomEvent} e - Event with customerId.
    * @private
    */
   _handleCustomerSelectedForHistory(e) {

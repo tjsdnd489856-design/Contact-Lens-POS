@@ -196,8 +196,7 @@ export const CustomerService = {
    * Dispatches a custom event to notify listeners that customer data has been updated.
    * @private
    */
-  _notify() {
-    // Detail object can be made more generic if not always filtering
-    document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: null, query: '' } }));
+  _notify(filteredCustomers = null, query = '') {
+    document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers, query } }));
   }
 };

@@ -20,11 +20,24 @@ export const addProductBtn = document.getElementById('add-product-btn');
 export const productModalLayout = document.getElementById('product-modal-layout');
 export const saveAllProductsBtn = document.getElementById('save-all-products-btn');
 export const tempProductListDiv = document.getElementById('temp-product-list');
-export const tempProductListContainer = document.getElementById('temp-product-list-container'); // Added for consistency
+export const tempProductListContainer = document.getElementById('temp-product-list-container');
 
 // Brand Product List Modal Elements
 export const brandProductListModal = document.getElementById('brand-product-list-modal');
 export const closeBrandProductListModalElement = document.getElementById('close-brand-product-list-modal');
+
+// Discard Inventory Modal Elements
+export const discardInventoryModal = document.getElementById('discard-inventory-modal');
+export const closeDiscardInventoryModalBtn = document.getElementById('close-discard-inventory-modal');
+
+// UDI Scanner Modal Elements
+export const udiScannerModal = document.getElementById('udi-scanner-modal');
+export const openUdiScannerBtn = document.getElementById('open-udi-scanner-btn'); // Added for main.js
+
+// Abnormal Inventory Panel Elements
+export const abnormalInventoryPanel = document.getElementById('abnormal-inventory-panel');
+export const toggleAbnormalInventoryPanelBtn = document.getElementById('toggle-abnormal-inventory-panel');
+
 
 /**
  * Validates if all essential DOM elements are present.
@@ -44,4 +57,10 @@ export function validateDOMElements() {
     if (!closeBrandProductListModalElement) console.error('Error: close-brand-product-list-modal element not found.');
     if (!tempProductListContainer) console.error('Error: temp-product-list-container element not found.');
     if (!tempProductListDiv) console.error('Error: temp-product-list element not found.');
+    if (!discardInventoryModal) console.error('Error: discard-inventory-modal element not found.');
+    if (!closeDiscardInventoryModalBtn) console.error('Error: close-discard-inventory-modal button not found.');
+    if (!udiScannerModal) console.error('Error: udi-scanner-modal element not found.');
+    if (!openUdiScannerBtn) console.error('Error: open-udi-scanner-btn element not found.');
+    if (!abnormalInventoryPanel) console.error('Error: abnormal-inventory-panel element not found.');
+    if (!toggleAbnormalInventoryPanelBtn) console.error('Error: toggle-abnormal-inventory-panel button not found.');
 }
