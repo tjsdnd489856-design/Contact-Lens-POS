@@ -447,13 +447,49 @@ export default class SaleTransaction extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>
-        /* General styling */
-        .transaction-form {
-            background: #fdfdfd;
+        /* Layout for the whole sale transaction component */
+        .sale-transaction-container {
+            display: flex;
+            gap: 2rem; /* Space between the two columns */
+            flex-wrap: wrap; /* Allow columns to wrap on smaller screens */
             padding: 2rem;
+            background: #fdfdfd; /* Background moved to container */
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             margin-bottom: 2rem;
+        }
+
+        .main-content {
+            flex: 2; /* Main content takes more space */
+            min-width: 300px; /* Minimum width for main content */
+        }
+
+        .cart-section {
+            flex: 1; /* Cart takes less space */
+            min-width: 280px; /* Minimum width for cart */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .sale-transaction-container {
+                flex-direction: column; /* Stack columns vertically on small screens */
+                padding: 1rem;
+            }
+            .main-content, .cart-section {
+                flex: none; /* Remove flex sizing when stacked */
+                width: 100%; /* Full width when stacked */
+                min-width: unset;
+            }
+        }
+        /* General styling */
+        .transaction-form {
+            /* Now applies to both main-content and cart-section for consistent padding/shadow */
+            padding: 0; /* Padding is handled by .sale-transaction-container */
+            background: none; /* Background is handled by .sale-transaction-container */
+            box-shadow: none; /* Shadow is handled by .sale-transaction-container */
+            margin-bottom: 0; /* Margin is handled by .sale-transaction-container */
         }
         .form-title {
             margin-top: 0;
@@ -635,49 +671,50 @@ export default class SaleTransaction extends HTMLElement {
             color: #28a745; /* Green for total */
         }
       </style>
-      <div class="transaction-form">
-        <h3 class="form-title">새로운 판매</h3>
-        <div class="form-group customer-search-wrapper">
-            <label for="customer-search-input-sale">고객 검색</label>
-            <input type="text" id="customer-search-input-sale" placeholder="이름 또는 연락처로 고객 검색">
-            <ul id="customer-search-results-sale" class="customer-search-results"></ul>
+      <div class="sale-transaction-container">
+        <div class="main-content transaction-form">
+          <h3 class="form-title">새로운 판매</h3>
+          <div class="form-group customer-search-wrapper">
+              <label for="customer-search-input-sale">고객 검색</label>
+              <input type="text" id="customer-search-input-sale" placeholder="이름 또는 연락처로 고객 검색">
+              <ul id="customer-search-results-sale" class="customer-search-results"></ul>
+          </div>
+          <div class="form-group selected-customer-group">
+              <label>선택된 고객</label>
+              <div id="selected-customer-display" class="selected-customer-display">
+                  <span id="selected-customer-name">${this.selectedCustomer ? `${this.selectedCustomer.name} (${this.selectedCustomer.phone})` : '선택된 고객 없음'}</span>
+                  <button id="clear-customer-selection-btn" style="display:${this.selectedCustomer ? 'inline-block' : 'none'};">X</button>
+              </div>
+          </div>
+          
+          <div class="form-group">
+              <label for="barcode-scanner-input">바코드 스캔 (USB 스캐너)</label>
+              <input type="text" id="barcode-scanner-input" placeholder="여기에 바코드를 스캔하세요" inputmode="latin" lang="en" pattern="[A-Za-z0-9]*">
+          </div>
+          
+          <div class="product-selection-group">
+              <div class="form-group">
+                  <label for="product-select">제품 선택</label>
+                  <select id="product-select">
+                      <option value="">--제품을 선택하세요--</option>
+                      ${products.map(p => `<option value="${p.id}">${p.brand} ${p.model} - $${p.price.toFixed(2)}</option>`).join('')}
+                  </select>
+              </div>
+          </div>
+          
+          <div class="form-group">
+              <label for="quantity">수량</label>
+              <input type="number" id="quantity" value="1" min="1">
+          </div>
+          <button id="add-to-cart-btn">카트에 추가</button>
+          
+          <button id="complete-sale-btn">판매 완료</button>
         </div>
-        <div class="form-group selected-customer-group">
-            <label>선택된 고객</label>
-            <div id="selected-customer-display" class="selected-customer-display">
-                <span id="selected-customer-name">${this.selectedCustomer ? `${this.selectedCustomer.name} (${this.selectedCustomer.phone})` : '선택된 고객 없음'}</span>
-                <button id="clear-customer-selection-btn" style="display:${this.selectedCustomer ? 'inline-block' : 'none'};">X</button>
-            </div>
-        </div>
-        
-        <div class="product-selection-group">
-            <div class="form-group">
-                <label for="product-select">제품 선택</label>
-                <select id="product-select">
-                    <option value="">--제품을 선택하세요--</option>
-                    ${products.map(p => `<option value="${p.id}">${p.brand} ${p.model} - $${p.price.toFixed(2)}</option>`).join('')}
-                </select>
-            </div>
-        </div>
-        
-        <div class="form-group">
-            <label for="barcode-scanner-input">바코드 스캔 (USB 스캐너)</label>
-            <input type="text" id="barcode-scanner-input" placeholder="여기에 바코드를 스캔하세요" inputmode="latin" lang="en" pattern="[A-Za-z0-9]*">
-        </div>
-        
-        <div class="form-group">
-            <label for="quantity">수량</label>
-            <input type="number" id="quantity" value="1" min="1">
-        </div>
-        <button id="add-to-cart-btn">카트에 추가</button>
-
-        <div class="cart">
+        <div class="cart-section transaction-form">
             <h4 class="cart-title">장바구니</h4>
             <div class="cart-items"></div>
             <div class="total">총액: $0.00</div>
         </div>
-        
-        <button id="complete-sale-btn">판매 완료</button>
       </div>
     `;
     this._renderCart();
