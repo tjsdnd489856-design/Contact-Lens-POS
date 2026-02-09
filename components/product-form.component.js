@@ -334,7 +334,7 @@ export default class ProductForm extends HTMLElement {
             <input type="hidden" name="gtin" value="${this._product ? this._product.gtin : ''}">
             <div class="form-group">
               <label for="barcode">바코드</label>
-              <input type="text" id="barcode" name="barcode" placeholder="바코드 스캔" value="${this._product ? this._product.barcode : ''}" inputmode="latin" lang="en">
+              <input type="text" id="barcode" name="barcode" placeholder="바코드 스캔" value="${this._product ? this._product.barcode : ''}" inputmode="latin" lang="en" pattern="[A-Za-z0-9]*">
             </div>
             <div class="form-group">
               <label for="brand">브랜드</label>

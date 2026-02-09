@@ -250,7 +250,7 @@ export default class SaleTransaction extends HTMLElement {
         </div>
         <div class="form-group">
             <label for="barcode-scanner-input">바코드 스캔 (USB 스캐너)</label>
-            <input type="text" id="barcode-scanner-input" placeholder="여기에 바코드를 스캔하세요" inputmode="latin" lang="en">
+            <input type="text" id="barcode-scanner-input" placeholder="여기에 바코드를 스캔하세요" inputmode="latin" lang="en" pattern="[A-Za-z0-9]*">
         </div>
         <div class="form-group">
             <label for="quantity">수량</label>

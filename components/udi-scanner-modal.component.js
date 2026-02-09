@@ -97,6 +97,7 @@ export default class UdiScannerModal extends HTMLElement {
         this._handleLookupUdi = this._handleLookupUdi.bind(this);
         this._handleAddUdiProduct = this._handleAddUdiProduct.bind(this);
         this._handleUdiInputKeydown = this._handleUdiInputKeydown.bind(this);
+        this._handleUdiInput = this._handleUdiInput.bind(this); // New binding
     }
 
     connectedCallback() {
@@ -118,7 +119,7 @@ export default class UdiScannerModal extends HTMLElement {
             <div class="udi-scanner-container">
                 <h3>UDI 바코드 스캔</h3>
                 <div id="udi-input-section">
-                    <input type="text" id="udi-input" placeholder="UDI 바코드를 스캔하거나 입력하세요">
+                    <input type="text" id="udi-input" placeholder="UDI 바코드를 스캔하거나 입력하세요" inputmode="latin" lang="en" pattern="[A-Za-z0-9]*">
                     <button id="lookup-udi-btn">제품 정보 조회</button>
                 </div>
                 <div id="udi-product-details">
@@ -145,12 +146,20 @@ export default class UdiScannerModal extends HTMLElement {
         this.shadowRoot.querySelector('#lookup-udi-btn').addEventListener('click', this._handleLookupUdi);
         this.shadowRoot.querySelector('#add-udi-product-btn').addEventListener('click', this._handleAddUdiProduct);
         this.shadowRoot.querySelector('#udi-input').addEventListener('keydown', this._handleUdiInputKeydown);
+        this.shadowRoot.querySelector('#udi-input').addEventListener('input', this._handleUdiInput); // New listener
     }
 
     _detachEventListeners() {
         this.shadowRoot.querySelector('#lookup-udi-btn').removeEventListener('click', this._handleLookupUdi);
         this.shadowRoot.querySelector('#add-udi-product-btn').removeEventListener('click', this._handleAddUdiProduct);
         this.shadowRoot.querySelector('#udi-input').removeEventListener('keydown', this._handleUdiInputKeydown);
+        this.shadowRoot.querySelector('#udi-input').removeEventListener('input', this._handleUdiInput); // New listener
+    }
+
+    _handleUdiInput(e) {
+        let input = e.target.value;
+        input = input.replace(/[^A-Za-z0-9]/g, ''); // Remove non-alphanumeric
+        e.target.value = input.toUpperCase();
     }
 
     _openUdiScannerModal() {
