@@ -70,33 +70,46 @@ export default class SaleTransaction extends HTMLElement {
    * Detaches all event listeners.
    * @private
    */
-  _detachEventListeners() {
-    const shadowRoot = this.shadowRoot;
-    shadowRoot.querySelector('#customer-select').removeEventListener('change', this._onCustomerSelectChange);
-    shadowRoot.querySelector('#add-to-cart-btn').removeEventListener('click', this._addToCartFromSelect);
-    shadowRoot.querySelector('#barcode-scanner-input').removeEventListener('keydown', this._onUsbBarcodeScan);
-    shadowRoot.querySelector('#complete-sale-btn').removeEventListener('click', this.completeSale);
-  }
-
-  /**
-   * Handles changes in the customer selection dropdown.
-   * @param {Event} event - The change event.
-   * @private
-   */
-  _onCustomerSelectChange(event) {
-    this.selectedCustomer = parseInt(event.target.value, 10);
-  }
-
-  /**
-   * Processes a barcode string, attempting to find or fetch product details.
-   * @param {string} barcodeString - The raw barcode string.
-   * @private
-   */
-  async _processBarcodeString(barcodeString) {
-    console.log(`Scanned Barcode: ${barcodeString}`);
-    const udiData = parseUdiBarcode(barcodeString);
-    console.log('Parsed UDI Data:', udiData);
-
+      _detachEventListeners() {
+      const shadowRoot = this.shadowRoot;
+      shadowRoot.querySelector('#customer-select').removeEventListener('change', this._onCustomerSelectChange);
+      shadowRoot.querySelector('#add-to-cart-btn').removeEventListener('click', this._addToCartFromSelect);
+      shadowRoot.querySelector('#barcode-scanner-input').removeEventListener('keydown', this._handleBarcodeInputKeydown); // Renamed
+      shadowRoot.querySelector('#barcode-scanner-input').removeEventListener('input', this._handleBarcodeInput); // Detach new listener
+      shadowRoot.querySelector('#complete-sale-btn').removeEventListener('click', this.completeSale);
+    }
+  
+    /**
+     * Handles changes in the customer selection dropdown.
+     * @param {Event} event - The change event.
+     * @private
+     */
+    _onCustomerSelectChange(event) {
+      this.selectedCustomer = parseInt(event.target.value, 10);
+    }
+  
+    /**
+     * Handles input to the barcode field, restricting to English letters and numbers, and converting to uppercase.
+     * @param {Event} e - The input event.
+     * @private
+     */
+    _handleBarcodeInput(e) {
+        let input = e.target.value;
+        // Remove any characters that are not English letters or numbers
+        input = input.replace(/[^A-Za-z0-9]/g, '');
+        // Convert to uppercase
+        e.target.value = input.toUpperCase();
+    }
+  
+    /**
+     * Processes a barcode string, attempting to find or fetch product details.
+     * @param {string} barcodeString - The raw barcode string.
+     * @private
+     */
+    async _processBarcodeString(barcodeString) {
+      console.log(`Scanned Barcode: ${barcodeString}`);
+      const udiData = parseUdiBarcode(barcodeString);
+      console.log('Parsed UDI Data:', udiData);
     let product = await this._findProduct(udiData, barcodeString);
     
     if (product) {
@@ -237,7 +250,7 @@ export default class SaleTransaction extends HTMLElement {
         </div>
         <div class="form-group">
             <label for="barcode-scanner-input">바코드 스캔 (USB 스캐너)</label>
-            <input type="text" id="barcode-scanner-input" placeholder="여기에 바코드를 스캔하세요">
+            <input type="text" id="barcode-scanner-input" placeholder="여기에 바코드를 스캔하세요" inputmode="latin" lang="en">
         </div>
         <div class="form-group">
             <label for="quantity">수량</label>

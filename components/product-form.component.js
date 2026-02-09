@@ -68,32 +68,37 @@ export default class ProductForm extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        this._product = null; // Store the product being edited
-    }
-
-    connectedCallback() {
-        this._render();
-        this._form = this.shadowRoot.querySelector('form');
-        this._attachEventListeners();
-        document.addEventListener('editProduct', this._populateForm);
-        document.addEventListener('clearProductForm', this._clearForm);
-        this._updateFormDisplay(); // Set initial state of form title and button
-    }
-
-    disconnectedCallback() {
-        this._detachEventListeners();
-        document.removeEventListener('editProduct', this._populateForm);
-        document.removeEventListener('clearProductForm', this._clearForm);
-    }
-
-    /**
-     * Attaches event listeners to form elements.
-     * @private
-     */
-    _attachEventListeners() {
-        if (!this._form) return;
-        this._form.barcode.addEventListener('change', this._handleBarcodeScan);
-
+            this._product = null; // Store the product being edited
+            // Bind handlers
+            this._handleBarcodeScan = this._handleBarcodeScan.bind(this);
+            this._handleBarcodeInput = this._handleBarcodeInput.bind(this);
+            this._handleSubmit = this._handleSubmit.bind(this);
+          }
+        
+          connectedCallback() {
+              this._render();
+              this._form = this.shadowRoot.querySelector('form');
+              this._attachEventListeners();
+              document.addEventListener('editProduct', this._populateForm);
+              document.addEventListener('clearProductForm', this._clearForm);
+              this._updateFormDisplay(); // Set initial state of form title and button
+          }
+        
+          disconnectedCallback() {
+              this._detachEventListeners();
+              document.removeEventListener('editProduct', this._populateForm);
+              document.removeEventListener('clearProductForm', this._clearForm);
+              this._form.barcode.removeEventListener('input', this._handleBarcodeInput); // Remove added listener
+          }
+        
+          /**
+           * Attaches event listeners to form elements.
+           * @private
+           */
+          _attachEventListeners() {
+              if (!this._form) return;
+              this._form.barcode.addEventListener('change', this._handleBarcodeScan);
+              this._form.barcode.addEventListener('input', this._handleBarcodeInput);
         // Power input formatting
         ['powerS', 'powerC'].forEach(field => {
             this._form[field].addEventListener('change', (e) => this._formatPowerValue(e.target));
@@ -109,12 +114,26 @@ export default class ProductForm extends HTMLElement {
     _detachEventListeners() {
         if (!this._form) return;
         this._form.barcode.removeEventListener('change', this._handleBarcodeScan);
+        this._form.barcode.removeEventListener('input', this._handleBarcodeInput); // Detach added listener
 
         ['powerS', 'powerC'].forEach(field => {
             this._form[field].removeEventListener('change', (e) => this._formatPowerValue(e.target));
         });
 
         this._form.removeEventListener('submit', this._handleSubmit);
+    }
+
+    /**
+     * Handles input to the barcode field, restricting to English letters and numbers, and converting to uppercase.
+     * @param {Event} e - The input event.
+     * @private
+     */
+    _handleBarcodeInput(e) {
+        let input = e.target.value;
+        // Remove any characters that are not English letters or numbers
+        input = input.replace(/[^A-Za-z0-9]/g, '');
+        // Convert to uppercase
+        e.target.value = input.toUpperCase();
     }
 
     /**
@@ -144,12 +163,12 @@ export default class ProductForm extends HTMLElement {
         }
 
         let formattedValue = (num / 100).toFixed(2);
-        if (floatValue === 0) {
+        if (parseFloat(formattedValue) === 0) { // Use parseFloat on formattedValue
             inputElement.value = '0.00';
-        } else if (startsWithPlus || (!startsWithMinus && floatValue > 0)) {
+        } else if (startsWithPlus || (!startsWithMinus && parseFloat(formattedValue) > 0)) {
             inputElement.value = `+${formattedValue}`;
         } else {
-            inputElement.value = `-${formattedValue}`;
+            inputElement.value = formattedValue; // - is already in formattedValue
         }
     }
 
@@ -315,7 +334,7 @@ export default class ProductForm extends HTMLElement {
             <input type="hidden" name="gtin" value="${this._product ? this._product.gtin : ''}">
             <div class="form-group">
               <label for="barcode">바코드</label>
-              <input type="text" id="barcode" name="barcode" placeholder="바코드 스캔" value="${this._product ? this._product.barcode : ''}">
+              <input type="text" id="barcode" name="barcode" placeholder="바코드 스캔" value="${this._product ? this._product.barcode : ''}" inputmode="latin" lang="en">
             </div>
             <div class="form-group">
               <label for="brand">브랜드</label>
