@@ -16,7 +16,6 @@ import UdiScannerModal from './components/udi-scanner-modal.component.js'; // Ne
 // Import handlers for various modals and global hotkeys
 import { initAbnormalInventoryPanelHandler } from './modules/abnormal-inventory-panel-handler.js';
 import { initGlobalHotkeys } from './modules/global-hotkeys.js';
-import { openUdiScannerModal } from './components/udi-scanner-modal.component.js'; // Exported open function
 
 
 document.addEventListener('DOMContentLoaded', () => {
