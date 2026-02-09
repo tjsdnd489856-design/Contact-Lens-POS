@@ -35,6 +35,8 @@ export default class SaleTransaction extends HTMLElement {
     this._handleSelectCustomerForSale = this._handleSelectCustomerForSale.bind(this);
     this._updateSelectedCustomerDisplay = this._updateSelectedCustomerDisplay.bind(this);
     this._handleProductSelectChange = this._handleProductSelectChange.bind(this); // Bind new event handler
+    this._handleCustomerSearchKeydown = this._handleCustomerSearchKeydown.bind(this);
+    this._selectedSearchIndex = -1;
   }
 
   connectedCallback() {
@@ -98,7 +100,10 @@ export default class SaleTransaction extends HTMLElement {
     const clearCustomerSelectionBtn = shadowRoot.querySelector('#clear-customer-selection-btn');
     const customerSearchResultsDiv = shadowRoot.querySelector('#customer-search-results-sale');
 
-    if (customerSearchInput) customerSearchInput.addEventListener('input', this._handleCustomerSearchInput);
+    if (customerSearchInput) {
+      customerSearchInput.addEventListener('input', this._handleCustomerSearchInput);
+      customerSearchInput.addEventListener('keydown', this._handleCustomerSearchKeydown);
+    }
     if (clearCustomerSelectionBtn) clearCustomerSelectionBtn.addEventListener('click', this._clearCustomerSelection);
     if (customerSearchResultsDiv) {
         customerSearchResultsDiv.addEventListener('click', (e) => {
@@ -132,7 +137,10 @@ export default class SaleTransaction extends HTMLElement {
     const customerSearchResultsDiv = shadowRoot.querySelector('#customer-search-results-sale');
     const productSelect = shadowRoot.querySelector('#product-select');
 
-    if (customerSearchInput) customerSearchInput.removeEventListener('input', this._handleCustomerSearchInput);
+    if (customerSearchInput) {
+      customerSearchInput.removeEventListener('input', this._handleCustomerSearchInput);
+      customerSearchInput.removeEventListener('keydown', this._handleCustomerSearchKeydown);
+    }
     if (clearCustomerSelectionBtn) clearCustomerSelectionBtn.removeEventListener('click', this._clearCustomerSelection);
     if (customerSearchResultsDiv) {
         customerSearchResultsDiv.removeEventListener('click', (e) => { // This anonymous function might not be removed
@@ -169,11 +177,66 @@ export default class SaleTransaction extends HTMLElement {
   }
 
   /**
+   * Handles keydown events on the customer search input field for keyboard navigation.
+   * @param {KeyboardEvent} event - The keyboard event.
+   * @private
+   */
+  _handleCustomerSearchKeydown(event) {
+    const searchResultsDiv = this.shadowRoot.querySelector('#customer-search-results-sale');
+    const items = searchResultsDiv.querySelectorAll('.customer-search-result-item');
+
+    if (!items.length) {
+      this._selectedSearchIndex = -1;
+      return;
+    }
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        this._selectedSearchIndex = (this._selectedSearchIndex + 1) % items.length;
+        this._updateSelectedSearchResult(items);
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this._selectedSearchIndex = (this._selectedSearchIndex - 1 + items.length) % items.length;
+        this._updateSelectedSearchResult(items);
+        break;
+      case 'Enter':
+        event.preventDefault();
+        if (this._selectedSearchIndex > -1) {
+          items[this._selectedSearchIndex].click();
+        }
+        break;
+      case 'Escape':
+        searchResultsDiv.innerHTML = '';
+        this._selectedSearchIndex = -1;
+        break;
+    }
+  }
+
+  /**
+   * Updates the visual selection of the search result items.
+   * @param {NodeListOf<Element>} items - The list of search result items.
+   * @private
+   */
+  _updateSelectedSearchResult(items) {
+    items.forEach((item, index) => {
+      if (index === this._selectedSearchIndex) {
+        item.classList.add('selected');
+        item.scrollIntoView({ block: 'nearest' });
+      } else {
+        item.classList.remove('selected');
+      }
+    });
+  }
+
+  /**
    * Renders the customer search results.
    * @param {Array<Object>} customers - Array of customer objects to display.
    * @private
    */
   _renderCustomerSearchResults(customers) {
+      this._selectedSearchIndex = -1;
       const searchResultsDiv = this.shadowRoot.querySelector('#customer-search-results-sale');
       if (searchResultsDiv) {
           if (customers.length === 0) {
@@ -610,7 +673,7 @@ export default class SaleTransaction extends HTMLElement {
         .customer-search-result-item:last-child {
             border-bottom: none;
         }
-        .customer-search-result-item:hover {
+        .customer-search-result-item:hover, .customer-search-result-item.selected {
             background-color: #f8f9fa;
             color: #007bff;
         }

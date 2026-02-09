@@ -38,9 +38,9 @@ export const SalesService = {
    */
   _validateStock(saleItems) {
     for (const item of saleItems) {
-        const product = ProductService.getProductById(item.product.id);
+        const product = ProductService.getProductById(item.productId);
         if (!product || product.quantity < item.quantity) {
-            throw new Error(ALERT_MESSAGES.INSUFFICIENT_STOCK(item.product.brand, item.product.model, product ? product.quantity : 0));
+            throw new Error(ALERT_MESSAGES.INSUFFICIENT_STOCK(product.brand, product.model, product ? product.quantity : 0));
         }
     }
   },
@@ -52,7 +52,7 @@ export const SalesService = {
    */
   _deductStock(saleItems) {
     for (const item of saleItems) {
-        ProductService.decreaseStock(item.product.id, item.quantity);
+        ProductService.decreaseStock(item.productId, item.quantity);
     }
   },
 
