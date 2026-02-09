@@ -62,24 +62,30 @@ export const SalesService = {
    * @returns {boolean} True if the sale was added successfully.
    * @throws {Error} If stock is insufficient.
    */
-  addSale(sale) {
-    // 1. Validate stock before proceeding
-    this._validateStock(sale.items);
-    
-    // 2. Deduct stock for all items
-    this._deductStock(sale.items);
+  async addSale(sale) {
+    return new Promise((resolve, reject) => {
+      try {
+        // 1. Validate stock before proceeding
+        this._validateStock(sale.items);
+        
+        // 2. Deduct stock for all items
+        this._deductStock(sale.items);
 
-    // 3. Create sale record
-    sale.id = this._nextId++;
-    sale.date = new Date();
-    this._sales.push(sale);
-    
-    // 4. Update customer purchase history
-    CustomerService.addPurchaseToCustomerHistory(sale.customerId, sale.id, sale.date);
-    
-    // 5. Notify listeners of sales update
-    this._notify();
-    return true;
+        // 3. Create sale record
+        sale.id = this._nextId++;
+        sale.date = new Date();
+        this._sales.push(sale);
+        
+        // 4. Update customer purchase history
+        CustomerService.addPurchaseToCustomerHistory(sale.customerId, sale.id, sale.date);
+        
+        // 5. Notify listeners of sales update
+        this._notify();
+        resolve(true);
+      } catch (error) {
+        reject(error);
+      }
+    });
   },
 
   /**

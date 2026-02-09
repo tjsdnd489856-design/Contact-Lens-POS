@@ -75,18 +75,21 @@ This document outlines the architecture, features, and ongoing development plan 
 
 This section will be updated with each new development task.
 
-**Current Task**: Implementation of the UDI-based Product Addition Feature.
-**Status**: Implemented.
-
-**Next Steps**: Awaiting further user instructions.
-## Plan for Current Request
+**Current Task**: Ensure all sales-related content is visible and functional on the "판매" tab.
 
 ### 1. Update `blueprint.md`
-- **Objective**: Reflect the completed customer search functionality in `sale-transaction.component.js` and mark related tasks as complete.
+- **Objective**: Reflect the updated `index.html` `<h2>` tag change.
 - **Details**:
-    - Update the `artifact_trail` for `components/sale-transaction.component.js` to mention the implementation of customer search functionality, including the replacement of the customer dropdown with a search input and results display, improved styling, and barcode input restrictions.
-    - Update the `task_state` to mark steps `5.5` and `5.5.1.1` as `[COMPLETED]`.
+    - Modify the `artifact_trail` entry for `index.html` to specify that the `<h2>` tag within the "Sales" tab content (`#sales-tab`) was also changed from "판매 및 주문" to "판매".
     
-### 2. Continue with next task
-- **Objective**: Move on to the next pending task, which is to implement a customer search method for customer selection in the "판매" tab. This was part of the previous task but was blocked and is now completed.
-- **Details**: Check the task list and proceed to the next incomplete task.
+### 2. Examine `sale-transaction.component.js`'s `completeSale` method
+- **Objective**: Verify the logic and calls to `SalesService.addSale`.
+- **Details**: Double-check the method for any potential issues that could prevent sales from being added or correctly processed.
+
+### 3. Mentally Simulate / Debug the sales workflow
+- **Objective**: Identify potential points of failure or non-rendering in the sales process.
+- **Details**: Trace the data flow from `SaleTransaction` -> `SalesService` -> `SalesList` to ensure each component is functioning as expected and passing data correctly.
+
+**Updated `artifact_trail` entry for `index.html`**:
+*   **`index.html`**: MODIFIED: UDI scanner modal embedding to correctly use `<udi-scanner-modal>` Web Component. Changed tab name "판매 및 주문" to "판매" in navigation button and the `<h2>` heading within the sales tab content.
+*   **`services/sales.service.js`**: MODIFIED: `addSale` method now returns a Promise, aligning with the asynchronous handling in `sale-transaction.component.js`.
