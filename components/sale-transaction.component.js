@@ -35,6 +35,7 @@ export default class SaleTransaction extends HTMLElement {
     this._handleCustomersUpdated = this._handleCustomersUpdated.bind(this);
     this._handleSelectCustomerForSale = this._handleSelectCustomerForSale.bind(this);
     this._updateSelectedCustomerDisplay = this._updateSelectedCustomerDisplay.bind(this);
+    this._handleProductSelectChange = this._handleProductSelectChange.bind(this); // Bind new event handler
   }
 
   connectedCallback() {
@@ -112,7 +113,10 @@ export default class SaleTransaction extends HTMLElement {
     }
 
     // Product and barcode listeners
-    shadowRoot.querySelector('#add-to-cart-btn').addEventListener('click', this._addToCartFromSelect);
+    const productSelect = shadowRoot.querySelector('#product-select');
+    if (productSelect) {
+      productSelect.addEventListener('change', this._handleProductSelectChange);
+    }
     shadowRoot.querySelector('#barcode-scanner-input').addEventListener('keydown', this._handleBarcodeInputKeydown);
     shadowRoot.querySelector('#barcode-scanner-input').addEventListener('input', this._handleBarcodeInput);
     shadowRoot.querySelector('#complete-sale-btn').addEventListener('click', this.completeSale);
@@ -127,6 +131,7 @@ export default class SaleTransaction extends HTMLElement {
     const customerSearchInput = shadowRoot.querySelector('#customer-search-input-sale');
     const clearCustomerSelectionBtn = shadowRoot.querySelector('#clear-customer-selection-btn');
     const customerSearchResultsDiv = shadowRoot.querySelector('#customer-search-results-sale');
+    const productSelect = shadowRoot.querySelector('#product-select');
 
     if (customerSearchInput) customerSearchInput.removeEventListener('input', this._handleCustomerSearchInput);
     if (clearCustomerSelectionBtn) clearCustomerSelectionBtn.removeEventListener('click', this._clearCustomerSelection);
@@ -141,7 +146,9 @@ export default class SaleTransaction extends HTMLElement {
         });
     }
 
-    shadowRoot.querySelector('#add-to-cart-btn').removeEventListener('click', this._addToCartFromSelect);
+    if (productSelect) {
+      productSelect.removeEventListener('change', this._handleProductSelectChange);
+    }
     shadowRoot.querySelector('#barcode-scanner-input').removeEventListener('keydown', this._handleBarcodeInputKeydown);
     shadowRoot.querySelector('#barcode-scanner-input').removeEventListener('input', this._handleBarcodeInput);
     shadowRoot.querySelector('#complete-sale-btn').removeEventListener('click', this.completeSale);
@@ -304,20 +311,17 @@ export default class SaleTransaction extends HTMLElement {
     return product;
   }
 
-  /**
-   * Adds a product to the cart from the product selection dropdown.
-   * @private
-   */
-  _addToCartFromSelect() {
-    const productId = parseInt(this.shadowRoot.querySelector('#product-select').value, 10);
-    const quantity = parseInt(this.shadowRoot.querySelector('#quantity').value, 10);
-    const product = ProductService.getProductById(productId);
-
-    if (!product) {
-        alert(ALERT_MESSAGES.INVALID_PRODUCT_SELECTION);
-        return;
+  _handleProductSelectChange(event) {
+    const productId = parseInt(event.target.value, 10);
+    if (!isNaN(productId)) { // Ensure a valid product is selected (not the default "--제품을 선택하세요--")
+        const product = ProductService.getProductById(productId);
+        if (product) {
+            this._addProductToCart(product, DEFAULT_QUANTITY);
+            event.target.value = ''; // Reset select to default option after adding to cart
+        } else {
+            alert(ALERT_MESSAGES.INVALID_PRODUCT_SELECTION);
+        }
     }
-    this._addProductToCart(product, quantity);
   }
 
   /**
@@ -460,12 +464,12 @@ export default class SaleTransaction extends HTMLElement {
         }
 
         .main-content {
-            flex: 2; /* Main content takes more space */
+            flex: 1; /* Main content takes less space */
             min-width: 300px; /* Minimum width for main content */
         }
 
         .cart-section {
-            flex: 1; /* Cart takes less space */
+            flex: 2; /* Cart takes more space */
             min-width: 280px; /* Minimum width for cart */
             display: flex;
             flex-direction: column;
@@ -639,8 +643,8 @@ export default class SaleTransaction extends HTMLElement {
         /* Cart styling */
         .cart-title {
             margin-top: 2.5rem;
-            border-top: 1px solid #eee;
-            padding-top: 2rem;
+            /* Removed border-top */
+            padding-top: 0; /* Adjust padding as border-top is removed */
             color: #333;
             font-size: 1.5rem;
             margin-bottom: 1.5rem;
@@ -701,12 +705,6 @@ export default class SaleTransaction extends HTMLElement {
                   </select>
               </div>
           </div>
-          
-          <div class="form-group">
-              <label for="quantity">수량</label>
-              <input type="number" id="quantity" value="1" min="1">
-          </div>
-          <button id="add-to-cart-btn">카트에 추가</button>
           
           <button id="complete-sale-btn">판매 완료</button>
         </div>
