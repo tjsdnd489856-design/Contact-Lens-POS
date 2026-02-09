@@ -30,7 +30,6 @@ export default class SaleTransaction extends HTMLElement {
     this._handleCustomerSearchInput = this._handleCustomerSearchInput.bind(this);
     this._selectCustomerFromSearch = this._selectCustomerFromSearch.bind(this);
     this._clearCustomerSelection = this._clearCustomerSelection.bind(this);
-    this._addToCartFromSelect = this._addToCartFromSelect.bind(this);
     this.completeSale = this.completeSale.bind(this);
     this._handleCustomersUpdated = this._handleCustomersUpdated.bind(this);
     this._handleSelectCustomerForSale = this._handleSelectCustomerForSale.bind(this);
