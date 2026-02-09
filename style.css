@@ -439,4 +439,10 @@ textarea,
 select {
   cursor: text !important;
 }
-
+/* Custom Elements ensure block display */
+sale-transaction-component, sales-list,
+customer-list, customer-purchase-history, product-list,
+customer-form, product-form, brand-product-list-modal,
+discard-inventory-modal, udi-scanner-modal, abnormal-inventory-list {
+  display: block;
+}
