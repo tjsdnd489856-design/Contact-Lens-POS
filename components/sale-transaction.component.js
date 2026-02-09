@@ -1,5 +1,3 @@
-console.log('SaleTransaction module loaded!');
-
 import { CustomerService } from '../services/customer.service.js';
 import { ProductService } from '../services/product.service.js';
 import { SalesService } from '../services/sales.service.js';
@@ -25,7 +23,6 @@ export default class SaleTransaction extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.cart = [];
     this.selectedCustomer = null; // To store selected customer object
-    console.log('SaleTransaction: constructor called');
 
     // Bind event handlers
     this._handleBarcodeInputKeydown = this._handleBarcodeInputKeydown.bind(this);
@@ -41,8 +38,7 @@ export default class SaleTransaction extends HTMLElement {
   }
 
   connectedCallback() {
-    console.log('SaleTransaction: connectedCallback called');
-    console.log('SaleTransaction: connectedCallback called');
+
     this._render();
     this._attachEventListeners();
     document.addEventListener('productsUpdated', this._render.bind(this));

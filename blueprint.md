@@ -11,7 +11,7 @@ This document outlines the architecture, features, and ongoing development plan 
 *   **`style.css`**: Global styles for the application, adhering to modern CSS practices.
 *   **`components/`**: Directory for Web Components, encapsulating reusable UI elements and their logic.
 *   **`services/`**: Directory for JavaScript modules providing data access and business logic (e.g., `ProductService`, `CustomerService`, `SalesService`).
-*   **`utils/`**: Utility functions, such as `udi-parser.js`.
+*   **`utils/`**: Utility functions, suchs as `udi-parser.js`.
 *   **`lambda/`**: AWS Lambda function and related deployment scripts for backend logic, including secure external API interactions.
 
 ### 2. Data Management and Services
@@ -91,7 +91,7 @@ This section will be updated with each new development task.
 - **Details**: Trace the data flow from `SaleTransaction` -> `SalesService` -> `SalesList` to ensure each component is functioning as expected and passing data correctly.
 
 **Updated `artifact_trail` entry for `index.html`**:
-*   **`index.html`**: MODIFIED: UDI scanner modal embedding to correctly use `<udi-scanner-modal>` Web Component. Changed tab name "판매 및 주문" to "판매" in navigation button and the `<h2>` heading within the sales tab content.
+*   **`index.html`**: MODIFIED: UDI scanner modal embedding to correctly use `<udi-scanner-modal>` Web Component. Changed tab name "판매 및 주문" to "판매" in navigation button and the `<h2>` heading within the sales tab content. Also, corrected custom element tag `<sale-transaction>` to `<sale-transaction-component>`.
 *   **`services/sales.service.js`**: MODIFIED: `addSale` method now returns a Promise, aligning with the asynchronous handling in `sale-transaction.component.js`.
 *   **`style.css`**: ADDED: CSS rule `display: block;` to custom elements (`sale-transaction-component`, `sales-list`, etc.) to ensure they render as block-level elements.
-*   **`components/sale-transaction.component.js`**: ADDED: Temporary `console.log` statements to `constructor` and `connectedCallback` for debugging component lifecycle, and a top-level `console.log` to confirm module loading.
+*   **`components/sale-transaction.component.js`**: REMOVED: Temporary `console.log` statements from `constructor`, `connectedCallback`, and top-level module code.
