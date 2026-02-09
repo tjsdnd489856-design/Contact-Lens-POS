@@ -1,5 +1,43 @@
 import { ProductService } from '../services/product.service.js';
 
+// --- Constants ---
+const MESSAGES = {
+    NO_ABNORMAL_INVENTORY: '이상 재고가 없습니다.',
+};
+
+const ABNORMAL_INVENTORY_STYLES = `
+    :host {
+        display: block;
+        padding: 15px;
+    }
+    h4 {
+        margin-top: 0;
+        color: #d9534f;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .abnormal-inventory-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+    .abnormal-inventory-table th, .abnormal-inventory-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+    }
+    .abnormal-inventory-table th {
+        background-color: #f2f2f2;
+    }
+    .abnormal-inventory-table tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    .negative-quantity {
+        color: #d9534f; /* Red color for negative quantities */
+        font-weight: bold;
+    }
+`;
+
 export default class AbnormalInventoryList extends HTMLElement {
     constructor() {
         super();
@@ -7,6 +45,10 @@ export default class AbnormalInventoryList extends HTMLElement {
         this._abnormalProducts = [];
     }
 
+    /**
+     * Sets the list of abnormal products and triggers a re-render.
+     * @param {Array<Object>} products - An array of product objects with abnormal quantities.
+     */
     setAbnormalProducts(products) {
         this._abnormalProducts = products;
         this._render();
@@ -16,54 +58,29 @@ export default class AbnormalInventoryList extends HTMLElement {
         this._render();
     }
 
-    _render() {
-        const tableRows = this._abnormalProducts.length === 0
-            ? '<tr><td colspan="6">이상 재고가 없습니다.</td></tr>'
-            : this._abnormalProducts.map(product => `
-                <tr>
-                    <td>${product.brand}</td>
-                    <td>${product.model}</td>
-                    <td>${(product.powerS !== null && product.powerS !== undefined) ? (product.powerS > 0 ? '+' : '') + product.powerS.toFixed(2) : 'N/A'}</td>
-                    <td>${(product.powerC !== null && product.powerC !== undefined) ? (product.powerC > 0 ? '+' : '') + product.powerC.toFixed(2) : 'N/A'}</td>
-                    <td>${product.powerAX !== null ? product.powerAX : 'N/A'}</td>
-                    <td class="negative-quantity">${product.quantity}</td>
-                </tr>
-            `).join('');
+    /**
+     * Generates the HTML table for displaying abnormal inventory.
+     * @param {Array<Object>} products - The list of abnormal products.
+     * @returns {string} The HTML string for the table or a message.
+     * @private
+     */
+    _generateTableHtml(products) {
+        if (products.length === 0) {
+            return `<p class="message">${MESSAGES.NO_ABNORMAL_INVENTORY}</p>`;
+        }
 
-        this.shadowRoot.innerHTML = `
-            <style>
-                :host {
-                    display: block;
-                    padding: 15px;
-                }
-                h4 {
-                    margin-top: 0;
-                    color: #d9534f;
-                    text-align: center;
-                    margin-bottom: 20px;
-                }
-                .abnormal-inventory-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 1rem;
-                }
-                .abnormal-inventory-table th, .abnormal-inventory-table td {
-                    border: 1px solid #ddd;
-                    padding: 8px;
-                    text-align: center;
-                }
-                .abnormal-inventory-table th {
-                    background-color: #f2f2f2;
-                }
-                .abnormal-inventory-table tbody tr:nth-child(even) {
-                    background-color: #f9f9f9;
-                }
-                .negative-quantity {
-                    color: #d9534f; /* Red color for negative quantities */
-                    font-weight: bold;
-                }
-            </style>
-            <h4>이상 재고 목록</h4>
+        const tableRows = products.map(product => `
+            <tr>
+                <td>${product.brand}</td>
+                <td>${product.model}</td>
+                <td>${(product.powerS !== null && product.powerS !== undefined) ? (product.powerS > 0 ? '+' : '') + product.powerS.toFixed(2) : 'N/A'}</td>
+                <td>${(product.powerC !== null && product.powerC !== undefined) ? (product.powerC > 0 ? '+' : '') + product.powerC.toFixed(2) : 'N/A'}</td>
+                <td>${product.powerAX !== null ? product.powerAX : 'N/A'}</td>
+                <td class="negative-quantity">${product.quantity}</td>
+            </tr>
+        `).join('');
+
+        return `
             <table class="abnormal-inventory-table">
                 <thead>
                     <tr>
@@ -79,6 +96,18 @@ export default class AbnormalInventoryList extends HTMLElement {
                     ${tableRows}
                 </tbody>
             </table>
+        `;
+    }
+
+    /**
+     * Renders the component's HTML structure.
+     * @private
+     */
+    _render() {
+        this.shadowRoot.innerHTML = `
+            <style>${ABNORMAL_INVENTORY_STYLES}</style>
+            <h4>이상 재고 목록</h4>
+            ${this._generateTableHtml(this._abnormalProducts)}
         `;
     }
 }
