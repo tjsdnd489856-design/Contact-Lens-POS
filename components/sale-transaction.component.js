@@ -198,10 +198,9 @@ export default class SaleTransaction extends HTMLElement {
       const customerSearchInput = this.shadowRoot.querySelector('#customer-search-input-sale');
       const searchResultsDiv = this.shadowRoot.querySelector('#customer-search-results-sale');
       
-      if (customerSearchInput) customerSearchInput.value = ''; // Clear search input
+      if (customerSearchInput) customerSearchInput.value = `${customer.name} (${customer.phone})`; // Display selected customer in input
       if (searchResultsDiv) searchResultsDiv.innerHTML = ''; // Clear search results
-
-      this._updateSelectedCustomerDisplay();
+      this._updateSelectedCustomerDisplay(); // Update internal state and clear button visibility
   }
 
   /**
@@ -210,6 +209,8 @@ export default class SaleTransaction extends HTMLElement {
    */
   _clearCustomerSelection() {
       this.selectedCustomer = null;
+      const customerSearchInput = this.shadowRoot.querySelector('#customer-search-input-sale');
+      if (customerSearchInput) customerSearchInput.value = ''; // Clear the input field
       this._updateSelectedCustomerDisplay();
   }
 
@@ -218,14 +219,14 @@ export default class SaleTransaction extends HTMLElement {
    * @private
    */
   _updateSelectedCustomerDisplay() {
-      const selectedCustomerNameSpan = this.shadowRoot.querySelector('#selected-customer-name');
+      // The customer name display is now handled by the input field directly.
+      // This method now primarily manages the internal selectedCustomer state
+      // and the visibility of the clear button.
       const clearButton = this.shadowRoot.querySelector('#clear-customer-selection-btn');
 
       if (this.selectedCustomer) {
-          selectedCustomerNameSpan.textContent = `${this.selectedCustomer.name} (${this.selectedCustomer.phone})`;
           if (clearButton) clearButton.style.display = 'inline-block';
       } else {
-          selectedCustomerNameSpan.textContent = '선택된 고객 없음';
           if (clearButton) clearButton.style.display = 'none';
       }
   }
@@ -472,6 +473,10 @@ export default class SaleTransaction extends HTMLElement {
             min-width: 280px; /* Minimum width for cart */
             display: flex;
             flex-direction: column;
+            background: #fdfdfd; /* Background matching the main form */
+            padding: 2rem; /* Padding matching the main form */
+            border-radius: 8px; /* Border radius matching the main form */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Box shadow matching the main form */
         }
 
         /* Responsive adjustments */
@@ -679,14 +684,14 @@ export default class SaleTransaction extends HTMLElement {
           <h3 class="form-title">새로운 판매</h3>
           <div class="form-group customer-search-wrapper">
               <label for="customer-search-input-sale">고객 검색</label>
-              <input type="text" id="customer-search-input-sale" placeholder="이름 또는 연락처로 고객 검색">
+              <input type="text" id="customer-search-input-sale" placeholder="고객 이름 또는 연락처 입력/검색 후 선택" value="${this.selectedCustomer ? `${this.selectedCustomer.name} (${this.selectedCustomer.phone})` : ''}">
               <ul id="customer-search-results-sale" class="customer-search-results"></ul>
           </div>
-          <div class="form-group selected-customer-group">
+          <div class="form-group selected-customer-group" style="display:none;">
               <label>선택된 고객</label>
               <div id="selected-customer-display" class="selected-customer-display">
-                  <span id="selected-customer-name">${this.selectedCustomer ? `${this.selectedCustomer.name} (${this.selectedCustomer.phone})` : '선택된 고객 없음'}</span>
-                  <button id="clear-customer-selection-btn" style="display:${this.selectedCustomer ? 'inline-block' : 'none'};">X</button>
+                  <span id="selected-customer-name"></span>
+                  <button id="clear-customer-selection-btn" style="display:none;">X</button>
               </div>
           </div>
           
