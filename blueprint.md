@@ -94,3 +94,4 @@ This section will be updated with each new development task.
 *   **`index.html`**: MODIFIED: UDI scanner modal embedding to correctly use `<udi-scanner-modal>` Web Component. Changed tab name "판매 및 주문" to "판매" in navigation button and the `<h2>` heading within the sales tab content.
 *   **`services/sales.service.js`**: MODIFIED: `addSale` method now returns a Promise, aligning with the asynchronous handling in `sale-transaction.component.js`.
 *   **`style.css`**: ADDED: CSS rule `display: block;` to custom elements (`sale-transaction-component`, `sales-list`, etc.) to ensure they render as block-level elements.
+*   **`components/sale-transaction.component.js`**: ADDED: Temporary `console.log` statements to `constructor` and `connectedCallback` for debugging component lifecycle.
