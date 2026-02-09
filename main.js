@@ -47,14 +47,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // UDI Scanner Modal
     const openUdiScannerBtn = document.getElementById('open-udi-scanner-btn');
     const udiScannerModal = document.getElementById('udi-scanner-modal'); // Assuming this is the div wrapping the component
+    const closeUdiScannerModalBtn = document.getElementById('close-udi-scanner-modal'); // Get the close button
 
-    if (openUdiScannerBtn && udiScannerModal) {
+    if (openUdiScannerBtn && udiScannerModal && closeUdiScannerModalBtn) {
         openUdiScannerBtn.addEventListener('click', () => {
-            udiScannerModal.style.display = 'block'; // Or dispatch custom event to component
-            // If the component handles its own open/close internally, we just dispatch event:
+            udiScannerModal.style.display = 'block';
             document.dispatchEvent(new CustomEvent('openUdiScannerModal'));
         });
+        closeUdiScannerModalBtn.addEventListener('click', () => { // Attach listener to the 'x' button
+            udiScannerModal.style.display = 'none';
+            document.dispatchEvent(new CustomEvent('closeUdiScannerModal'));
+        });
     } else {
-        console.error('Open UDI Scanner button or modal not found.');
+        console.error('Open UDI Scanner button, modal, or close button not found.');
     }
 });
