@@ -548,13 +548,12 @@ export default class SaleTransaction extends HTMLElement {
         .overall-sales-layout-container {
             display: flex;
             flex-direction: column;
-            flex-grow: 1; /* Allow this container to fill vertical space */
-            gap: 2rem;
+            gap: 1rem;
         }
         /* Layout for the whole sale transaction component */
         .top-sales-section { /* Renamed from .sale-transaction-container */
             display: flex;
-            gap: 2rem; /* Space between the two columns */
+            gap: 1rem; /* Space between the two columns */
             flex-wrap: wrap; /* Allow columns to wrap on smaller screens */
             padding: 2rem;
             background: #fdfdfd; /* Background moved to container */
@@ -579,6 +578,7 @@ export default class SaleTransaction extends HTMLElement {
             padding: 2rem; /* Padding matching the main form */
             border-radius: 8px; /* Border radius matching the main form */
             box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Box shadow matching the main form */
+            justify-content: space-between; /* To push button to bottom */
         }
 
         customer-purchase-history {
@@ -670,7 +670,7 @@ export default class SaleTransaction extends HTMLElement {
         /* Specific button styles */
         #add-to-cart-btn { background-color: #28a745; margin-top: 1rem; }
         #add-to-cart-btn:hover { background-color: #218838; }
-        #complete-sale-btn { background-color: #007bff; margin-top: 1.5rem; }
+        #complete-sale-btn { background-color: #007bff; }
         #complete-sale-btn:hover { background-color: #0069d9; }
         .remove-from-cart-btn {
             background-color: #dc3545;
@@ -823,15 +823,14 @@ export default class SaleTransaction extends HTMLElement {
                 </div>
             </div>
             
-            <button id="complete-sale-btn">판매 완료</button>
           </div>
           <div class="cart-section transaction-form">
               <h4 class="cart-title">장바구니</h4>
               <div class="cart-items"></div>
               <div class="total">총액: $0.00</div>
+              <button id="complete-sale-btn" style="align-self: flex-end;">판매 완료</button>
           </div>
         </div>
-        <customer-purchase-history></customer-purchase-history>
       </div>
     `;
   }
