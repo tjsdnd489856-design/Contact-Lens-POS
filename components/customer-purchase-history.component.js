@@ -117,6 +117,9 @@ export default class CustomerPurchaseHistory extends HTMLElement {
                     <tr>
                         ${itemIndex === 0 ? `<td rowspan="${rowspan}">${date}</td>` : ''}
                         <td>${item.product.brand} ${item.product.model}</td>
+                        <td>${item.product.s || ''}</td>
+                        <td>${item.product.c || ''}</td>
+                        <td>${item.product.ax || ''}</td>
                         <td>${item.quantity}</td>
                     </tr>
                 `;
@@ -144,9 +147,15 @@ export default class CustomerPurchaseHistory extends HTMLElement {
                 <table>
                     <thead>
                         <tr>
-                            <th>구매일자</th>
-                            <th>구매품목</th>
-                            <th>구매수량</th>
+                            <th rowspan="2">구매일자</th>
+                            <th rowspan="2">구매품목</th>
+                            <th colspan="3">도수</th>
+                            <th rowspan="2">구매수량</th>
+                        </tr>
+                        <tr>
+                            <th>s</th>
+                            <th>c</th>
+                            <th>ax</th>
                         </tr>
                     </thead>
                     <tbody>
