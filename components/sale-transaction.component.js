@@ -475,7 +475,7 @@ export default class SaleTransaction extends HTMLElement {
         </tbody>
       </table>
     `;
-    totalDiv.textContent = `총액: $${total.toFixed(2)}`;
+    totalDiv.textContent = `총액: ${total.toLocaleString('ko-KR')}원`;
 
     this.shadowRoot.querySelectorAll('.remove-from-cart-btn').forEach(button => {
       button.addEventListener('click', (e) => {
@@ -579,6 +579,12 @@ export default class SaleTransaction extends HTMLElement {
             border-radius: 8px; /* Border radius matching the main form */
             box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Box shadow matching the main form */
             justify-content: space-between; /* To push button to bottom */
+        }
+
+        .scrollable-cart-items {
+            flex-grow: 1; /* Allow cart items to take up available space and scroll */
+            overflow-y: auto; /* Enable vertical scrolling */
+            margin-bottom: 1rem; /* Space between scrollable items and total */
         }
 
         customer-purchase-history {
@@ -787,7 +793,7 @@ export default class SaleTransaction extends HTMLElement {
             font-size: 1.8rem;
             font-weight: bold;
             text-align: right;
-            margin-top: 2rem;
+            margin-top: 1rem; /* Reduced margin */
             color: #28a745; /* Green for total */
         }
       </style>
@@ -826,7 +832,9 @@ export default class SaleTransaction extends HTMLElement {
           </div>
           <div class="cart-section transaction-form">
               <h4 class="cart-title">장바구니</h4>
-              <div class="cart-items"></div>
+              <div class="scrollable-cart-items">
+                <div class="cart-items"></div>
+              </div>
               <div class="total">총액: $0.00</div>
               <button id="complete-sale-btn" style="align-self: flex-end;">판매 완료</button>
           </div>
