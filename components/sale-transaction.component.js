@@ -844,6 +844,7 @@ export default class SaleTransaction extends HTMLElement {
               <button id="complete-sale-btn" style="align-self: flex-end;">판매</button>
           </div>
         </div>
+        <customer-purchase-history></customer-purchase-history>
       </div>
     `;
   }
