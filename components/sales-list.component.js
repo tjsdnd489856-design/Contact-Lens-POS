@@ -92,7 +92,6 @@ export default class SalesList extends HTMLElement {
     
     this.shadowRoot.innerHTML = `
       <style>${SALES_LIST_STYLES}</style>
-      <h4>과거 판매 내역</h4>
       ${this._generateTableHtml(sales)}
     `;
   }
