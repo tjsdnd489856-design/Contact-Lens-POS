@@ -441,7 +441,7 @@ export default class SaleTransaction extends HTMLElement {
 
     if (this.cart.length === 0) {
       cartItemsDiv.innerHTML = '<p>장바구니가 비어 있습니다.</p>';
-      totalDiv.textContent = `총액: $0.00`;
+      totalDiv.textContent = `총액: 0원`;
       return;
     }
 
@@ -844,6 +844,7 @@ export default class SaleTransaction extends HTMLElement {
               <button id="complete-sale-btn" style="align-self: flex-end;">판매</button>
           </div>
         </div>
+        <customer-purchase-history></customer-purchase-history>
       </div>
     `;
   }
