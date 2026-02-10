@@ -9,7 +9,7 @@ const MESSAGES = {
 };
 
 const PURCHASE_HISTORY_STYLES = `
-    h4 { margin-top: 2rem; border-top: 1px solid #eee; padding-top: 2rem; }
+    h4 { margin-top: 2rem; } /* Removed border-top and padding-top */
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     th, td { border: 1px solid #ddd; padding: 12px; text-align: center; } /* 검색 결과 가운데 정렬 */
     thead { background-color: #5cb85c; color: white; } /* Green header for purchase history */
