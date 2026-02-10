@@ -475,7 +475,7 @@ export default class SaleTransaction extends HTMLElement {
         </tbody>
       </table>
     `;
-    totalDiv.textContent = `총액: ${total.toLocaleString('ko-KR')}원`;
+    totalDiv.textContent = `총액: ${total === 0 ? '0' : total.toLocaleString('ko-KR')}원`;
 
     this.shadowRoot.querySelectorAll('.remove-from-cart-btn').forEach(button => {
       button.addEventListener('click', (e) => {
@@ -795,6 +795,10 @@ export default class SaleTransaction extends HTMLElement {
             text-align: right;
             margin-top: 1rem; /* Reduced margin */
             color: #28a745; /* Green for total */
+            background-color: #e6ffe6; /* Light green background */
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
         }
       </style>
       <div class="overall-sales-layout-container">
