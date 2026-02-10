@@ -525,16 +525,34 @@ export default class SaleTransaction extends HTMLElement {
    */
   _render() {
     const products = ProductService.getProducts();
+    this.shadowRoot.innerHTML = this._getSalesTemplate(products);
+    this._renderCart();
+    // Re-attach event listeners as shadowRoot.innerHTML was reset
+    this._attachEventListeners();
+  }
 
-    this.shadowRoot.innerHTML = `
+  /**
+   * Returns the HTML and CSS template for the sale transaction component.
+   * @param {Array<Object>} products - The list of products to display in the product selection.
+   * @returns {string} The HTML string for the component.
+   * @private
+   */
+  _getSalesTemplate(products) {
+    return `
       <style>
         :host {
           display: flex; /* Make the host element a flex container */
           flex-direction: column; /* Stack children vertically */
           height: 100%; /* Ensure it takes full height of its parent */
         }
+        .overall-sales-layout-container {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1; /* Allow this container to fill vertical space */
+            gap: 2rem;
+        }
         /* Layout for the whole sale transaction component */
-        .sale-transaction-container {
+        .top-sales-section { /* Renamed from .sale-transaction-container */
             display: flex;
             gap: 2rem; /* Space between the two columns */
             flex-wrap: wrap; /* Allow columns to wrap on smaller screens */
@@ -543,7 +561,6 @@ export default class SaleTransaction extends HTMLElement {
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             margin-bottom: 0; /* Remove bottom margin to allow full height */
-            flex-grow: 1; /* Allow the container to grow vertically */
         }
 
         .main-content {
@@ -568,11 +585,15 @@ export default class SaleTransaction extends HTMLElement {
             flex-grow: 1; /* Allow the purchase history component to grow vertically */
             display: flex; /* Make it a flex container to manage its own content */
             flex-direction: column;
+            background: #fdfdfd; /* Background matching the main form */
+            padding: 2rem; /* Padding matching the main form */
+            border-radius: 8px; /* Border radius matching the main form */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Box shadow matching the main form */
         }
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
-            .sale-transaction-container {
+            .top-sales-section { /* Renamed from .sale-transaction-container */
                 flex-direction: column; /* Stack columns vertically on small screens */
                 padding: 1rem;
             }
@@ -770,50 +791,49 @@ export default class SaleTransaction extends HTMLElement {
             color: #28a745; /* Green for total */
         }
       </style>
-      <div class="sale-transaction-container">
-        <div class="main-content transaction-form">
-          <h3 class="form-title">새로운 판매</h3>
-          <div class="form-group customer-search-wrapper">
-              <label for="customer-search-input-sale">고객 검색</label>
-              <input type="text" id="customer-search-input-sale" placeholder="고객 이름 또는 연락처 입력/검색 후 선택" value="${this.selectedCustomer ? `${this.selectedCustomer.name} (${this.selectedCustomer.phone})` : ''}">
-              <ul id="customer-search-results-sale" class="customer-search-results"></ul>
+      <div class="overall-sales-layout-container">
+        <div class="top-sales-section">
+          <div class="main-content transaction-form">
+            <h3 class="form-title">새로운 판매</h3>
+            <div class="form-group customer-search-wrapper">
+                <label for="customer-search-input-sale">고객 검색</label>
+                <input type="text" id="customer-search-input-sale" placeholder="고객 이름 또는 연락처 입력/검색 후 선택" value="${this.selectedCustomer ? `${this.selectedCustomer.name} (${this.selectedCustomer.phone})` : ''}">
+                <ul id="customer-search-results-sale" class="customer-search-results"></ul>
+            </div>
+            <div class="form-group selected-customer-group" style="display:none;">
+                <label>선택된 고객</label>
+                <div id="selected-customer-display" class="selected-customer-display">
+                    <span id="selected-customer-name"></span>
+                    <button id="clear-customer-selection-btn" style="display:none;">X</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="barcode-scanner-input">바코드 스캔 (USB 스캐너)</label>
+                <input type="text" id="barcode-scanner-input" placeholder="여기에 바코드를 스캔하세요" inputmode="latin" lang="en" pattern="[A-Za-z0-9]*">
+            </div>
+            
+            <div class="product-selection-group">
+                <div class="form-group">
+                    <label for="product-select">제품 선택</label>
+                    <select id="product-select">
+                        <option value="">--제품을 선택하세요--</option>
+                        ${products.map(p => `<option value="${p.id}">${p.brand} ${p.model} - $${p.price.toFixed(2)}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
+            
+            <button id="complete-sale-btn">판매 완료</button>
           </div>
-          <div class="form-group selected-customer-group" style="display:none;">
-              <label>선택된 고객</label>
-              <div id="selected-customer-display" class="selected-customer-display">
-                  <span id="selected-customer-name"></span>
-                  <button id="clear-customer-selection-btn" style="display:none;">X</button>
-              </div>
+          <div class="cart-section transaction-form">
+              <h4 class="cart-title">장바구니</h4>
+              <div class="cart-items"></div>
+              <div class="total">총액: $0.00</div>
           </div>
-          
-          <div class="form-group">
-              <label for="barcode-scanner-input">바코드 스캔 (USB 스캐너)</label>
-              <input type="text" id="barcode-scanner-input" placeholder="여기에 바코드를 스캔하세요" inputmode="latin" lang="en" pattern="[A-Za-z0-9]*">
-          </div>
-          
-          <div class="product-selection-group">
-              <div class="form-group">
-                  <label for="product-select">제품 선택</label>
-                  <select id="product-select">
-                      <option value="">--제품을 선택하세요--</option>
-                      ${products.map(p => `<option value="${p.id}">${p.brand} ${p.model} - $${p.price.toFixed(2)}</option>`).join('')}
-                  </select>
-              </div>
-          </div>
-          
-          <button id="complete-sale-btn">판매 완료</button>
-          <customer-purchase-history></customer-purchase-history>
         </div>
-        <div class="cart-section transaction-form">
-            <h4 class="cart-title">장바구니</h4>
-            <div class="cart-items"></div>
-            <div class="total">총액: $0.00</div>
-        </div>
+        <customer-purchase-history></customer-purchase-history>
       </div>
     `;
-    this._renderCart();
-    // Re-attach event listeners as shadowRoot.innerHTML was reset
-    this._attachEventListeners();
   }
 }
 
