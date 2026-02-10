@@ -841,7 +841,7 @@ export default class SaleTransaction extends HTMLElement {
                 <div class="cart-items"></div>
               </div>
               <div class="total">총액: $0.00</div>
-              <button id="complete-sale-btn" style="align-self: flex-end;">판매 완료</button>
+              <button id="complete-sale-btn" style="align-self: flex-end;">판매</button>
           </div>
         </div>
       </div>
