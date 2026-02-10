@@ -2,17 +2,7 @@ import { SalesService } from '../services/sales.service.js';
 import { CustomerService } from '../services/customer.service.js';
 
 // --- Constants ---
-const SALES_LIST_STYLES = `
-    h4 { margin-top: 2rem; border-top: 1px solid #eee; padding-top: 2rem; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-    thead { background-color: #34495e; color: #ecf0f1; }
-    thead tr:hover { background-color: #34495e; cursor: default; } /* Prevent hover on header */
-    thead th { text-align: center; } /* Center align header text */
-    tbody tr:nth-child(even) { background-color: #f8f9f9; }
-    tbody tr:hover { background-color: #ecf0f1; cursor: pointer; } 
-    .message { text-align: center; padding: 1rem; color: #555; }
-`;
+const SALES_LIST_STYLES = ``;
 
 // --- SalesList Component ---
 export default class SalesList extends HTMLElement {
@@ -90,7 +80,6 @@ export default class SalesList extends HTMLElement {
   _render() {
     this.shadowRoot.innerHTML = `
       <style>${SALES_LIST_STYLES}</style>
-      <p class="message">과거 판매 내역은 이 탭에서 표시되지 않습니다.</p>
     `;
   }
 }
