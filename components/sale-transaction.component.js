@@ -790,15 +790,16 @@ export default class SaleTransaction extends HTMLElement {
             text-transform: uppercase;
         }
         .total {
-            font-size: 0.9rem; /* Reduced by half */
+            font-size: 1.3rem; /* Adjusted size */
             font-weight: bold;
             text-align: right;
             margin-top: 1rem;
             color: #333; /* Blackish color */
             background-color: #ffffff; /* White tone background */
-            padding: 0.4rem 0.6rem; /* Reduced padding */
+            padding: 0.6rem 0.8rem; /* Adjusted padding */
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            margin-bottom: 0.5rem; /* Small gap to button */
         }
       </style>
       <div class="overall-sales-layout-container">
