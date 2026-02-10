@@ -88,11 +88,9 @@ export default class SalesList extends HTMLElement {
    * @private
    */
   _render() {
-    const sales = SalesService.getSales();
-    
     this.shadowRoot.innerHTML = `
       <style>${SALES_LIST_STYLES}</style>
-      ${this._generateTableHtml(sales)}
+      <p class="message">과거 판매 내역은 이 탭에서 표시되지 않습니다.</p>
     `;
   }
 }
