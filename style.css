@@ -162,6 +162,17 @@ footer {
 body #product-modal .modal-content {
     width: 90%;
     max-width: 1200px; /* 1.5 times original */
+    margin: 10% auto; /* Restore margin for centering */
+    animation-name: animatetop; /* Restore animation */
+    animation-duration: 0.4s; /* Restore animation duration */
+}
+
+/* Specific size for the product modal */
+body #discard-inventory-modal .modal-content,
+body #udi-scanner-modal .modal-content {
+    margin: 10% auto; /* Restore margin for centering */
+    animation-name: animatetop; /* Restore animation */
+    animation-duration: 0.4s; /* Restore animation duration */
 }
 
 /* Add Animation */
