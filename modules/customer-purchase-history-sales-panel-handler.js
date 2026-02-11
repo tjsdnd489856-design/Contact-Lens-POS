@@ -62,27 +62,4 @@ export function initCustomerPurchaseHistorySalesPanelHandler() {
             }
         }
     });
-
-    // Listen for customer selection to open the panel and update history
-    document.addEventListener('customerSelectedForHistory', (e) => {
-        const customerId = e.detail;
-        const customerPurchaseHistoryComponent = customerPurchaseHistorySalesPanel.querySelector('customer-purchase-history');
-        if (customerPurchaseHistoryComponent) {
-            if (customerId) {
-                const customer = CustomerService.getCustomerById(customerId);
-                if (customer) {
-                    // Assuming customer-purchase-history component has a method to set customer
-                    customerPurchaseHistoryComponent.setCustomer(customer);
-                    // Automatically open the panel when a customer is selected
-                    if (!customerPurchaseHistorySalesPanel.classList.contains('open')) {
-                         toggleCustomerPurchaseHistorySalesPanel();
-                    }
-                }
-            } else {
-                // If customerId is null, clear the history and close the panel
-                customerPurchaseHistoryComponent.setCustomer(null);
-                closeCustomerPurchaseHistorySalesPanel();
-            }
-        }
-    });
 }
