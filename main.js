@@ -15,14 +15,12 @@ import UdiScannerModal from './components/udi-scanner-modal.component.js'; // Ne
 
 // Import handlers for various modals and global hotkeys
 import { initAbnormalInventoryPanelHandler } from './modules/abnormal-inventory-panel-handler.js';
-import { initCustomerPurchaseHistoryPanelHandler } from './modules/customer-purchase-history-panel-handler.js';
 import { initGlobalHotkeys } from './modules/global-hotkeys.js';
 
 
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize handlers for features that require global setup FIRST to ensure listeners are ready
     initAbnormalInventoryPanelHandler();
-    initCustomerPurchaseHistoryPanelHandler();
 
     // Initialize the main application setup (Firebase, tabs, general event listeners)
     initializeApp();

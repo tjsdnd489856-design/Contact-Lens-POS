@@ -34,10 +34,6 @@ export const closeDiscardInventoryModalBtn = document.getElementById('close-disc
 export const udiScannerModal = document.getElementById('udi-scanner-modal');
 export const openUdiScannerBtn = document.getElementById('open-udi-scanner-btn'); // Added for main.js
 
-// Customer Purchase History Panel Elements
-export const customerPurchaseHistoryPanel = document.getElementById('customer-purchase-history-panel');
-export const toggleCustomerPurchaseHistoryPanelBtn = document.getElementById('toggle-customer-purchase-history-panel');
-
 // Abnormal Inventory Panel Elements
 export const abnormalInventoryPanel = document.getElementById('abnormal-inventory-panel');
 export const toggleAbnormalInventoryPanelBtn = document.getElementById('toggle-abnormal-inventory-panel');
@@ -67,6 +63,4 @@ export function validateDOMElements() {
     if (!openUdiScannerBtn) console.error('Error: open-udi-scanner-btn element not found.');
     if (!abnormalInventoryPanel) console.error('Error: abnormal-inventory-panel element not found.');
     if (!toggleAbnormalInventoryPanelBtn) console.error('Error: toggle-abnormal-inventory-panel button not found.');
-    if (!customerPurchaseHistoryPanel) console.error('Error: customer-purchase-history-panel element not found.');
-    if (!toggleCustomerPurchaseHistoryPanelBtn) console.error('Error: toggle-customer-purchase-history-panel button not found.');
 }
