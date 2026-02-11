@@ -94,9 +94,14 @@ export default class SaleTransaction extends HTMLElement {
    */
   _handleSelectCustomerForSale(event) {
     const customerId = event.detail.customerId;
-    this.selectedCustomer = CustomerService.getCustomerById(customerId);
-    this._updateSelectedCustomerDisplay();
-    this._dispatchCustomerSelectionEvent(this.selectedCustomer ? this.selectedCustomer.id : null);
+    const customer = CustomerService.getCustomerById(customerId);
+    if (customer) {
+        const customerSearchInput = this.shadowRoot.querySelector('#customer-search-input-sale');
+        if (customerSearchInput) {
+            customerSearchInput.value = `${customer.name} (${customer.phone})`;
+        }
+        this._selectCustomerFromSearch(customer);
+    }
   }
 
   /**
