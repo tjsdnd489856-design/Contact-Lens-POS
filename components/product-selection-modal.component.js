@@ -156,8 +156,7 @@ export default class ProductSelectionModal extends HTMLElement {
         this.currentPage = 1;
         this.productsPerPage = 10;
 
-        // Bind event handlers - _handleOpenModal and _handleCloseModal are no longer event listeners
-        // They are now public methods, so binding is not strictly necessary here, but doesn't hurt.
+        // Bind event handlers
         this.openModal = this.openModal.bind(this);
         this.closeModal = this.closeModal.bind(this);
 
@@ -183,14 +182,15 @@ export default class ProductSelectionModal extends HTMLElement {
     openModal() {
         this.isOpen = true;
         this._applyFiltersAndSort(); // Re-apply filters and sort in case products changed
-        this._render(); // Re-render to update the overlay class
+        this.shadowRoot.querySelector('.modal-overlay').classList.add('open'); // Explicitly add class
     }
 
     // Public method to close the modal
     closeModal() {
         this.isOpen = false;
         this.selectedProduct = null; // Clear selection on close
-        this._render(); // Re-render to update the overlay class
+        this.shadowRoot.querySelector('.modal-overlay').classList.remove('open'); // Explicitly remove class
+        document.dispatchEvent(new CustomEvent('closeProductSelectionModal'));
     }
 
     _handleFilterChange(event) {
