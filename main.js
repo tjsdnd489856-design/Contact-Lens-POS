@@ -19,11 +19,11 @@ import { initGlobalHotkeys } from './modules/global-hotkeys.js';
 
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize handlers for features that require global setup FIRST to ensure listeners are ready
+    initAbnormalInventoryPanelHandler();
+
     // Initialize the main application setup (Firebase, tabs, general event listeners)
     initializeApp();
-
-    // Initialize handlers for features that require global setup
-    initAbnormalInventoryPanelHandler();
     initGlobalHotkeys(); // Setup global hotkeys like Escape
 
     // --- Global Event Listeners for Modals that need to be opened from main controls ---
