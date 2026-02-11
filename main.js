@@ -12,6 +12,7 @@ import BrandProductListModal from './components/brand-product-list-modal.compone
 import DiscardInventoryModal from './components/discard-inventory-modal.component.js';
 import AbnormalInventoryList from './components/abnormal-inventory-list.component.js';
 import UdiScannerModal from './components/udi-scanner-modal.component.js'; // New UDI Scanner Component
+import ProductSelectionModal from './components/product-selection-modal.component.js'; // New Product Selection Modal
 
 // Import handlers for various modals and global hotkeys
 import { initAbnormalInventoryPanelHandler } from './modules/abnormal-inventory-panel-handler.js';
@@ -62,5 +63,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     } else {
         console.error('Open UDI Scanner button, modal, or close button not found.');
+    }
+
+    // Product Selection Modal
+    const productSelectionModalContainer = document.getElementById('product-selection-modal');
+    const closeProductSelectionModalBtn = document.getElementById('close-product-selection-modal');
+
+    if (productSelectionModalContainer && closeProductSelectionModalBtn) {
+        document.addEventListener('openProductSelectionModal', () => {
+            productSelectionModalContainer.style.display = 'block';
+            // The custom element itself will handle its internal state and rendering
+        });
+        closeProductSelectionModalBtn.addEventListener('click', () => {
+            productSelectionModalContainer.style.display = 'none';
+            // The custom element itself will handle its internal state and rendering
+        });
+    } else {
+        console.error('Product Selection Modal container or close button not found.');
     }
 });

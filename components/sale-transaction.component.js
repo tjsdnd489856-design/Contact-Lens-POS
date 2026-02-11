@@ -34,7 +34,7 @@ export default class SaleTransaction extends HTMLElement {
     this._handleCustomersUpdated = this._handleCustomersUpdated.bind(this);
     this._handleSelectCustomerForSale = this._handleSelectCustomerForSale.bind(this);
     this._updateSelectedCustomerDisplay = this._updateSelectedCustomerDisplay.bind(this);
-    this._handleProductSelectChange = this._handleProductSelectChange.bind(this); // Bind new event handler
+    this._handleOpenProductSelectionModal = this._handleOpenProductSelectionModal.bind(this); // New binding
     this._handleCustomerSearchKeydown = this._handleCustomerSearchKeydown.bind(this);
     this._selectedSearchIndex = -1;
   }
@@ -133,12 +133,9 @@ export default class SaleTransaction extends HTMLElement {
     }
 
     // Product and barcode listeners
-    const productSelect = shadowRoot.querySelector('#product-select');
-    if (productSelect) {
-      productSelect.addEventListener('change', this._handleProductSelectChange);
-    }
     shadowRoot.querySelector('#barcode-scanner-input').addEventListener('keydown', this._handleBarcodeInputKeydown);
     shadowRoot.querySelector('#barcode-scanner-input').addEventListener('input', this._handleBarcodeInput);
+    shadowRoot.querySelector('#open-product-selection-modal-btn').addEventListener('click', this._handleOpenProductSelectionModal); // New listener
     shadowRoot.querySelector('#complete-sale-btn').addEventListener('click', this.completeSale);
   }
 
@@ -151,7 +148,6 @@ export default class SaleTransaction extends HTMLElement {
     const customerSearchInput = shadowRoot.querySelector('#customer-search-input-sale');
     const clearCustomerSelectionBtn = shadowRoot.querySelector('#clear-customer-selection-btn');
     const customerSearchResultsDiv = shadowRoot.querySelector('#customer-search-results-sale');
-    const productSelect = shadowRoot.querySelector('#product-select');
 
     if (customerSearchInput) {
       customerSearchInput.removeEventListener('input', this._handleCustomerSearchInput);
@@ -169,11 +165,9 @@ export default class SaleTransaction extends HTMLElement {
         });
     }
 
-    if (productSelect) {
-      productSelect.removeEventListener('change', this._handleProductSelectChange);
-    }
     shadowRoot.querySelector('#barcode-scanner-input').removeEventListener('keydown', this._handleBarcodeInputKeydown);
     shadowRoot.querySelector('#barcode-scanner-input').removeEventListener('input', this._handleBarcodeInput);
+    shadowRoot.querySelector('#open-product-selection-modal-btn').removeEventListener('click', this._handleOpenProductSelectionModal); // New listener
     shadowRoot.querySelector('#complete-sale-btn').removeEventListener('click', this.completeSale);
   }
 
@@ -392,17 +386,13 @@ export default class SaleTransaction extends HTMLElement {
     return product;
   }
 
-  _handleProductSelectChange(event) {
-    const productId = parseInt(event.target.value, 10);
-    if (!isNaN(productId)) { // Ensure a valid product is selected (not the default "--제품을 선택하세요--")
-        const product = ProductService.getProductById(productId);
-        if (product) {
-            this._addProductToCart(product, DEFAULT_QUANTITY);
-            event.target.value = ''; // Reset select to default option after adding to cart
-        } else {
-            alert(ALERT_MESSAGES.INVALID_PRODUCT_SELECTION);
-        }
-    }
+  /**
+   * Handles the click event for opening the product selection modal.
+   * Dispatches a custom event to open the modal.
+   * @private
+   */
+  _handleOpenProductSelectionModal() {
+    document.dispatchEvent(new CustomEvent('openProductSelectionModal'));
   }
 
   /**
@@ -556,71 +546,69 @@ export default class SaleTransaction extends HTMLElement {
             gap: 1rem;
         }
         /* Layout for the whole sale transaction component */
-        .top-sales-section { /* Renamed from .sale-transaction-container */
+        .top-sales-section {
             display: flex;
-            gap: 1rem; /* Space between the two columns */
-            flex-wrap: wrap; /* Allow columns to wrap on smaller screens */
+            gap: 1rem;
+            flex-wrap: wrap;
             padding: 2rem;
-            background: #fdfdfd; /* Background moved to container */
+            background: #fdfdfd;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 0; /* Remove bottom margin to allow full height */
+            margin-bottom: 0;
         }
 
         .main-content {
-            flex: 1; /* Main content takes less space horizontally */
-            min-width: 300px; /* Minimum width for main content */
-            display: flex; /* Make main-content a flex container */
-            flex-direction: column; /* Stack its children vertically */
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
         }
 
         .cart-section {
-            flex: 2; /* Cart takes more space horizontally */
-            min-width: 280px; /* Minimum width for cart */
+            flex: 2;
+            min-width: 280px;
             display: flex;
             flex-direction: column;
-            background: #fdfdfd; /* Background matching the main form */
-            padding: 2rem; /* Padding matching the main form */
-            border-radius: 8px; /* Border radius matching the main form */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Box shadow matching the main form */
-            justify-content: space-between; /* To push button to bottom */
+            background: #fdfdfd;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            justify-content: space-between;
         }
 
         .scrollable-cart-items {
-            flex-grow: 1; /* Allow cart items to take up available space and scroll */
-            overflow-y: auto; /* Enable vertical scrolling */
-            margin-bottom: 1rem; /* Space between scrollable items and total */
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 1rem;
         }
 
         customer-purchase-history {
-            flex-grow: 1; /* Allow the purchase history component to grow vertically */
-            display: flex; /* Make it a flex container to manage its own content */
+            flex-grow: 1;
+            display: flex;
             flex-direction: column;
-            background: #fdfdfd; /* Background matching the main form */
-            padding: 2rem; /* Padding matching the main form */
-            border-radius: 8px; /* Border radius matching the main form */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Box shadow matching the main form */
+            background: #fdfdfd;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
-        /* Responsive adjustments */
         @media (max-width: 768px) {
-            .top-sales-section { /* Renamed from .sale-transaction-container */
-                flex-direction: column; /* Stack columns vertically on small screens */
+            .top-sales-section {
+                flex-direction: column;
                 padding: 1rem;
             }
             .main-content, .cart-section {
-                flex: none; /* Remove flex sizing when stacked */
-                width: 100%; /* Full width when stacked */
+                flex: none;
+                width: 100%;
                 min-width: unset;
             }
         }
         /* General styling */
         .transaction-form {
-            /* Now applies to both main-content and cart-section for consistent padding/shadow */
-            padding: 0; /* Padding is handled by .sale-transaction-container */
-            background: none; /* Background is handled by .sale-transaction-container */
-            box-shadow: none; /* Shadow is handled by .sale-transaction-container */
-            margin-bottom: 0; /* Margin is handled by .sale-transaction-container */
+            padding: 0;
+            background: none;
+            box-shadow: none;
+            margin-bottom: 0;
         }
         /* Removed .form-title styles */
         .form-group {
@@ -823,11 +811,8 @@ export default class SaleTransaction extends HTMLElement {
             
             <div class="product-selection-group">
                 <div class="form-group">
-                    <label for="product-select">제품 선택</label>
-                    <select id="product-select">
-                        <option value="">--제품을 선택하세요--</option>
-                        ${products.map(p => `<option value="${p.id}">${p.brand} ${p.model} - $${p.price.toFixed(2)}</option>`).join('')}
-                    </select>
+                    <label for="open-product-selection-modal-btn">제품 선택</label>
+                    <button id="open-product-selection-modal-btn" class="add-to-cart-btn">제품 목록 열기</button>
                 </div>
             </div>
             
