@@ -54,7 +54,7 @@ function _setupGlobalEventListeners() {
         if (e.detail.tabId === 'customers') {
             if (customerSearchInput) customerSearchInput.value = '';
             // Dispatch a generic customersUpdated event to clear/reset list
-            document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: CustomerService.getCustomers(), query: '' } }));
+            document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: [], query: '' } }));
         }
     });
 }
