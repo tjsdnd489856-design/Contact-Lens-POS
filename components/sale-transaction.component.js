@@ -32,10 +32,9 @@ export default class SaleTransaction extends HTMLElement {
     this._clearCustomerSelection = this._clearCustomerSelection.bind(this);
     this.completeSale = this.completeSale.bind(this);
     this._handleCustomersUpdated = this._handleCustomersUpdated.bind(this);
-    this._handleSelectCustomerForSale = this._handleSelectCustomerForSale.bind(this);
-    this._updateSelectedCustomerDisplay = this._updateSelectedCustomerDisplay.bind(this);
     this._handleOpenProductSelectionModal = this._handleOpenProductSelectionModal.bind(this); // New binding
     this._handleProductSelectedForSale = this._handleProductSelectedForSale.bind(this); // New binding for product selection event
+    this._dispatchSalesCustomerSelectedEvent = this._dispatchSalesCustomerSelectedEvent.bind(this); // Bind new dispatcher
     this._handleCustomerSearchKeydown = this._handleCustomerSearchKeydown.bind(this);
     this._selectedSearchIndex = -1;
   }
@@ -46,7 +45,6 @@ export default class SaleTransaction extends HTMLElement {
     this._attachEventListeners();
     document.addEventListener('productsUpdated', this._render.bind(this));
     document.addEventListener('customersUpdated', this._handleCustomersUpdated);
-    document.addEventListener('selectCustomerForSale', this._handleSelectCustomerForSale);
     document.addEventListener('productSelectedForSale', this._handleProductSelectedForSale); // Listen for product selection
   }
 
@@ -54,17 +52,17 @@ export default class SaleTransaction extends HTMLElement {
     this._detachEventListeners();
     document.removeEventListener('productsUpdated', this._render.bind(this));
     document.removeEventListener('customersUpdated', this._handleCustomersUpdated);
-    document.removeEventListener('selectCustomerForSale', this._handleSelectCustomerForSale);
     document.removeEventListener('productSelectedForSale', this._handleProductSelectedForSale); // Remove listener
   }
 
   /**
-   * Dispatches a custom event to notify listeners that a customer has been selected for history.
+   * Dispatches a custom event when a customer is selected within the sales transaction context.
+   * This is intended for the sales panel's customer purchase history.
    * @param {number|null} customerId - The ID of the selected customer, or null if no customer is selected.
    * @private
    */
-  _dispatchCustomerSelectionEvent(customerId) {
-    document.dispatchEvent(new CustomEvent('customerSelectedForHistory', { detail: customerId }));
+  _dispatchSalesCustomerSelectedEvent(customerId) {
+    document.dispatchEvent(new CustomEvent('salesCustomerSelected', { detail: customerId }));
   }
 
   /**
@@ -87,24 +85,8 @@ export default class SaleTransaction extends HTMLElement {
               this.selectedCustomer = null;
           }
           this._updateSelectedCustomerDisplay();
-          this._dispatchCustomerSelectionEvent(this.selectedCustomer ? this.selectedCustomer.id : null);
+          this._dispatchSalesCustomerSelectedEvent(this.selectedCustomer ? this.selectedCustomer.id : null);
       }
-  }
-
-  /**
-   * Handles the 'selectCustomerForSale' custom event.
-   * @param {CustomEvent} event - The custom event containing customerId.
-   */
-  _handleSelectCustomerForSale(event) {
-    const customerId = event.detail.customerId;
-    const customer = CustomerService.getCustomerById(customerId);
-    if (customer) {
-        const customerSearchInput = this.shadowRoot.querySelector('#customer-search-input-sale');
-        if (customerSearchInput) {
-            customerSearchInput.value = `${customer.name} (${customer.phone})`;
-        }
-        this._selectCustomerFromSearch(customer);
-    }
   }
 
   /**
@@ -290,7 +272,7 @@ export default class SaleTransaction extends HTMLElement {
       if (customerSearchInput) customerSearchInput.value = `${customer.name} (${customer.phone})`; // Display selected customer in input
       if (searchResultsDiv) searchResultsDiv.innerHTML = ''; // Clear search results
       this._updateSelectedCustomerDisplay(); // Update internal state and clear button visibility
-      this._dispatchCustomerSelectionEvent(this.selectedCustomer ? this.selectedCustomer.id : null);
+      this._dispatchSalesCustomerSelectedEvent(this.selectedCustomer ? this.selectedCustomer.id : null);
   }
 
   /**
@@ -302,7 +284,7 @@ export default class SaleTransaction extends HTMLElement {
       const customerSearchInput = this.shadowRoot.querySelector('#customer-search-input-sale');
       if (customerSearchInput) customerSearchInput.value = ''; // Clear the input field
       this._updateSelectedCustomerDisplay();
-      this._dispatchCustomerSelectionEvent(null);
+      this._dispatchSalesCustomerSelectedEvent(null);
   }
 
   /**
@@ -526,7 +508,7 @@ export default class SaleTransaction extends HTMLElement {
         this.cart = [];
         this.selectedCustomer = null; // Clear selected customer after sale
         this._render(); // Re-render to clear cart and customer display
-        this._dispatchCustomerSelectionEvent(null);
+        this._dispatchSalesCustomerSelectedEvent(null);
       })
       .catch(error => {
         alert(`판매 실패: ${error.message}`);

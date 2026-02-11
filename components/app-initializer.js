@@ -49,7 +49,7 @@ function _setupGlobalEventListeners() {
     document.addEventListener('showTab', (e) => {
         // Handle tab-specific resets
         if (e.detail.tabId !== 'customers') {
-            document.dispatchEvent(new CustomEvent('customerSelectedForHistory', { detail: null }));
+
         }
         if (e.detail.tabId === 'customers') {
             if (customerSearchInput) customerSearchInput.value = '';

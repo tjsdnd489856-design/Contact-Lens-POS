@@ -1,5 +1,7 @@
 import { customerPurchaseHistorySalesPanel, toggleCustomerPurchaseHistorySalesPanelBtn } from '../utils/dom-elements.js';
-import { CustomerService } from '../services/customer.service.js';
+
+let _customerHistoryComponent = null;
+let _lastSelectedCustomerId = null; // To persist the customer selection across tab changes
 
 /**
  * Handles the logic for the customer purchase history side panel in the Sales tab.
@@ -10,8 +12,11 @@ function toggleCustomerPurchaseHistorySalesPanel() {
         return;
     }
     
-    customerPurchaseHistorySalesPanel.classList.toggle('open');
-    // The content will be updated by listening to customerSelectedForHistory event
+    const isOpen = customerPurchaseHistorySalesPanel.classList.toggle('open');
+    if (isOpen && _customerHistoryComponent && _lastSelectedCustomerId !== null) {
+        // Ensure the history component displays the last selected customer when panel opens
+        _customerHistoryComponent.setCustomerId(_lastSelectedCustomerId);
+    }
 }
 
 /**
@@ -24,11 +29,28 @@ export function closeCustomerPurchaseHistorySalesPanel() {
 }
 
 /**
+ * Handles the 'salesCustomerSelected' event to update the customer history component.
+ * @param {CustomEvent} e - The event containing the customer ID.
+ */
+function handleSalesCustomerSelected(e) {
+    _lastSelectedCustomerId = e.detail; // Store the ID
+    if (_customerHistoryComponent) {
+        _customerHistoryComponent.setCustomerId(_lastSelectedCustomerId);
+    }
+}
+
+/**
  * Initializes event listeners for the customer purchase history panel in the Sales tab.
  */
 export function initCustomerPurchaseHistorySalesPanelHandler() {
     if (!toggleCustomerPurchaseHistorySalesPanelBtn || !customerPurchaseHistorySalesPanel) {
         console.error('Customer purchase history sales panel or toggle button not found for initialization.');
+        return;
+    }
+
+    _customerHistoryComponent = customerPurchaseHistorySalesPanel.querySelector('customer-purchase-history');
+    if (!_customerHistoryComponent) {
+        console.error('Customer purchase history component not found inside sales panel.');
         return;
     }
 
@@ -50,12 +72,20 @@ export function initCustomerPurchaseHistorySalesPanelHandler() {
         }
     });
 
+    // Listen for the new sales-specific customer selection event
+    document.addEventListener('salesCustomerSelected', handleSalesCustomerSelected);
+
     // Handle visibility based on active tab
     document.addEventListener('showTab', (e) => {
         const customerPurchaseHistorySalesBookmark = document.getElementById('customer-purchase-history-sales-bookmark');
         if (customerPurchaseHistorySalesBookmark) {
             if (e.detail.tabId === 'sales') { // Only visible on 'sales' tab
                 customerPurchaseHistorySalesBookmark.style.display = 'block';
+                // If the sales tab becomes active and a customer was previously selected,
+                // ensure the history component is updated.
+                if (_customerHistoryComponent && _lastSelectedCustomerId !== null) {
+                    _customerHistoryComponent.setCustomerId(_lastSelectedCustomerId);
+                }
             } else {
                 customerPurchaseHistorySalesBookmark.style.display = 'none';
                 closeCustomerPurchaseHistorySalesPanel(); // Close panel if tab changes

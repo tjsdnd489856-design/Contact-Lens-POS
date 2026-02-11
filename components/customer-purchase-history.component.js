@@ -24,32 +24,30 @@ export default class CustomerPurchaseHistory extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        this.selectedCustomerId = null;
-        
-        // Bind event handlers
-        this._handleCustomerSelectedForHistory = this._handleCustomerSelectedForHistory.bind(this);
+        this._selectedCustomerId = null; // Internal property
+
+        // Bind event handlers (no longer listening to global event here)
         this._handleSalesUpdated = this._handleSalesUpdated.bind(this);
     }
 
     connectedCallback() {
         this._render(); // Initial render
-        document.addEventListener('customerSelectedForHistory', this._handleCustomerSelectedForHistory);
         document.addEventListener('salesUpdated', this._handleSalesUpdated);
     }
 
     disconnectedCallback() {
-        document.removeEventListener('customerSelectedForHistory', this._handleCustomerSelectedForHistory);
         document.removeEventListener('salesUpdated', this._handleSalesUpdated);
     }
 
     /**
-     * Handles the 'customerSelectedForHistory' event to update the displayed history.
-     * @param {CustomEvent} e - The event containing the customer ID.
-     * @private
+     * Public method to set the customer ID and update the history display.
+     * @param {number|null} id - The ID of the customer to display history for.
      */
-    _handleCustomerSelectedForHistory(e) {
-        this.selectedCustomerId = e.detail;
-        this._render();
+    setCustomerId(id) {
+        if (this._selectedCustomerId !== id) {
+            this._selectedCustomerId = id;
+            this._render();
+        }
     }
 
     /**
@@ -58,7 +56,7 @@ export default class CustomerPurchaseHistory extends HTMLElement {
      */
     _handleSalesUpdated() {
         // Re-render only if a customer is currently selected
-        if (this.selectedCustomerId !== null) {
+        if (this._selectedCustomerId !== null) {
             this._render();
         }
     }
@@ -133,8 +131,8 @@ export default class CustomerPurchaseHistory extends HTMLElement {
      * @private
      */
     _render() {
-        const customer = this.selectedCustomerId ? CustomerService.getCustomerById(this.selectedCustomerId) : null;
-        const sales = customer ? SalesService.getSalesByCustomerId(this.selectedCustomerId) : [];
+        const customer = this._selectedCustomerId ? CustomerService.getCustomerById(this._selectedCustomerId) : null;
+        const sales = customer ? SalesService.getSalesByCustomerId(this._selectedCustomerId) : [];
         const groupedPurchases = this._groupPurchases(sales);
 
         let contentHtml = '';

@@ -51,63 +51,60 @@ export default class CustomerList extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
     this.selectedCustomerId = null; // State to keep track of the selected customer
+    this._customerPurchaseHistoryComponent = null; // Reference to the sibling customer-purchase-history component
     
     // Bind event handlers
     this._handleCustomersUpdated = this._handleCustomersUpdated.bind(this);
-        this._openEditModal = this._openEditModal.bind(this);
-        this._selectCustomerRow = this._selectCustomerRow.bind(this);
-        this._handleSearchCustomers = this._handleSearchCustomers.bind(this);
-      }
+    this._openEditModal = this._openEditModal.bind(this);
+    this._selectCustomerRow = this._selectCustomerRow.bind(this);
+    this._handleSearchCustomers = this._handleSearchCustomers.bind(this);
+  }
         
-      connectedCallback() {
-          this._render([]); // Render with an empty list initially
-          document.addEventListener('customersUpdated', this._handleCustomersUpdated);
-          document.addEventListener('customerSelectedForHistory', this._handleCustomerSelectedForHistory.bind(this));
-          document.addEventListener('searchCustomers', this._handleSearchCustomers);
-      }
+  connectedCallback() {
+    this._render([]); // Render with an empty list initially
+    document.addEventListener('customersUpdated', this._handleCustomersUpdated);
+    document.addEventListener('searchCustomers', this._handleSearchCustomers);
+
+    // Get reference to the sibling customer-purchase-history component
+    // This assumes customer-purchase-history is a direct sibling within the same tab content.
+    this._customerPurchaseHistoryComponent = this.closest('.tab-content').querySelector('customer-purchase-history');
+  }
     
-      disconnectedCallback() {
-        document.removeEventListener('customersUpdated', this._handleCustomersUpdated);
-        document.removeEventListener('customerSelectedForHistory', this._handleCustomerSelectedForHistory);
-        document.removeEventListener('searchCustomers', this._handleSearchCustomers);
-      }
+  disconnectedCallback() {
+    document.removeEventListener('customersUpdated', this._handleCustomersUpdated);
+    document.removeEventListener('searchCustomers', this._handleSearchCustomers);
+  }
     
-      /**
-       * Handles the 'customersUpdated' event to re-render the list.
-       * @param {CustomEvent} e - The event containing filtered customers and query.
-       * @private
-       */
-      _handleCustomersUpdated(e) {
-        const { filteredCustomers, query } = e.detail;
-        // If no query and filteredCustomers is empty, it means search was cleared or initialized
-        if (!query && (!filteredCustomers || filteredCustomers.length === 0)) {
-            this._render([]); // Render empty state
-            this.selectedCustomerId = null; // Clear selection
-        } else {
-            this._render(filteredCustomers, query);
-        }
-      }
-    
-      /**
-       * Handles the 'searchCustomers' event, performs the search, and notifies updates.
-       * @param {CustomEvent} e - The event containing the search query.
-       * @private
-       */
-      _handleSearchCustomers(e) {
-          const query = e.detail;
-          const results = CustomerService.searchCustomers(query);
-          CustomerService._notify(results, query); // Notify listeners with filtered results
-      }
-    
-      /**
-       * Handles 'customerSelectedForHistory' event, primarily to keep selection state in sync.   * @param {CustomEvent} e - Event with customerId.
+  /**
+   * Handles the 'customersUpdated' event to re-render the list.
+   * @param {CustomEvent} e - The event containing filtered customers and query.
    * @private
    */
-  _handleCustomerSelectedForHistory(e) {
-    this.selectedCustomerId = e.detail;
-    this._updateSelectionHighlight(); // Update highlight without full re-render
+  _handleCustomersUpdated(e) {
+    const { filteredCustomers, query } = e.detail;
+    // If no query and filteredCustomers is empty, it means search was cleared or initialized
+    if (!query && (!filteredCustomers || filteredCustomers.length === 0)) {
+        this._render([]); // Render empty state
+        this.selectedCustomerId = null; // Clear selection
+        // Also clear history display
+        if (this._customerPurchaseHistoryComponent) {
+            this._customerPurchaseHistoryComponent.setCustomerId(null);
+        }
+    } else {
+        this._render(filteredCustomers, query);
+    }
   }
-
+    
+  /**
+   * Handles the 'searchCustomers' event, performs the search, and notifies updates.
+   * @param {CustomEvent} e - The event containing the search query.
+   * @private
+   */
+  _handleSearchCustomers(e) {
+      const query = e.detail;
+      const results = CustomerService.searchCustomers(query);
+      CustomerService._notify(results, query); // Notify listeners with filtered results
+  }
 
   /**
    * Opens the customer modal for editing an existing customer.
@@ -136,10 +133,14 @@ export default class CustomerList extends HTMLElement {
       // Deselect if the same row is clicked again
       if (this.selectedCustomerId === customerId) {
           this.selectedCustomerId = null;
-          document.dispatchEvent(new CustomEvent('customerSelectedForHistory', { detail: null }));
+          if (this._customerPurchaseHistoryComponent) {
+              this._customerPurchaseHistoryComponent.setCustomerId(null);
+          }
       } else {
           this.selectedCustomerId = customerId;
-          document.dispatchEvent(new CustomEvent('customerSelectedForHistory', { detail: customerId }));
+          if (this._customerPurchaseHistoryComponent) {
+              this._customerPurchaseHistoryComponent.setCustomerId(customerId);
+          }
       }
       this._updateSelectionHighlight();
   }
@@ -257,6 +258,7 @@ export default class CustomerList extends HTMLElement {
           row.addEventListener('click', this._selectCustomerRow);
           row.addEventListener('dblclick', (e) => {
               const customerId = parseInt(row.dataset.id, 10);
+              // Dispatch the new sales-specific event
               document.dispatchEvent(new CustomEvent('selectCustomerForSale', { detail: { customerId: customerId } }));
               const salesTabButton = document.querySelector('.tab-button[data-tab="sales"]');
               if (salesTabButton) {
