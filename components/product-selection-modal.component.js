@@ -182,14 +182,20 @@ export default class ProductSelectionModal extends HTMLElement {
     openModal() {
         this.isOpen = true;
         this._applyFiltersAndSort(); // Re-apply filters and sort in case products changed
-        this.shadowRoot.querySelector('.modal-overlay').classList.add('open'); // Explicitly add class
+        const modalOverlay = this.shadowRoot.querySelector('.modal-overlay');
+        if (modalOverlay) {
+            modalOverlay.classList.add('open');
+        }
     }
 
     // Public method to close the modal
     closeModal() {
         this.isOpen = false;
         this.selectedProduct = null; // Clear selection on close
-        this.shadowRoot.querySelector('.modal-overlay').classList.remove('open'); // Explicitly remove class
+        const modalOverlay = this.shadowRoot.querySelector('.modal-overlay');
+        if (modalOverlay) {
+            modalOverlay.classList.remove('open');
+        }
         document.dispatchEvent(new CustomEvent('closeProductSelectionModal'));
     }
 
