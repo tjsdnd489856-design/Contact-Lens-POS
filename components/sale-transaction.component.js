@@ -35,6 +35,7 @@ export default class SaleTransaction extends HTMLElement {
     this._handleSelectCustomerForSale = this._handleSelectCustomerForSale.bind(this);
     this._updateSelectedCustomerDisplay = this._updateSelectedCustomerDisplay.bind(this);
     this._handleOpenProductSelectionModal = this._handleOpenProductSelectionModal.bind(this); // New binding
+    this._handleProductSelectedForSale = this._handleProductSelectedForSale.bind(this); // New binding for product selection event
     this._handleCustomerSearchKeydown = this._handleCustomerSearchKeydown.bind(this);
     this._selectedSearchIndex = -1;
   }
@@ -46,6 +47,7 @@ export default class SaleTransaction extends HTMLElement {
     document.addEventListener('productsUpdated', this._render.bind(this));
     document.addEventListener('customersUpdated', this._handleCustomersUpdated);
     document.addEventListener('selectCustomerForSale', this._handleSelectCustomerForSale);
+    document.addEventListener('productSelectedForSale', this._handleProductSelectedForSale); // Listen for product selection
   }
 
   disconnectedCallback() {
@@ -53,6 +55,7 @@ export default class SaleTransaction extends HTMLElement {
     document.removeEventListener('productsUpdated', this._render.bind(this));
     document.removeEventListener('customersUpdated', this._handleCustomersUpdated);
     document.removeEventListener('selectCustomerForSale', this._handleSelectCustomerForSale);
+    document.removeEventListener('productSelectedForSale', this._handleProductSelectedForSale); // Remove listener
   }
 
   /**
@@ -102,6 +105,19 @@ export default class SaleTransaction extends HTMLElement {
         }
         this._selectCustomerFromSearch(customer);
     }
+  }
+
+  /**
+   * Handles the 'productSelectedForSale' custom event.
+   * Adds the selected product to the cart.
+   * @param {CustomEvent} event - The custom event containing product details.
+   * @private
+   */
+  _handleProductSelectedForSale(event) {
+      const { product, quantity } = event.detail;
+      if (product) {
+          this._addProductToCart(product, quantity || DEFAULT_QUANTITY);
+      }
   }
 
   /**
@@ -375,7 +391,11 @@ export default class SaleTransaction extends HTMLElement {
         ProductService.addProduct({
           ...externalProduct,
           barcode: udiData.gtin, // Use GTIN as barcode for consistency
-          gtin: udiData.gtin,
+          udiDi: udiData.gtin, // Assuming udiDi is GTIN from UDI-DI
+          // Override with parsed UDI data if available
+          expirationDate: udiData.expirationDate || externalProduct.expirationDate,
+          lotNumber: udiData.lotNumber || externalProduct.lotNumber,
+          serialNumber: udiData.serialNumber || externalProduct.serialNumber,
         });
         alert(ALERT_MESSAGES.PRODUCT_FETCHED_EXTERNAL(externalProduct.model || externalProduct.productName));
         return ProductService.getProductByGtin(udiData.gtin);

@@ -206,6 +206,7 @@ export default class DiscardInventoryModal extends HTMLElement {
         this._sortOrder = 'asc'; // 'asc' or 'desc'
 
         // Bind event handlers
+        this.closeModal = this.closeModal.bind(this); // New binding
         this._filterByBrand = this._filterByBrand.bind(this);
         this._showAllBrands = this._showAllBrands.bind(this);
         this._filterByProduct = this._filterByProduct.bind(this);
@@ -231,6 +232,21 @@ export default class DiscardInventoryModal extends HTMLElement {
         this._sortBy = null;
         this._sortOrder = 'asc';
         this._render();
+    }
+
+    /**
+     * Resets the modal's state and dispatches an event to close the outer modal container.
+     */
+    closeModal() {
+        // Reset internal state
+        this._products = ProductService.getProducts().map(augmentProductWithPowerOptions); // Re-fetch and re-augment products
+        this._selectedProductsToDiscard.clear();
+        this._currentFilterBrand = null;
+        this._currentFilterProduct = null;
+        this._sortBy = null;
+        this._sortOrder = 'asc';
+        this._render(); // Re-render to show initial state (empty)
+        document.dispatchEvent(new CustomEvent('closeDiscardInventoryModal'));
     }
 
     /**
@@ -317,7 +333,7 @@ export default class DiscardInventoryModal extends HTMLElement {
             this._selectedProductsToDiscard.clear();
             // Refresh products and go back to brand selection after discarding
             this.setProducts(ProductService.getProducts()); // Re-fetch all products
-            document.dispatchEvent(new CustomEvent('closeDiscardInventoryModal'));
+            this.closeModal(); // Call the public closeModal method
             alert(MESSAGES.DISCARD_SUCCESS);
         }
     }

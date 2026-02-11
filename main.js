@@ -35,84 +35,72 @@ document.addEventListener('DOMContentLoaded', () => {
     const discardInventoryBtn = document.getElementById('discard-inventory-btn');
     const discardInventoryModal = document.getElementById('discard-inventory-modal');
     const closeDiscardInventoryModalBtn = document.getElementById('close-discard-inventory-modal');
-    const discardInventoryModalComponent = discardInventoryModal ? discardInventoryModal.querySelector('discard-inventory-modal') : null;
+    
+    // Ensure the custom element is defined before querying for it
+    customElements.whenDefined('discard-inventory-modal').then(() => {
+        const discardInventoryModalComponent = discardInventoryModal ? discardInventoryModal.querySelector('discard-inventory-modal') : null;
 
-    if (discardInventoryBtn && discardInventoryModal && closeDiscardInventoryModalBtn && discardInventoryModalComponent) {
-        discardInventoryBtn.addEventListener('click', () => {
-            discardInventoryModalComponent.setProducts(ProductService.getProducts()); // Pass all products
-            discardInventoryModal.style.display = 'block';
-        });
+        if (discardInventoryBtn && discardInventoryModal && closeDiscardInventoryModalBtn && discardInventoryModalComponent) {
+            discardInventoryBtn.addEventListener('click', () => {
+                discardInventoryModalComponent.setProducts(ProductService.getProducts()); // Pass all products
+                discardInventoryModal.style.display = 'block';
+            });
 
-        // Handle external close button click
-        closeDiscardInventoryModalBtn.addEventListener('click', () => {
-            discardInventoryModalComponent.closeModal(); // Component will dispatch 'closeDiscardInventoryModal'
-        });
-
-        // Listen for the close event dispatched by the component itself
-        document.addEventListener('closeDiscardInventoryModal', () => {
-            discardInventoryModal.style.display = 'none';
-        });
-        // Handle overlay click to close
-        discardInventoryModal.addEventListener('click', (e) => {
-            if (e.target === discardInventoryModal) {
+            // Handle external close button click
+            closeDiscardInventoryModalBtn.addEventListener('click', () => {
                 discardInventoryModalComponent.closeModal(); // Component will dispatch 'closeDiscardInventoryModal'
-            }
-        });
+            });
 
-    } else {
-        console.error('Discard Inventory button, modal container, close button, or component not found.');
-    }
+            // Listen for the close event dispatched by the component itself
+            document.addEventListener('closeDiscardInventoryModal', () => {
+                discardInventoryModal.style.display = 'none';
+            });
+            // Handle overlay click to close
+            discardInventoryModal.addEventListener('click', (e) => {
+                if (e.target === discardInventoryModal) {
+                    discardInventoryModalComponent.closeModal(); // Component will dispatch 'closeDiscardInventoryModal'
+                }
+            });
+        } else {
+            console.error('Discard Inventory button, modal container, close button, or component not found after custom element defined.');
+        }
+    });
 
     // UDI Scanner Modal
     const openUdiScannerBtn = document.getElementById('open-udi-scanner-btn');
-    const udiScannerModal = document.getElementById('udi-scanner-modal');
-    const closeUdiScannerModalBtn = document.getElementById('close-udi-scanner-modal');
-    const udiScannerModalComponent = udiScannerModal ? udiScannerModal.querySelector('udi-scanner-modal') : null;
 
-    if (openUdiScannerBtn && udiScannerModal && closeUdiScannerModalBtn && udiScannerModalComponent) {
-        openUdiScannerBtn.addEventListener('click', () => {
-            udiScannerModalComponent.openModal();
-            udiScannerModal.style.display = 'block';
-        });
-        closeUdiScannerModalBtn.addEventListener('click', () => {
-            udiScannerModalComponent.closeModal();
-        });
-        // Listen for the close event dispatched by the component itself
-        document.addEventListener('closeUdiScannerModal', () => {
-            udiScannerModal.style.display = 'none';
-        });
-        // Handle overlay click to close
-        udiScannerModal.addEventListener('click', (e) => {
-            if (e.target === udiScannerModal) {
-                udiScannerModalComponent.closeModal();
-            }
-        });
-    } else {
-        console.error('Open UDI Scanner button, modal, close button, or component not found.');
-    }
+    customElements.whenDefined('udi-scanner-modal').then(() => {
+        const udiScannerModal = document.getElementById('udi-scanner-modal'); // Now directly refers to the custom element
+
+        if (openUdiScannerBtn && udiScannerModal) {
+            openUdiScannerBtn.addEventListener('click', () => {
+                udiScannerModal.openModal();
+            });
+
+            // Listen for the close event dispatched by the component itself
+            document.addEventListener('closeUdiScannerModal', () => {
+                // The custom element already hides itself, but we might want to do something else here if needed
+            });
+        } else {
+            console.error('Open UDI Scanner button or udi-scanner-modal component not found after custom element defined.');
+        }
+    });
 
     // Product Selection Modal
-    const productSelectionModalContainer = document.getElementById('product-selection-modal');
-    const productSelectionModalComponent = productSelectionModalContainer ? productSelectionModalContainer.querySelector('product-selection-modal') : null;
+    customElements.whenDefined('product-selection-modal').then(() => {
+        const productSelectionModal = document.getElementById('product-selection-modal'); // Now directly refers to the custom element
 
-    if (productSelectionModalContainer && productSelectionModalComponent) {
-        document.addEventListener('openProductSelectionModal', () => {
-            productSelectionModalContainer.style.display = 'block';
-            productSelectionModalComponent.openModal();
-        });
-        // Listen for the close event dispatched by the component
-        document.addEventListener('closeProductSelectionModal', () => {
-            productSelectionModalContainer.style.display = 'none';
-        });
-        // Handle overlay click to close
-        productSelectionModalContainer.addEventListener('click', (e) => {
-            // Close if clicking on the overlay itself (not the modal content)
-            if (e.target === productSelectionModalContainer) {
-                productSelectionModalComponent.closeModal(); // Component will dispatch 'closeProductSelectionModal'
-            }
-        });
-
-    } else {
-        console.error('Product Selection Modal container or component not found.');
-    }
+        if (productSelectionModal) {
+            // Event listener to open the modal (triggered from sales-transaction.component.js usually)
+            document.addEventListener('openProductSelectionModal', () => {
+                productSelectionModal.openModal();
+            });
+            // Event listener to close the modal (dispatched by the component itself)
+            document.addEventListener('closeProductSelectionModal', () => {
+                // The custom element already hides itself, but we might want to do something else here if needed
+            });
+        } else {
+            console.error('Product Selection Modal component not found after custom element defined.');
+        }
+    });
 });
