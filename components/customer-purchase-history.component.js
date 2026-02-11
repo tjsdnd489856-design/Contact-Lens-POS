@@ -147,10 +147,10 @@ export default class CustomerPurchaseHistory extends HTMLElement {
                 <table>
                     <thead>
                         <tr>
-                            <th rowspan="2">구매일자</th>
-                            <th rowspan="2">구매품목</th>
+                            <th rowspan="2">일자</th>
+                            <th rowspan="2">품목</th>
                             <th colspan="3">도수</th>
-                            <th rowspan="2">구매수량</th>
+                            <th rowspan="2">수량</th>
                         </tr>
                         <tr>
                             <th>s</th>
