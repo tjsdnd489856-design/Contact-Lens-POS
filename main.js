@@ -33,36 +33,62 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Discard Inventory Modal
     const discardInventoryBtn = document.getElementById('discard-inventory-btn');
-    const discardInventoryModal = document.getElementById('discard-inventory-modal'); // Assuming this is the div wrapping the component
+    const discardInventoryModal = document.getElementById('discard-inventory-modal');
+    const closeDiscardInventoryModalBtn = document.getElementById('close-discard-inventory-modal');
     const discardInventoryModalComponent = discardInventoryModal ? discardInventoryModal.querySelector('discard-inventory-modal') : null;
 
-    if (discardInventoryBtn && discardInventoryModalComponent) {
+    if (discardInventoryBtn && discardInventoryModal && closeDiscardInventoryModalBtn && discardInventoryModalComponent) {
         discardInventoryBtn.addEventListener('click', () => {
-            // ProductService is imported in ProductList, but might need to be imported here too if its methods are called directly
-            // For now, assume ProductService is globally accessible for this call due to Web Component scope
             discardInventoryModalComponent.setProducts(ProductService.getProducts()); // Pass all products
             discardInventoryModal.style.display = 'block';
         });
+
+        // Handle external close button click
+        closeDiscardInventoryModalBtn.addEventListener('click', () => {
+            discardInventoryModalComponent.closeModal(); // Component will dispatch 'closeDiscardInventoryModal'
+        });
+
+        // Listen for the close event dispatched by the component itself
+        document.addEventListener('closeDiscardInventoryModal', () => {
+            discardInventoryModal.style.display = 'none';
+        });
+        // Handle overlay click to close
+        discardInventoryModal.addEventListener('click', (e) => {
+            if (e.target === discardInventoryModal) {
+                discardInventoryModalComponent.closeModal(); // Component will dispatch 'closeDiscardInventoryModal'
+            }
+        });
+
     } else {
-        console.error('Discard Inventory button or modal component not found.');
+        console.error('Discard Inventory button, modal container, close button, or component not found.');
     }
 
     // UDI Scanner Modal
     const openUdiScannerBtn = document.getElementById('open-udi-scanner-btn');
-    const udiScannerModal = document.getElementById('udi-scanner-modal'); // Assuming this is the div wrapping the component
-    const closeUdiScannerModalBtn = document.getElementById('close-udi-scanner-modal'); // Get the close button
+    const udiScannerModal = document.getElementById('udi-scanner-modal');
+    const closeUdiScannerModalBtn = document.getElementById('close-udi-scanner-modal');
+    const udiScannerModalComponent = udiScannerModal ? udiScannerModal.querySelector('udi-scanner-modal') : null;
 
-    if (openUdiScannerBtn && udiScannerModal && closeUdiScannerModalBtn) {
+    if (openUdiScannerBtn && udiScannerModal && closeUdiScannerModalBtn && udiScannerModalComponent) {
         openUdiScannerBtn.addEventListener('click', () => {
+            udiScannerModalComponent.openModal();
             udiScannerModal.style.display = 'block';
-            document.dispatchEvent(new CustomEvent('openUdiScannerModal'));
         });
-        closeUdiScannerModalBtn.addEventListener('click', () => { // Attach listener to the 'x' button
+        closeUdiScannerModalBtn.addEventListener('click', () => {
+            udiScannerModalComponent.closeModal();
+        });
+        // Listen for the close event dispatched by the component itself
+        document.addEventListener('closeUdiScannerModal', () => {
             udiScannerModal.style.display = 'none';
-            document.dispatchEvent(new CustomEvent('closeUdiScannerModal'));
+        });
+        // Handle overlay click to close
+        udiScannerModal.addEventListener('click', (e) => {
+            if (e.target === udiScannerModal) {
+                udiScannerModalComponent.closeModal();
+            }
         });
     } else {
-        console.error('Open UDI Scanner button, modal, or close button not found.');
+        console.error('Open UDI Scanner button, modal, close button, or component not found.');
     }
 
     // Product Selection Modal
