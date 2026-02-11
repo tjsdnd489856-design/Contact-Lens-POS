@@ -103,4 +103,18 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Product Selection Modal component not found after custom element defined.');
         }
     });
+
+    // Sales Tab Reset Button
+    customElements.whenDefined('sale-transaction-component').then(() => {
+        const resetSalesTabBtn = document.getElementById('reset-sales-tab-btn');
+        const saleTransactionComponent = document.querySelector('sale-transaction-component');
+
+        if (resetSalesTabBtn && saleTransactionComponent) {
+            resetSalesTabBtn.addEventListener('click', () => {
+                saleTransactionComponent.reset(); // Call the public reset method on the component
+            });
+        } else {
+            console.error('Reset Sales Tab Button or Sale Transaction Component not found after custom element defined.');
+        }
+    });
 });

@@ -35,7 +35,6 @@ export default class SaleTransaction extends HTMLElement {
     this._handleOpenProductSelectionModal = this._handleOpenProductSelectionModal.bind(this); // New binding
     this._handleProductSelectedForSale = this._handleProductSelectedForSale.bind(this); // New binding for product selection event
     this._dispatchSalesCustomerSelectedEvent = this._dispatchSalesCustomerSelectedEvent.bind(this); // Bind new dispatcher
-    this._handleCustomerSearchKeydown = this._handleCustomerSearchKeydown.bind(this);
     this._selectedSearchIndex = -1;
   }
 
@@ -167,6 +166,25 @@ export default class SaleTransaction extends HTMLElement {
     shadowRoot.querySelector('#barcode-scanner-input').removeEventListener('input', this._handleBarcodeInput);
     shadowRoot.querySelector('#open-product-selection-modal-btn').removeEventListener('click', this._handleOpenProductSelectionModal); // New listener
     shadowRoot.querySelector('#complete-sale-btn').removeEventListener('click', this.completeSale);
+  }
+
+  /**
+   * Resets the entire sales transaction form and state.
+   * @public
+   */
+  reset() {
+      this.cart = [];
+      this.selectedCustomer = null;
+      // Clear customer search input
+      const customerSearchInput = this.shadowRoot.querySelector('#customer-search-input-sale');
+      if (customerSearchInput) customerSearchInput.value = '';
+      // Clear barcode input
+      const barcodeInput = this.shadowRoot.querySelector('#barcode-scanner-input');
+      if (barcodeInput) barcodeInput.value = '';
+
+      this._updateSelectedCustomerDisplay(); // Hide clear customer button
+      this._dispatchSalesCustomerSelectedEvent(null); // Clear customer in sales history panel
+      this._render(); // Re-render to clear cart and other displays
   }
 
   /**
@@ -673,6 +691,7 @@ export default class SaleTransaction extends HTMLElement {
             margin-top: 0;
         }
         .remove-from-cart-btn:hover { background-color: #c82333; }
+        /* Moved #reset-sale-btn to global CSS */
 
         /* Layout and components */
         .product-selection-group {
@@ -825,7 +844,9 @@ export default class SaleTransaction extends HTMLElement {
                 <div class="cart-items"></div>
               </div>
               <div class="total">총액: $0.00</div>
-              <button id="complete-sale-btn" style="align-self: flex-end;">판매</button>
+              <div class="sale-actions">
+                  <button id="complete-sale-btn" style="align-self: flex-end;">판매</button>
+              </div>
           </div>
         </div>
       </div>
