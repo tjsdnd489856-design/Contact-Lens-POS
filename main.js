@@ -69,14 +69,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const productSelectionModalContainer = document.getElementById('product-selection-modal');
     const closeProductSelectionModalBtn = document.getElementById('close-product-selection-modal');
 
+    // The component itself will handle its internal state and rendering,
+    // so no direct display manipulation of the container is needed here.
+    // The 'openProductSelectionModal' event will be listened to by the component itself.
     if (productSelectionModalContainer && closeProductSelectionModalBtn) {
-        document.addEventListener('openProductSelectionModal', () => {
-            productSelectionModalContainer.style.display = 'block';
-            // The custom element itself will handle its internal state and rendering
-        });
+        // No event listeners needed here for opening, as the component's internal logic will handle it.
+        // We still need a listener for the close button if it's outside the component's shadow DOM.
         closeProductSelectionModalBtn.addEventListener('click', () => {
-            productSelectionModalContainer.style.display = 'none';
-            // The custom element itself will handle its internal state and rendering
+            // Dispatch a custom event to the component to signal it to close itself.
+            // The actual closing logic (removing 'open' class) is inside the component.
+            document.dispatchEvent(new CustomEvent('closeProductSelectionModal'));
         });
     } else {
         console.error('Product Selection Modal container or close button not found.');
