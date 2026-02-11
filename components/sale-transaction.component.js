@@ -811,8 +811,8 @@ export default class SaleTransaction extends HTMLElement {
             
             <div class="product-selection-group">
                 <div class="form-group">
-                    <label for="open-product-selection-modal-btn">제품 선택</label>
-                    <button id="open-product-selection-modal-btn" class="add-to-cart-btn">제품 목록 열기</button>
+
+                    <button id="open-product-selection-modal-btn" class="add-to-cart-btn">제품 선택</button>
                 </div>
             </div>
             
