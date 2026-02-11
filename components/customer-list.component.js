@@ -258,7 +258,10 @@ export default class CustomerList extends HTMLElement {
           row.addEventListener('dblclick', (e) => {
               const customerId = parseInt(row.dataset.id, 10);
               document.dispatchEvent(new CustomEvent('selectCustomerForSale', { detail: { customerId: customerId } }));
-              document.dispatchEvent(new CustomEvent('showTab', { detail: { tabId: 'sales' } }));
+              const salesTabButton = document.querySelector('.tab-button[data-tab="sales"]');
+              if (salesTabButton) {
+                  salesTabButton.click();
+              }
           });
       });
   }
