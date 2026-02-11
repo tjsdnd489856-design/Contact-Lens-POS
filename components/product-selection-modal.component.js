@@ -159,6 +159,7 @@ export default class ProductSelectionModal extends HTMLElement {
         // Bind event handlers
         this.openModal = this.openModal.bind(this);
         this.closeModal = this.closeModal.bind(this);
+        this._handleProductDoubleClick = this._handleProductDoubleClick.bind(this); // New binding for Task 4
 
         this._handleFilterChange = this._handleFilterChange.bind(this);
         this._handleSortClick = this._handleSortClick.bind(this);
@@ -223,6 +224,21 @@ export default class ProductSelectionModal extends HTMLElement {
         const productId = parseInt(event.currentTarget.dataset.productId, 10);
         this.selectedProduct = this.products.find(p => p.id === productId);
         this._renderProductTable(); // Re-render to highlight selection
+    }
+
+    _handleProductDoubleClick(event) {
+        const productId = parseInt(event.currentTarget.dataset.productId, 10);
+        const product = this.products.find(p => p.id === productId);
+
+        if (product) {
+            document.dispatchEvent(new CustomEvent('productSelectedForSale', {
+                detail: {
+                    product: product,
+                    quantity: 1 // Default quantity
+                }
+            }));
+            this.closeModal();
+        }
     }
 
     _handleAddToCart() {
@@ -336,6 +352,7 @@ export default class ProductSelectionModal extends HTMLElement {
 
         this.shadowRoot.querySelectorAll('.product-table tbody tr').forEach(row => {
             row.addEventListener('click', this._handleProductSelect);
+            row.addEventListener('dblclick', this._handleProductDoubleClick); // New dblclick listener for Task 4
         });
     }
 
