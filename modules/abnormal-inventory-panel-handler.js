@@ -37,6 +37,9 @@ export function initAbnormalInventoryPanelHandler() {
         return;
     }
 
+    // Ensure the panel is closed on initialization
+    closeAbnormalInventoryPanel();
+
     // Toggle button click listener
     toggleAbnormalInventoryPanelBtn.addEventListener('click', (event) => {
         event.stopPropagation(); // Prevent this click from immediately closing the panel if clicking inside
