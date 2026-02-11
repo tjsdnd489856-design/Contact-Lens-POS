@@ -27,6 +27,7 @@ export function initTabManager(tabButtons, tabContents) {
             }
         });
         console.log(`Tab switched to: ${tabId}`);
+        document.dispatchEvent(new CustomEvent('showTab', { detail: { tabId: tabId } }));
     }
 
     // Attach event listeners to tab buttons
@@ -36,13 +37,6 @@ export function initTabManager(tabButtons, tabContents) {
             const tabId = button.dataset.tab;
             showTab(tabId);
         });
-    });
-
-    // Handle custom event for tab switching
-    document.addEventListener('showTab', (e) => {
-        showTab(e.detail.tabId);
-        // Additional logic for tab-specific actions can be dispatched here
-        // or handled by specific component listeners.
     });
 
     // Show the initial active tab (customers tab by default)
