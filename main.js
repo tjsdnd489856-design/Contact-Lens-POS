@@ -67,18 +67,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Product Selection Modal
     const productSelectionModalContainer = document.getElementById('product-selection-modal');
-    const closeProductSelectionModalBtn = document.getElementById('close-product-selection-modal');
+    const productSelectionModalComponent = productSelectionModalContainer ? productSelectionModalContainer.querySelector('product-selection-modal') : null;
 
-    if (productSelectionModalContainer && closeProductSelectionModalBtn) {
+    if (productSelectionModalContainer && productSelectionModalComponent) {
         document.addEventListener('openProductSelectionModal', () => {
             productSelectionModalContainer.style.display = 'block';
-            // The custom element itself will handle its internal state and rendering
+            productSelectionModalComponent.openModal();
         });
-        closeProductSelectionModalBtn.addEventListener('click', () => {
+        // The custom element has its own internal close button.
+        // We also need to handle cases where the external close button was clicked (if it existed)
+        // or a close event is dispatched from within the component.
+        document.addEventListener('closeProductSelectionModal', () => {
+            productSelectionModalComponent.closeModal(); // Ensure internal state is also closed
             productSelectionModalContainer.style.display = 'none';
-            // The custom element itself will handle its internal state and rendering
         });
+        // Handle overlay click to close
+        productSelectionModalContainer.addEventListener('click', (e) => {
+            // Close if clicking on the overlay itself (not the modal content)
+            if (e.target === productSelectionModalContainer) {
+                productSelectionModalComponent.closeModal();
+                productSelectionModalContainer.style.display = 'none';
+            }
+        });
+
     } else {
-        console.error('Product Selection Modal container or close button not found.');
+        console.error('Product Selection Modal container or component not found.');
     }
 });

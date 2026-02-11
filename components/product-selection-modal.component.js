@@ -156,8 +156,11 @@ export default class ProductSelectionModal extends HTMLElement {
         this.currentPage = 1;
         this.productsPerPage = 10;
 
-        this._handleOpenModal = this._handleOpenModal.bind(this);
-        this._handleCloseModal = this._handleCloseModal.bind(this);
+        // Bind event handlers - _handleOpenModal and _handleCloseModal are no longer event listeners
+        // They are now public methods, so binding is not strictly necessary here, but doesn't hurt.
+        this.openModal = this.openModal.bind(this);
+        this.closeModal = this.closeModal.bind(this);
+
         this._handleFilterChange = this._handleFilterChange.bind(this);
         this._handleSortClick = this._handleSortClick.bind(this);
         this._handleProductSelect = this._handleProductSelect.bind(this);
@@ -167,27 +170,27 @@ export default class ProductSelectionModal extends HTMLElement {
 
     connectedCallback() {
         this._render();
-        document.addEventListener('openProductSelectionModal', this._handleOpenModal);
         // Fetch products when component connects
         this.products = ProductService.getProducts();
         this._applyFiltersAndSort();
     }
 
     disconnectedCallback() {
-        document.removeEventListener('openProductSelectionModal', this._handleOpenModal);
+        // No external event listeners to remove
     }
 
-    _handleOpenModal() {
+    // Public method to open the modal
+    openModal() {
         this.isOpen = true;
         this._applyFiltersAndSort(); // Re-apply filters and sort in case products changed
-        this._render();
-        this.shadowRoot.querySelector('.modal-overlay').classList.add('open');
+        this._render(); // Re-render to update the overlay class
     }
 
-    _handleCloseModal() {
+    // Public method to close the modal
+    closeModal() {
         this.isOpen = false;
         this.selectedProduct = null; // Clear selection on close
-        this.shadowRoot.querySelector('.modal-overlay').classList.remove('open');
+        this._render(); // Re-render to update the overlay class
     }
 
     _handleFilterChange(event) {
@@ -224,7 +227,7 @@ export default class ProductSelectionModal extends HTMLElement {
                     quantity: 1 // Default quantity, can be made interactive later
                 }
             }));
-            this._handleCloseModal();
+            this.closeModal(); // Call public close method
         } else {
             alert('제품을 선택해주세요.');
         }
@@ -392,10 +395,10 @@ export default class ProductSelectionModal extends HTMLElement {
             </div>
         `;
 
-        this.shadowRoot.querySelector('.close-button').addEventListener('click', this._handleCloseModal);
+        this.shadowRoot.querySelector('.close-button').addEventListener('click', this.closeModal); // Call public close method
         this.shadowRoot.querySelector('.modal-overlay').addEventListener('click', (e) => {
             if (e.target === e.currentTarget) {
-                this._handleCloseModal();
+                this.closeModal(); // Call public close method
             }
         });
         this.shadowRoot.querySelectorAll('.filters select').forEach(select => {
