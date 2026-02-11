@@ -74,19 +74,15 @@ document.addEventListener('DOMContentLoaded', () => {
             productSelectionModalContainer.style.display = 'block';
             productSelectionModalComponent.openModal();
         });
-        // The custom element has its own internal close button.
-        // We also need to handle cases where the external close button was clicked (if it existed)
-        // or a close event is dispatched from within the component.
+        // Listen for the close event dispatched by the component
         document.addEventListener('closeProductSelectionModal', () => {
-            productSelectionModalComponent.closeModal(); // Ensure internal state is also closed
             productSelectionModalContainer.style.display = 'none';
         });
         // Handle overlay click to close
         productSelectionModalContainer.addEventListener('click', (e) => {
             // Close if clicking on the overlay itself (not the modal content)
             if (e.target === productSelectionModalContainer) {
-                productSelectionModalComponent.closeModal();
-                productSelectionModalContainer.style.display = 'none';
+                productSelectionModalComponent.closeModal(); // Component will dispatch 'closeProductSelectionModal'
             }
         });
 
