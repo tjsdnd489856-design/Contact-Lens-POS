@@ -660,8 +660,8 @@ export default class SaleTransaction extends HTMLElement {
         }
 
         /* Specific button styles */
-        #add-to-cart-btn { background-color: #28a745; margin-top: 1rem; }
-        #add-to-cart-btn:hover { background-color: #218838; }
+        #open-product-selection-modal-btn { background-color: #28a745; }
+        #open-product-selection-modal-btn:hover { background-color: #218838; }
         #complete-sale-btn { background-color: #007bff; }
         #complete-sale-btn:hover { background-color: #0069d9; }
         .remove-from-cart-btn {
