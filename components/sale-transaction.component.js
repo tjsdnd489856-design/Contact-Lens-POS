@@ -622,14 +622,7 @@ export default class SaleTransaction extends HTMLElement {
             box-shadow: none; /* Shadow is handled by .sale-transaction-container */
             margin-bottom: 0; /* Margin is handled by .sale-transaction-container */
         }
-        .form-title {
-            margin-top: 0;
-            color: #333;
-            font-size: 1.8rem;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 1rem;
-            margin-bottom: 1.5rem;
-        }
+        /* Removed .form-title styles */
         .form-group {
             margin-bottom: 1.5rem;
         }
@@ -769,7 +762,7 @@ export default class SaleTransaction extends HTMLElement {
 
         /* Cart styling */
         .cart-title {
-            margin-top: 2.5rem;
+            margin-top: 0;
             /* Removed border-top */
             padding-top: 0; /* Adjust padding as border-top is removed */
             color: #333;
@@ -810,7 +803,6 @@ export default class SaleTransaction extends HTMLElement {
       <div class="overall-sales-layout-container">
         <div class="top-sales-section">
           <div class="main-content transaction-form">
-            <h3 class="form-title">새로운 판매</h3>
             <div class="form-group customer-search-wrapper">
                 <label for="customer-search-input-sale">고객 검색</label>
                 <input type="text" id="customer-search-input-sale" placeholder="고객 이름 또는 연락처 입력/검색 후 선택" value="${this.selectedCustomer ? `${this.selectedCustomer.name} (${this.selectedCustomer.phone})` : ''}">
