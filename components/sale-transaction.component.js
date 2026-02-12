@@ -122,7 +122,7 @@ export default class SaleTransaction extends HTMLElement {
         customerSearchResultsDiv.addEventListener('click', (e) => {
             const selectedResult = e.target.closest('.customer-search-result-item');
             if (selectedResult) {
-                const customerId = parseInt(selectedResult.dataset.customerId, 10);
+                const customerId = selectedResult.dataset.customerId;
                 const customer = CustomerService.getCustomerById(customerId);
                 if (customer) this._selectCustomerFromSearch(customer);
             }
