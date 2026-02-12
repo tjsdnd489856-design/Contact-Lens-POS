@@ -1,5 +1,7 @@
 
 
+import { db } from '../modules/firebase-init.js'; // Import Firestore instance
+
 // Constants for better maintainability
 const API_GATEWAY_URL = 'https://oupi92eoc7.execute-api.ap-southeast-2.amazonaws.com/default/getMedicalDeviceDetails';
 const DEFAULT_LENS_TYPE = '투명';
