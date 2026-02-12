@@ -209,7 +209,7 @@ export default class SaleTransaction extends HTMLElement {
    */
   _handleCustomerSearchKeydown(event) {
     const searchResultsDiv = this.shadowRoot.querySelector('#customer-search-results-sale');
-    const items = searchResultsDiv.querySelectorAll('.customer-search-result-item');
+    const items = searchResultsDiv ? searchResultsDiv.querySelectorAll('.customer-search-result-item') : [];
 
     if (!items.length) {
       this._selectedSearchIndex = -1;
@@ -845,7 +845,7 @@ export default class SaleTransaction extends HTMLElement {
               </div>
               <div class="total">총액: $0.00</div>
               <div class="sale-actions">
-                  <button id="complete-sale-btn" style="align-self: flex-end;">판매</button>
+                  <button id="complete-sale-btn">판매</button>
               </div>
           </div>
         </div>

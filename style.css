@@ -138,6 +138,13 @@ main {
     background-color: #e0a800; /* Darker yellow on hover */
 }
 
+/* Styles for Sale Actions container */
+.sale-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 1rem; /* Add some padding if needed, adjust as per design */
+}
+
 
 /* Footer Styles */
 footer {
