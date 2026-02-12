@@ -1,3 +1,7 @@
+import { db } from '../modules/firebase-init.js'; // Import Firestore instance
+
+const DUPLICATE_CUSTOMER_MESSAGE = '중복된 고객입니다.';
+
 // --- Constants for better readability and maintainability ---
 const DEFAULT_CUSTOMER_DATA = {
     phone: '',
@@ -9,42 +13,55 @@ const DEFAULT_CUSTOMER_DATA = {
     isVIP: false,
     isCaution: false,
 };
-const DUPLICATE_CUSTOMER_MESSAGE = '중복된 고객입니다.';
 
 // --- Customer Service (Singleton) ---
 export const CustomerService = {
-  _customers: [
-    { id: 1, name: '홍길동', phone: '010-1234-5678', rightS: -1.00, rightC: -0.50, rightAX: 180, leftS: -1.25, leftC: -0.75, leftAX: 90, purchaseHistory: [], lastPurchaseDate: null, notes: '', isVIP: false, isCaution: false },
-    { id: 2, name: '김철수', phone: '010-9876-5432', rightS: -2.00, rightC: 0.00, rightAX: 0, leftS: -2.00, leftC: 0.00, leftAX: 0, purchaseHistory: [], lastPurchaseDate: null, notes: '', isVIP: false, isCaution: false },
-  ],
-  _nextId: 3,
+  _initialized: false, // Flag to ensure initialization only runs once
+  _firestoreCustomers: [], // Local cache of Firestore data
+
+  async init() {
+    if (this._initialized) return;
+    this._initialized = true;
+
+    // Set up a real-time listener for the 'customers' collection
+    db.collection('customers').orderBy('name').onSnapshot(snapshot => {
+      this._firestoreCustomers = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      this._notify(); // Notify components after local cache is updated
+    }, error => {
+      console.error("Error fetching customers from Firestore:", error);
+      // Optionally, handle error notification to UI
+    });
+  },
 
   /**
-   * Retrieves a copy of all customer records.
+   * Retrieves a copy of all customer records from the local Firestore cache.
    * @returns {Array<Object>} An array of customer objects.
    */
   getCustomers() {
-    return [...this._customers];
+    return [...this._firestoreCustomers];
   },
   
   /**
-   * Finds a customer by their unique ID.
-   * @param {number} id - The ID of the customer.
+   * Finds a customer by their unique ID from the local Firestore cache.
+   * @param {string} id - The ID of the customer.
    * @returns {Object|undefined} The customer object if found, otherwise undefined.
    */
   getCustomerById(id) {
-      return this._customers.find(c => c.id === id);
+      return this._firestoreCustomers.find(c => c.id === id);
   },
   
   /**
-   * Checks if a customer with the given name and phone already exists.
+   * Checks if a customer with the given name and phone already exists in the local Firestore cache.
    * @param {string} name - The name of the customer.
    * @param {string} phone - The phone number of the customer.
-   * @param {number|null} id - The ID of the customer being checked (for updates).
+   * @param {string|null} id - The ID of the customer being checked (for updates).
    * @returns {boolean} True if a duplicate exists, false otherwise.
    */
   isDuplicateCustomer(name, phone, id = null) {
-      return this._customers.some(customer => 
+      return this._firestoreCustomers.some(customer => 
           customer.name === name && 
           customer.phone === phone && 
           customer.id !== id
@@ -94,6 +111,7 @@ export const CustomerService = {
 
   /**
    * Searches for customers based on a query string.
+   * This now filters the local Firestore cache.
    * @param {string} query - The search query (name, phone, or 'name phone' format).
    * @returns {Array<Object>} An array of matching customer objects.
    */
@@ -104,7 +122,7 @@ export const CustomerService = {
       const lowerCaseQuery = query.toLowerCase().trim();
       const queryParts = lowerCaseQuery.split(' '); // Split for 'name phone' search
       
-      return this._customers.filter(customer => {
+      return this._firestoreCustomers.filter(customer => {
           // Search by name
           if (this._filterByName(customer, lowerCaseQuery)) {
               return true;
@@ -122,81 +140,92 @@ export const CustomerService = {
   },
 
   /**
-   * Adds a new customer to the system.
+   * Adds a new customer to Firestore.
    * @param {Object} customerData - The data for the new customer.
-   * @returns {boolean} True if the customer was added, false if it's a duplicate.
+   * @returns {Promise<boolean>} True if the customer was added, false if it's a duplicate.
    */
-  addCustomer(customerData) {
+  async addCustomer(customerData) {
     if (this.isDuplicateCustomer(customerData.name, customerData.phone)) {
-        console.warn(DUPLICATE_CUSTOMER_MESSAGE); // Log instead of alert
-        return false;
+        throw new Error(DUPLICATE_CUSTOMER_MESSAGE);
     }
-    const newCustomer = {
-        id: this._nextId++,
-        ...DEFAULT_CUSTOMER_DATA, // Apply defaults first
-        ...customerData,         // Override with provided data
-    };
-
-    this._customers.push(newCustomer);
-    this._notify();
-    return true;
+    try {
+      const docRef = await db.collection('customers').add({
+          ...DEFAULT_CUSTOMER_DATA,
+          ...customerData,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error("Error adding customer to Firestore:", error);
+      throw new Error("고객 추가 중 오류가 발생했습니다: " + error.message);
+    }
   },
 
   /**
-   * Updates an existing customer's details.
-   * @param {Object} updatedCustomerData - The updated data for the customer.
-   * @returns {boolean} True if the customer was updated, false if not found or a duplicate.
+   * Updates an existing customer's details in Firestore.
+   * @param {Object} updatedCustomerData - The updated data for the customer (must include id).
+   * @returns {Promise<boolean>} True if the customer was updated, false if not found or a duplicate.
    */
-  updateCustomer(updatedCustomerData) {
+  async updateCustomer(updatedCustomerData) {
     if (this.isDuplicateCustomer(updatedCustomerData.name, updatedCustomerData.phone, updatedCustomerData.id)) {
-        console.warn(DUPLICATE_CUSTOMER_MESSAGE); // Log instead of alert
-        return false;
+        throw new Error(DUPLICATE_CUSTOMER_MESSAGE);
     }
-    const index = this._customers.findIndex(c => c.id === updatedCustomerData.id);
-    if (index !== -1) {
-      // Preserve purchase history and last purchase date if not explicitly updated
-      const existingCustomer = this._customers[index];
-      const customerToUpdate = {
-        ...updatedCustomerData,
-        purchaseHistory: updatedCustomerData.purchaseHistory || existingCustomer.purchaseHistory,
-        lastPurchaseDate: updatedCustomerData.lastPurchaseDate || existingCustomer.lastPurchaseDate,
-      };
-      this._customers[index] = customerToUpdate;
-      this._notify();
-      return true;
+    try {
+      const customerRef = db.collection('customers').doc(updatedCustomerData.id);
+      await customerRef.update({
+          ...updatedCustomerData,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      return updatedCustomerData.id;
+    } catch (error) {
+      console.error("Error updating customer in Firestore:", error);
+      throw new Error("고객 정보 업데이트 중 오류가 발생했습니다: " + error.message);
     }
-    return false;
   },
 
   /**
-   * Deletes a customer from the system by their ID.
-   * @param {number} id - The ID of the customer to delete.
+   * Deletes a customer from Firestore by their ID.
+   * @param {string} id - The ID of the customer to delete.
+   * @returns {Promise<void>}
    */
-  deleteCustomer(id) {
-    this._customers = this._customers.filter(c => c.id !== id);
-    this._notify();
+  async deleteCustomer(id) {
+    try {
+      await db.collection('customers').doc(id).delete();
+    } catch (error) {
+      console.error("Error deleting customer from Firestore:", error);
+      throw new Error("고객 삭제 중 오류가 발생했습니다: " + error.message);
+    }
   },
 
   /**
-   * Adds a sale record to a customer's purchase history and updates their last purchase date.
-   * @param {number} customerId - The ID of the customer.
-   * @param {number} saleId - The ID of the completed sale.
+   * Adds a sale record to a customer's purchase history and updates their last purchase date in Firestore.
+   * @param {string} customerId - The ID of the customer.
+   * @param {string} saleId - The ID of the completed sale.
    * @param {Date} purchaseDate - The date of the purchase.
+   * @returns {Promise<void>}
    */
-  addPurchaseToCustomerHistory(customerId, saleId, purchaseDate) {
-    const customer = this.getCustomerById(customerId);
-    if (customer) {
-      customer.purchaseHistory.push(saleId);
-      customer.lastPurchaseDate = purchaseDate;
-      this._notify();
+  async addPurchaseToCustomerHistory(customerId, saleId, purchaseDate) {
+    try {
+      const customerRef = db.collection('customers').doc(customerId);
+      await customerRef.update({
+        purchaseHistory: firebase.firestore.FieldValue.arrayUnion(saleId), // Add saleId to array
+        lastPurchaseDate: purchaseDate,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Error updating customer purchase history in Firestore:", error);
+      throw new Error("고객 구매 내역 업데이트 중 오류가 발생했습니다: " + error.message);
     }
   },
 
   /**
    * Dispatches a custom event to notify listeners that customer data has been updated.
+   * This now uses the internally cached Firestore data.
    * @private
    */
   _notify(filteredCustomers = null, query = '') {
-    document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers, query } }));
+    // If filteredCustomers are provided (e.g., from a search), use them, otherwise use the full Firestore cache
+    const customersToDispatch = filteredCustomers || this._firestoreCustomers;
+    document.dispatchEvent(new CustomEvent('customersUpdated', { detail: { filteredCustomers: customersToDispatch, query } }));
   }
 };

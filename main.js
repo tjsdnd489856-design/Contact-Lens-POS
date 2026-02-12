@@ -1,4 +1,5 @@
 import { initializeApp } from './components/app-initializer.js';
+import { db } from './modules/firebase-init.js'; // Import Firebase db instance
 
 // Import all Web Components to ensure they are defined
 import ProductList from './components/product-list.component.js';

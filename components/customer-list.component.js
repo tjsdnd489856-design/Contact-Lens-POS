@@ -113,7 +113,7 @@ export default class CustomerList extends HTMLElement {
    */
   _openEditModal(e) {
       e.stopPropagation(); // Prevent row selection when clicking edit button
-      const id = parseInt(e.target.dataset.id, 10);
+      const id = e.target.dataset.id; // ID from Firestore is a string
       const customer = CustomerService.getCustomerById(id);
       if (customer) {
           document.dispatchEvent(new CustomEvent('editCustomer', { detail: customer }));
@@ -128,7 +128,7 @@ export default class CustomerList extends HTMLElement {
    */
   _selectCustomerRow(e) {
       const row = e.currentTarget;
-      const customerId = parseInt(row.dataset.id, 10);
+      const customerId = row.dataset.id; // ID from Firestore is a string
 
       // Deselect if the same row is clicked again
       if (this.selectedCustomerId === customerId) {
@@ -151,7 +151,7 @@ export default class CustomerList extends HTMLElement {
    */
   _updateSelectionHighlight() {
       this.shadowRoot.querySelectorAll('tbody tr').forEach(r => {
-          if (parseInt(r.dataset.id, 10) === this.selectedCustomerId) {
+          if (r.dataset.id === this.selectedCustomerId) { // ID from Firestore is a string
               r.classList.add('selected');
           } else {
               r.classList.remove('selected');
@@ -162,7 +162,6 @@ export default class CustomerList extends HTMLElement {
   /**
    * Generates the HTML string for the customer table rows.
    * @param {Array<Object>} customers - The list of customer objects to display.
-   * @param {string|null} query - The current search query.
    * @returns {string} The HTML string for the table body.
    * @private
    */
@@ -257,7 +256,7 @@ export default class CustomerList extends HTMLElement {
       this.shadowRoot.querySelectorAll('tbody tr.customer-row').forEach(row => {
           row.addEventListener('click', this._selectCustomerRow);
           row.addEventListener('dblclick', (e) => {
-              const customerId = parseInt(row.dataset.id, 10);
+              const customerId = row.dataset.id; // ID from Firestore is a string
               // Dispatch the new sales-specific event
               document.dispatchEvent(new CustomEvent('salesCustomerSelected', { detail: customerId })); // Changed event name
               const salesTabButton = document.querySelector('.tab-button[data-tab="sales"]');

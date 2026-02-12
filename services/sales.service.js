@@ -50,9 +50,9 @@ export const SalesService = {
    * @param {Array<Object>} saleItems - An array of items in the sale cart.
    * @private
    */
-  _deductStock(saleItems) {
+  async _deductStock(saleItems) {
     for (const item of saleItems) {
-        ProductService.decreaseStock(item.productId, item.quantity);
+        await ProductService.decreaseStock(item.productId, item.quantity);
     }
   },
 
@@ -63,21 +63,21 @@ export const SalesService = {
    * @throws {Error} If stock is insufficient.
    */
   async addSale(sale) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => { // Make the promise callback async
       try {
         // 1. Validate stock before proceeding
         this._validateStock(sale.items);
         
-        // 2. Deduct stock for all items
-        this._deductStock(sale.items);
+        // 2. Deduct stock for all items - AWAIT this call
+        await this._deductStock(sale.items);
 
         // 3. Create sale record
         sale.id = this._nextId++;
         sale.date = new Date();
         this._sales.push(sale);
         
-        // 4. Update customer purchase history
-        CustomerService.addPurchaseToCustomerHistory(sale.customerId, sale.id, sale.date);
+        // 4. Update customer purchase history - AWAIT this call
+        await CustomerService.addPurchaseToCustomerHistory(sale.customerId, sale.id, sale.date);
         
         // 5. Notify listeners of sales update
         this._notify();

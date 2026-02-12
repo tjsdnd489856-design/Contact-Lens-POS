@@ -1,3 +1,5 @@
+
+
 // Constants for better maintainability
 const API_GATEWAY_URL = 'https://oupi92eoc7.execute-api.ap-southeast-2.amazonaws.com/default/getMedicalDeviceDetails';
 const DEFAULT_LENS_TYPE = '투명';
@@ -9,30 +11,58 @@ const DEFAULT_QUANTITY = 1;
 const DEFAULT_PRICE = 0.00;
 const DEFAULT_EXPIRATION_DATE = '2099-12-31';
 
+const DEFAULT_PRODUCT_DATA = {
+    brand: DEFAULT_BRAND,
+    model: DEFAULT_MODEL,
+    productName: DEFAULT_PRODUCT_NAME,
+    powerS: 0,
+    powerC: 0,
+    powerAX: 0,
+    quantity: DEFAULT_QUANTITY,
+    expirationDate: DEFAULT_EXPIRATION_DATE,
+    price: DEFAULT_PRICE,
+    barcode: '',
+    gtin: '',
+    lensType: DEFAULT_LENS_TYPE,
+    wearType: DEFAULT_WEAR_TYPE,
+};
+
 export const ProductService = {
-  _products: [
-    { id: 1, brand: '아큐브', model: '오아시스 원데이', lensType: '투명', wearType: '원데이', powerS: -1.25, powerC: -0.5, powerAX: 180, quantity: 20, expirationDate: '2028-12-31', price: 55.00, barcode: '1234567890123', gtin: '01234567890123' },
-    { id: 2, brand: '바슈롬', model: '바이오트루 원데이', lensType: '컬러', wearType: '원데이', powerS: -2.50, powerC: 0, powerAX: 0, quantity: 15, expirationDate: '2028-11-30', price: 65.00, barcode: '2345678901234', gtin: '02345678901234' },
-    { id: 3, brand: '알콘', model: '워터렌즈', lensType: '투명', wearType: '장기착용', powerS: -1.75, powerC: 0, powerAX: 0, quantity: 4, expirationDate: '2027-06-30', price: 70.00, barcode: '3456789012345', gtin: '03456789012345' },
-    { id: 4, brand: '쿠퍼비전', model: '클래리티 원데이', lensType: '컬러', wearType: '장기착용', powerS: -3.00, powerC: -1.0, powerAX: 90, quantity: 30, expirationDate: '2029-01-31', price: 75.00, barcode: '4567890123456', gtin: '04567890123456' },
-  ],
-  _nextId: 5,
+  _initialized: false, // Flag to ensure initialization only runs once
+  _firestoreProducts: [], // Local cache of Firestore data
+
+  async init() {
+    if (this._initialized) return;
+    this._initialized = true;
+
+    // Set up a real-time listener for the 'products' collection
+    db.collection('products').orderBy('brand').orderBy('model').onSnapshot(snapshot => {
+      this._firestoreProducts = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      this._notify(); // Notify components after local cache is updated
+    }, error => {
+      console.error("Error fetching products from Firestore:", error);
+      // Optionally, handle error notification to UI
+    });
+  },
 
   /**
    * Retrieves a copy of all products.
    * @returns {Array<Object>} An array of product objects.
    */
   getProducts() {
-    return [...this._products];
+    return [...this._firestoreProducts];
   },
 
   /**
    * Finds a product by its unique ID.
-   * @param {number} id - The ID of the product.
+   * @param {string} id - The ID of the product.
    * @returns {Object|undefined} The product object if found, otherwise undefined.
    */
   getProductById(id) {
-    return this._products.find(p => p.id === id);
+    return this._firestoreProducts.find(p => p.id === id);
   },
 
   /**
@@ -41,7 +71,7 @@ export const ProductService = {
    * @returns {Object|undefined} The product object if found, otherwise undefined.
    */
   getProductByGtin(gtin) {
-    return this._products.find(p => p.gtin === gtin);
+    return this._firestoreProducts.find(p => p.gtin === gtin);
   },
 
   /**
@@ -50,7 +80,7 @@ export const ProductService = {
    * @returns {Object|undefined} The product object if found, otherwise undefined.
    */
   getProductByLegacyBarcode(barcode) {
-      return this._products.find(p => p.barcode === barcode);
+      return this._firestoreProducts.find(p => p.barcode === barcode);
   },
 
   /**
@@ -58,7 +88,7 @@ export const ProductService = {
    * @returns {Array<string>} An array of unique brand names.
    */
   getUniqueBrands() {
-    const brands = new Set(this._products.map(p => p.brand));
+    const brands = new Set(this._firestoreProducts.map(p => p.brand));
     return ['전체', ...Array.from(brands)];
   },
 
@@ -67,50 +97,56 @@ export const ProductService = {
    * Assigns a new ID and sets default values for missing properties.
    * @param {Object} product - The product object to add.
    */
-  addProduct(product) {
-    product.id = this._nextId++;
-    product.lensType = product.lensType || DEFAULT_LENS_TYPE;
-    product.wearType = product.wearType || DEFAULT_WEAR_TYPE;
-    this._products.push(product);
-    this._notify();
+  async addProduct(product) {
+    try {
+      const docRef = await db.collection('products').add({
+        ...DEFAULT_PRODUCT_DATA, // Apply defaults first
+        ...product, // Then override with provided product data
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(), // Add timestamp
+      });
+      return docRef.id;
+    } catch (error) {
+      console.error("Error adding product to Firestore:", error);
+      throw new Error("제품 추가 중 오류가 발생했습니다: " + error.message);
+    }
   },
 
   /**
    * Updates an existing product's details.
    * @param {Object} updatedProduct - The product object with updated details.
+   * @returns {Promise<string>} The ID of the updated product.
    */
-  updateProduct(updatedProduct) {
-    const index = this._products.findIndex(p => p.id === updatedProduct.id);
-    if (index !== -1) {
-      this._products[index] = { 
-        ...updatedProduct, 
-        lensType: updatedProduct.lensType || DEFAULT_LENS_TYPE,
-        wearType: updatedProduct.wearType || DEFAULT_WEAR_TYPE
-      }; 
-      this._notify();
+
+  /**
+   * Deletes a product from the inventory by its ID.
+   * @param {string} id - The ID of the product to delete.
+   */
+  async deleteProduct(id) {
+    try {
+      await db.collection('products').doc(id).delete();
+    } catch (error) {
+      console.error("Error deleting product from Firestore:", error);
+      throw new Error("제품 삭제 중 오류가 발생했습니다: " + error.message);
     }
   },
 
   /**
-   * Deletes a product from the inventory by its ID.
-   * @param {number} id - The ID of the product to delete.
-   */
-  deleteProduct(id) {
-    this._products = this._products.filter(p => p.id !== id);
-    this._notify();
-  },
-
-  /**
    * Decreases the stock quantity of a product.
-   * @param {number} productId - The ID of the product.
+   * @param {string} productId - The ID of the product.
    * @param {number} quantity - The amount to decrease the stock by.
+   * @returns {Promise<void>}
    */
-  decreaseStock(productId, quantity) {
-      const product = this.getProductById(productId);
-      if (product) {
-          product.quantity -= quantity;
-          this._notify();
-      }
+  async decreaseStock(productId, quantity) {
+    try {
+      const productRef = db.collection('products').doc(productId);
+      await productRef.update({
+        quantity: firebase.firestore.FieldValue.increment(-quantity),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch (error) {
+      console.error("Error decreasing stock in Firestore:", error);
+      throw new Error("재고 감소 중 오류가 발생했습니다: " + error.message);
+    }
   },
 
   /**
@@ -211,7 +247,7 @@ export const ProductService = {
     const warningDate = new Date();
     warningDate.setDate(today.getDate() + days);
 
-    return this._products.filter(product => {
+    return this._firestoreProducts.filter(product => {
         const expiration = new Date(product.expirationDate);
         return expiration <= warningDate && expiration >= today;
     }).sort((a, b) => new Date(a.expirationDate) - new Date(b.expirationDate));
@@ -222,7 +258,7 @@ export const ProductService = {
    * @returns {Array<Object>} An array of products with abnormal inventory.
    */
   getAbnormalInventory() {
-    return this._products.filter(p => p.quantity < 0);
+    return this._firestoreProducts.filter(p => p.quantity < 0);
   },
 
   /**
@@ -230,6 +266,6 @@ export const ProductService = {
    * @private
    */
   _notify() {
-    document.dispatchEvent(new CustomEvent('productsUpdated'));
+    document.dispatchEvent(new CustomEvent('productsUpdated', { detail: this._firestoreProducts }));
   }
 };

@@ -149,11 +149,17 @@ export default class CustomerForm extends HTMLElement {
         }
     }
 
-    handleDeleteClick() {
-        const customerId = parseInt(this._form.id.value, 10);
+    async handleDeleteClick() {
+        const customerId = this._form.id.value;
         if (customerId && confirm('이 고객 정보를 삭제하시겠습니까?')) {
-            CustomerService.deleteCustomer(customerId);
-            document.dispatchEvent(new CustomEvent('closeCustomerModal'));
+            try {
+                await CustomerService.deleteCustomer(customerId);
+                document.dispatchEvent(new CustomEvent('closeCustomerModal'));
+                this.clearForm(); // Clear form after successful delete
+            } catch (error) {
+                alert('고객 삭제 중 오류가 발생했습니다: ' + error.message);
+                console.error('고객 삭제 오류:', error);
+            }
         }
     }
 
@@ -350,11 +356,11 @@ export default class CustomerForm extends HTMLElement {
         this.handleVipCautionChange(); // Set checkbox states
     }
 
-    handleSubmit(e) {
+    async handleSubmit(e) {
         e.preventDefault();
         const formData = new FormData(this._form);
         const customer = {
-            id: parseInt(formData.get('id'), 10) || null,
+            id: formData.get('id') || null, // ID can be string
             name: formData.get('name'),
             phone: formData.get('phone'),
             // Parse formatted dose string back to float
@@ -369,17 +375,24 @@ export default class CustomerForm extends HTMLElement {
             isCaution: formData.get('isCaution') === 'on',
         };
 
-        let success = false;
-        if (customer.id) {
-            success = CustomerService.updateCustomer(customer);
-        } else {
-            delete customer.id;
-            success = CustomerService.addCustomer(customer);
-        }
-
-        if (success) {
-            document.dispatchEvent(new CustomEvent('closeCustomerModal')); // Close modal on success
-            this.clearForm(); // Clear form after successful save
+        try {
+            let customerIdOrSuccess; // Variable to hold the ID or true/false for success
+            if (customer.id) {
+                // If customer.id exists, it's an update
+                customerIdOrSuccess = await CustomerService.updateCustomer(customer);
+            } else {
+                // Otherwise, it's a new customer
+                delete customer.id; // Ensure id is not sent for new customer
+                customerIdOrSuccess = await CustomerService.addCustomer(customer);
+            }
+            // If we successfully get an ID (for add) or true (for update, though now it returns ID), proceed
+            if (customerIdOrSuccess) {
+                document.dispatchEvent(new CustomEvent('closeCustomerModal')); // Close modal on success
+                this.clearForm(); // Clear form after successful save
+            }
+        } catch (error) {
+            alert('고객 정보 저장 중 오류가 발생했습니다: ' + error.message);
+            console.error('고객 저장 오류:', error);
         }
     }
 }
