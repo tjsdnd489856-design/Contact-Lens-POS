@@ -61,7 +61,7 @@ export default class CustomerList extends HTMLElement {
   }
         
   connectedCallback() {
-    this._render([]); // Render with an empty list initially
+    this._render([], ''); // Render with an empty list and empty query initially
     document.addEventListener('customersUpdated', this._handleCustomersUpdated);
     document.addEventListener('searchCustomers', this._handleSearchCustomers);
 
@@ -84,7 +84,7 @@ export default class CustomerList extends HTMLElement {
     const { filteredCustomers, query } = e.detail;
     // If no query and filteredCustomers is empty, it means search was cleared or initialized
     if (!query && (!filteredCustomers || filteredCustomers.length === 0)) {
-        this._render([]); // Render empty state
+        this._render([], ''); // Render empty state with empty query
         this.selectedCustomerId = null; // Clear selection
         // Also clear history display
         if (this._customerPurchaseHistoryComponent) {

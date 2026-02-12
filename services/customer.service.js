@@ -29,7 +29,7 @@ export const CustomerService = {
         id: doc.id,
         ...doc.data()
       }));
-      this._notify(); // Notify components after local cache is updated
+      // Removed this._notify() here to prevent displaying all customers by default
     }, error => {
       console.error("Error fetching customers from Firestore:", error);
       // Optionally, handle error notification to UI
