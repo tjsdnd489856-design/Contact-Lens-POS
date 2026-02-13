@@ -41,8 +41,12 @@ export default class SaleTransaction extends HTMLElement {
   }
 
   connectedCallback() {
+    // Defer rendering to the next animation frame to ensure the component is fully attached to the DOM
+    // and its shadowRoot is ready for interaction.
+    window.requestAnimationFrame(() => {
+      this._render();
+    });
 
-    this._render();
     document.addEventListener('productsUpdated', this._render.bind(this));
     document.addEventListener('customersUpdated', this._handleCustomersUpdated);
     document.addEventListener('productSelectedForSale', this._handleProductSelectedForSale); // Listen for product selection
