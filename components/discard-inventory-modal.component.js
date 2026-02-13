@@ -325,8 +325,7 @@ export default class DiscardInventoryModal extends HTMLElement {
             this._selectedProductsToDiscard.forEach((powerOptionSelections, productId) => {
                 powerOptionSelections.forEach((quantity, powerOptionKey) => {
                     if (quantity > 0) {
-                        // This assumes ProductService.decreaseStock handles specific power options if necessary
-                        ProductService.decreaseStock(productId, quantity); // Refinement needed for powerOptionKey
+                        ProductService.decreaseStock(productId, quantity);
                     }
                 });
             });
