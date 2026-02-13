@@ -397,8 +397,29 @@ export default class DiscardInventoryModal extends HTMLElement {
         if (productsMatchingModel.length > 0) {
             // Set _currentFilterProduct to the first found product variant that matches the model.
             // This ensures _currentFilterProduct has the powerOptions array _renderPowerOptionSelectionView expects.
-            this._currentFilterProduct = productsMatchingModel[0]; 
-            console.log('[_filterByBrandAndModel] Found product for model:', this._currentFilterProduct);
+            this._currentFilterProduct = {
+                id: productsMatchingModel[0].id, // Use the ID of one of the variants as the product ID
+                brand: brand,
+                model: model,
+                // Aggregate all unique power options for this brand and model
+                powerOptions: productsMatchingModel.flatMap(p => p.powerOptions)
+                                .reduce((acc, currentOption) => {
+                                    const key = `${currentOption.s}_${currentOption.c}_${currentOption.ax}`;
+                                    if (!acc.has(key)) {
+                                        acc.set(key, { ...currentOption });
+                                    } else {
+                                        // If already exists, aggregate quantity
+                                        const existing = acc.get(key);
+                                        existing.quantity += currentOption.quantity;
+                                    }
+                                    return acc;
+                                }, new Map())
+                                .values() // Get the values (power option objects) from the map
+            };
+            // Ensure powerOptions is an array
+            this._currentFilterProduct.powerOptions = Array.from(this._currentFilterProduct.powerOptions);
+
+            console.log('[_filterByBrandAndModel] Found product for model (consolidated):', this._currentFilterProduct);
         } else {
             this._currentFilterProduct = null;
             console.warn('[_filterByBrandAndModel] Product not found for brand:', brand, 'model:', model);
