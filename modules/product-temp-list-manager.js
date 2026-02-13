@@ -69,7 +69,9 @@ function generatePowerVariants(baseProduct) {
  * Renders the temporary product list table in the product modal.
  */
 function renderTempProductList() {
-    if (productsToAdd.length === 0) {
+    const productsToDisplay = productsToAdd.filter(p => p.quantity > 0); // Filter out products with quantity 0
+
+    if (productsToDisplay.length === 0) {
         tempProductListDiv.innerHTML = '<p>추가할 제품이 없습니다.</p>';
         return;
     }
@@ -89,7 +91,7 @@ function renderTempProductList() {
                 </tr>
             </thead>
             <tbody>
-                ${productsToAdd.map(p => `
+                ${productsToDisplay.map(p => `
                     <tr>
                         <td>${p.brand || 'N/A'}</td>
                         <td>${p.model || 'N/A'}</td>
