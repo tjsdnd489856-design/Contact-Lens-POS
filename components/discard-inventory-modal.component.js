@@ -132,7 +132,7 @@ const DISCARD_MODAL_STYLES = `
     }
     /* New table styles */
     .power-option-table {
-        width: 100%;
+        width: 97%; /* Reduced overall width by 3% */
         border-collapse: collapse;
         margin-top: 1rem;
         display: block; /* Necessary for tbody to scroll independently */
@@ -189,7 +189,7 @@ const DISCARD_MODAL_STYLES = `
     }
     .power-option-table tbody {
         display: block; /* Essential for max-height and overflow-y to work */
-        max-height: 780px; /* 15 rows * 52px/row */
+        max-height: 520px; /* 10 rows * 52px/row */
         overflow-y: auto;
         width: 100%; /* Ensure tbody takes full width */
     }
