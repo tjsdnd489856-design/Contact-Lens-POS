@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize the main application setup (Firebase, tabs, general event listeners)
     initializeApp();
+    ProductService.init(); // Initialize ProductService to fetch products
     initGlobalHotkeys(); // Setup global hotkeys like Escape
 
     // --- Global Event Listeners for Modals that need to be opened from main controls ---
