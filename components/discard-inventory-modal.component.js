@@ -452,21 +452,36 @@ export default class DiscardInventoryModal extends HTMLElement {
     _renderProductSelectionView() {
         const productsForBrand = this._products.filter(p => p.brand === this._currentFilterBrand);
         if (productsForBrand.length === 0) return `<p class="message">${MESSAGES.NO_PRODUCTS_FOR_BRAND(this._currentFilterBrand)}</p>`;
+
+        // Group products by model and calculate total quantity
+        const groupedProductsMap = productsForBrand.reduce((acc, product) => {
+            const key = `${product.brand}-${product.model}`; // Group by brand and model
+            if (!acc.has(key)) {
+                acc.set(key, {
+                    brand: product.brand,
+                    model: product.model,
+                    firstProductId: product.id, // Keep a product ID for filtering later
+                    totalQuantity: 0,
+                    // We don't need to store powerOptions here as they are not displayed in this view
+                });
+            }
+            const groupedItem = acc.get(key);
+            groupedItem.totalQuantity += product.powerOptions.reduce((sum, opt) => sum + opt.quantity, 0);
+            return acc;
+        }, new Map());
+
+        const productsToRender = Array.from(groupedProductsMap.values());
         
         return `
             <button class="back-button back-to-brands-btn">← 전체 브랜드 보기</button>
             <div class="product-selection-list">
-                ${productsForBrand.map(product => `
-                    <div class="product-selection-list-item" data-product-id="${product.id}">
+                ${productsToRender.map(groupedProduct => `
+                    <div class="product-selection-list-item" data-product-id="${groupedProduct.firstProductId}">
                         <div class="product-info-main">
-                            <span class="brand-model">${product.brand} - ${product.model}</span>
-                            <span class="quantity-display">총 수량: ${product.powerOptions.reduce((sum, opt) => sum + opt.quantity, 0)}</span>
+                            <span class="brand-model">${groupedProduct.brand} - ${groupedProduct.model}</span>
+                            <span class="quantity-display">총 수량: ${groupedProduct.totalQuantity}</span>
                         </div>
-                        <div class="product-info-detail">
-                            <span class="power-axis-combined">
-                                ${product.powerOptions.map(opt => `S:${(opt.s !== null && opt.s !== undefined) ? (opt.s > 0 ? '+' : '') + opt.s.toFixed(2) : 'N/A'} C:${(opt.c !== null && opt.c !== undefined) ? (opt.c > 0 ? '+' : '') + opt.c.toFixed(2) : 'N/A'} AX:${opt.ax !== null ? opt.ax : 'N/A'}`).join(' / ')}
-                            </span>
-                        </div>
+                        <!-- Detailed power options are intentionally not displayed here as per user request -->
                     </div>
                 `).join('')}
             </div>
@@ -508,7 +523,7 @@ export default class DiscardInventoryModal extends HTMLElement {
                         return `
                             <tr class="power-option-table-row ${currentSelectedQty > 0 ? 'selected' : ''}" data-product-id="${product.id}" data-detail-id="${option.detailId}">
                                 <td>${(option.s !== null && option.s !== undefined) ? (option.s > 0 ? '+' : '') + option.s.toFixed(2) : 'N/A'}</td>
-                                <td>${(option.c !== null && option.c !== undefined) ? (option.c > 0 ? '+' : '') + option.c.toFixed(2) : 'N/A'}</td>
+                                <td>${(option.c !== null && option.c !== undefined) ? (opt.c > 0 ? '+' : '') + opt.c.toFixed(2) : 'N/A'}</td>
                                 <td>${option.ax !== null ? option.ax : 'N/A'}</td>
                                 <td>${option.quantity}</td>
                                 <td>
