@@ -124,8 +124,8 @@ main {
 }
 
 #reset-sales-tab-btn {
-    background-color: #6c757d; /* Muted grey for reset */
-    color: white;
+    background-color: #ffc107; /* Yellow for reset */
+    color: #333; /* Text color for yellow background */
     padding: 0.9rem 1.2rem;
     border: none;
     border-radius: 6px;
@@ -137,7 +137,7 @@ main {
 }
 
 #reset-sales-tab-btn:hover {
-    background-color: #5a6268; /* Darker grey on hover */
+    background-color: #e0a800; /* Darker yellow on hover */
     transform: translateY(-1px);
 }
 
@@ -518,8 +518,8 @@ discard-inventory-modal, udi-scanner-modal, abnormal-inventory-list {
 }
 
 #reset-sales-tab-btn {
-    background-color: #6c757d; /* Muted grey for reset */
-    color: white;
+    background-color: #ffc107; /* Yellow for reset */
+    color: white; /* Text color for yellow background */
     padding: 0.9rem 1.2rem;
     border: none;
     border-radius: 6px;
@@ -531,7 +531,7 @@ discard-inventory-modal, udi-scanner-modal, abnormal-inventory-list {
 }
 
 #reset-sales-tab-btn:hover {
-    background-color: #5a6268; /* Darker grey on hover */
+    background-color: #e0a800; /* Darker yellow on hover */
     transform: translateY(-1px);
 }
 
