@@ -172,10 +172,21 @@ export default class SaleTransaction extends HTMLElement {
     }
 
     // Product and barcode listeners
-    shadowRoot.querySelector('#barcode-scanner-input').addEventListener('keydown', this._handleBarcodeInputKeydown);
-    shadowRoot.querySelector('#barcode-scanner-input').addEventListener('input', this._handleBarcodeInput);
-    shadowRoot.querySelector('#open-product-selection-modal-btn').addEventListener('click', this._handleOpenProductSelectionModal); // New listener
-    shadowRoot.querySelector('#complete-sale-btn').addEventListener('click', this.completeSale);
+    const barcodeInput = shadowRoot.querySelector('#barcode-scanner-input');
+    if (barcodeInput) {
+      barcodeInput.addEventListener('keydown', this._handleBarcodeInputKeydown);
+      barcodeInput.addEventListener('input', this._handleBarcodeInput);
+    }
+
+    const openProductModalBtn = shadowRoot.querySelector('#open-product-selection-modal-btn');
+    if (openProductModalBtn) {
+      openProductModalBtn.addEventListener('click', this._handleOpenProductSelectionModal);
+    }
+
+    const completeSaleBtn = shadowRoot.querySelector('#complete-sale-btn');
+    if (completeSaleBtn) {
+      completeSaleBtn.addEventListener('click', this.completeSale);
+    }
   }
 
   /**
@@ -184,6 +195,8 @@ export default class SaleTransaction extends HTMLElement {
    */
   _detachEventListeners() {
     const shadowRoot = this.shadowRoot;
+    if (!shadowRoot) return; // Add null check for shadowRoot
+
     const customerSearchInput = shadowRoot.querySelector('#customer-search-input-sale');
     const clearCustomerSelectionBtn = shadowRoot.querySelector('#clear-customer-selection-btn');
     const customerSearchResultsDiv = shadowRoot.querySelector('#customer-search-results-sale');
