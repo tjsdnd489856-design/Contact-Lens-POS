@@ -295,33 +295,45 @@ export default class DiscardInventoryModal extends HTMLElement {
      * @private
      */
     _handleDiscardQuantityChange(modelId, detailId, variantId, quantity) {
+        console.log('[_handleDiscardQuantityChange] 호출됨:', { modelId, detailId, variantId, quantity });
+
         // Find original product variant by its Firestore ID to get its max quantity
         const originalVariant = this._products.find(p => p.id === variantId);
         const powerOptionFromOriginal = originalVariant?.powerOptions.find(opt => opt.detailId === detailId && opt.variantId === variantId);
         
-        if (!originalVariant || !powerOptionFromOriginal) return;
+        if (!originalVariant || !powerOptionFromOriginal) {
+            console.warn('[_handleDiscardQuantityChange] 원본 변형 또는 도수 옵션을 찾을 수 없음:', { variantId, detailId });
+            return; 
+        }
 
         const numQuantity = parseInt(quantity, 10);
+        console.log('[_handleDiscardQuantityChange] 파싱된 수량:', numQuantity, '최대:', powerOptionFromOriginal.quantity);
         
         let modelSelections = this._selectedProductsToDiscard.get(modelId);
         if (!modelSelections) {
             modelSelections = new Map();
+            console.log('[_handleDiscardQuantityChange] modelId에 대한 새 modelSelections Map 초기화:', modelId);
             this._selectedProductsToDiscard.set(modelId, modelSelections);
         }
 
         if (!isNaN(numQuantity) && numQuantity >= 0 && numQuantity <= powerOptionFromOriginal.quantity) {
             if (numQuantity > 0) {
                 modelSelections.set(detailId, { quantity: numQuantity, variantId: variantId });
+                console.log('[_handleDiscardQuantityChange] detailId에 대한 수량 설정:', detailId, '->', numQuantity);
             } else {
                 modelSelections.delete(detailId);
+                console.log('[_handleDiscardQuantityChange] detailId에 대한 선택 삭제 (수량 0)');
             }
         } else {
+            console.warn('[_handleDiscardQuantityChange] 유효하지 않은 수량 입력됨:', numQuantity, '최대:', powerOptionFromOriginal.quantity);
             alert(MESSAGES.INVALID_QUANTITY(powerOptionFromOriginal.quantity));
             modelSelections.delete(detailId); // Reset selection
+            console.log('[_handleDiscardQuantityChange] detailId에 대한 선택 삭제 (유효하지 않은 수량)');
         }
         
         if (modelSelections.size === 0) {
             this._selectedProductsToDiscard.delete(modelId);
+            console.log('[_handleDiscardQuantityChange] modelId에 대한 선택이 비어있어 _selectedProductsToDiscard에서 modelId 삭제.');
         }
         this._updateRenderedSelectionState(modelId, detailId, variantId, numQuantity);
         this._updateDiscardButtonState();
