@@ -606,7 +606,7 @@ export default class DiscardInventoryModal extends HTMLElement {
                         return `
                             <tr class="power-option-table-row ${currentSelectedQty > 0 ? 'selected' : ''}" data-product-id="${product.id}" data-detail-id="${option.detailId}">
                                 <td>${(option.s !== null && option.s !== undefined) ? (option.s > 0 ? '+' : '') + option.s.toFixed(2) : 'N/A'}</td>
-                                <td>${(option.c !== null && option.c !== undefined) ? (opt.c > 0 ? '+' : '') + opt.c.toFixed(2) : 'N/A'}</td>
+                                <td>${(option.c !== null && option.c !== undefined) ? (option.c > 0 ? '+' : '') + option.c.toFixed(2) : 'N/A'}</td>
                                 <td>${option.ax !== null ? option.ax : 'N/A'}</td>
                                 <td>${option.quantity}</td>
                                 <td>
