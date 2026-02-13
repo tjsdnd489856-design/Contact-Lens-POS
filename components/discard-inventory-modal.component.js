@@ -295,52 +295,37 @@ export default class DiscardInventoryModal extends HTMLElement {
      * @private
      */
     _handleDiscardQuantityChange(modelId, detailId, variantId, quantity) {
-        console.log('[_handleDiscardQuantityChange] 호출됨:', { modelId, detailId, variantId, quantity });
-
         // Find original product variant by its Firestore ID to get its max quantity
         const originalVariant = this._products.find(p => p.id === variantId);
         const powerOptionFromOriginal = originalVariant?.powerOptions.find(opt => opt.detailId === detailId && opt.variantId === variantId);
         
         if (!originalVariant || !powerOptionFromOriginal) {
-            console.warn('[_handleDiscardQuantityChange] 원본 변형 또는 도수 옵션을 찾을 수 없음. 상세 정보:', { 
-                passedVariantId: variantId, 
-                passedDetailId: detailId,
-                originalVariantFound: !!originalVariant, 
-                originalVariantId: originalVariant ? originalVariant.id : 'N/A',
-                originalVariantPowerOptions: originalVariant ? originalVariant.powerOptions : 'N/A',
-                powerOptionFromOriginalFound: !!powerOptionFromOriginal
-            });
+            // Log cleaned up, only warn message, no verbose object.
+            // console.warn('[_handleDiscardQuantityChange] 원본 변형 또는 도수 옵션을 찾을 수 없음. variantId:', variantId, 'detailId:', detailId);
             return; 
         }
 
         const numQuantity = parseInt(quantity, 10);
-        console.log('[_handleDiscardQuantityChange] 파싱된 수량:', numQuantity, '최대:', powerOptionFromOriginal.quantity);
         
         let modelSelections = this._selectedProductsToDiscard.get(modelId);
         if (!modelSelections) {
             modelSelections = new Map();
-            console.log('[_handleDiscardQuantityChange] modelId에 대한 새 modelSelections Map 초기화:', modelId);
             this._selectedProductsToDiscard.set(modelId, modelSelections);
         }
 
         if (!isNaN(numQuantity) && numQuantity >= 0 && numQuantity <= powerOptionFromOriginal.quantity) {
             if (numQuantity > 0) {
                 modelSelections.set(detailId, { quantity: numQuantity, variantId: variantId });
-                console.log('[_handleDiscardQuantityChange] detailId에 대한 수량 설정:', detailId, '->', numQuantity);
             } else {
                 modelSelections.delete(detailId);
-                console.log('[_handleDiscardQuantityChange] detailId에 대한 선택 삭제 (수량 0)');
             }
         } else {
-            console.warn('[_handleDiscardQuantityChange] 유효하지 않은 수량 입력됨:', numQuantity, '최대:', powerOptionFromOriginal.quantity);
             alert(MESSAGES.INVALID_QUANTITY(powerOptionFromOriginal.quantity));
             modelSelections.delete(detailId); // Reset selection
-            console.log('[_handleDiscardQuantityChange] detailId에 대한 선택 삭제 (유효하지 않은 수량)');
         }
         
         if (modelSelections.size === 0) {
             this._selectedProductsToDiscard.delete(modelId);
-            console.log('[_handleDiscardQuantityChange] modelId에 대한 선택이 비어있어 _selectedProductsToDiscard에서 modelId 삭제.');
         }
         this._updateRenderedSelectionState(modelId, detailId, variantId, numQuantity);
         this._updateDiscardButtonState();
@@ -383,7 +368,7 @@ export default class DiscardInventoryModal extends HTMLElement {
             return;
         }
 
-        const confirmation = confirm(MESSAGES.CONFIRM_CONFIRM); // Should be MESSAGES.CONFIRM_DISCARD
+        const confirmation = confirm(MESSAGES.CONFIRM_DISCARD); 
         if (confirmation) {
             this._selectedProductsToDiscard.forEach((powerOptionSelections, modelId) => {
                 powerOptionSelections.forEach((selection, detailId) => {
@@ -406,7 +391,6 @@ export default class DiscardInventoryModal extends HTMLElement {
      * @private
      */
     _filterByBrand(brand) {
-        console.log('[_filterByBrand] Filtering by brand:', brand);
         this._currentFilterBrand = brand;
         this._currentFilterProduct = null;
         this._sortBy = null;
@@ -419,7 +403,6 @@ export default class DiscardInventoryModal extends HTMLElement {
      * @private
      */
     _showAllBrands() {
-        console.log('[_showAllBrands] Showing all brands.');
         this._currentFilterBrand = null;
         this._currentFilterProduct = null;
         this._sortBy = null;
@@ -435,7 +418,6 @@ export default class DiscardInventoryModal extends HTMLElement {
     _handleProductSelectionClick(e) {
         const brand = e.currentTarget.dataset.brand;
         const model = e.currentTarget.dataset.model;
-        console.log('[_handleProductSelectionClick] Clicked brand:', brand, 'model:', model);
         this._filterByBrandAndModel(brand, model);
     }
 
@@ -447,7 +429,6 @@ export default class DiscardInventoryModal extends HTMLElement {
      * @private
      */
     _filterByBrandAndModel(brand, model) {
-        console.log('[_filterByBrandAndModel] Searching for product with brand:', brand, 'model:', model);
         const productsMatchingModel = this._products.filter(p => p.brand === brand && p.model === model);
         
         if (productsMatchingModel.length > 0) {
@@ -478,7 +459,6 @@ export default class DiscardInventoryModal extends HTMLElement {
                 powerOptions: Array.from(consolidatedPowerOptionsMap.values())
             };
             
-            console.log('[_filterByBrandAndModel] Found product for model (consolidated):', this._currentFilterProduct);
         } else {
             this._currentFilterProduct = null;
             console.warn('[_filterByBrandAndModel] Product not found for brand:', brand, 'model:', model);
@@ -493,7 +473,6 @@ export default class DiscardInventoryModal extends HTMLElement {
      * @private
      */
     _showAllProductsForBrand() {
-        console.log('[_showAllProductsForBrand] Showing all products for brand:', this._currentFilterBrand);
         this._currentFilterProduct = null;
         this._sortBy = null;
         this._sortOrder = 'asc';
@@ -532,7 +511,6 @@ export default class DiscardInventoryModal extends HTMLElement {
      * @private
      */
     _handleSort(sortBy) {
-        console.log('[_handleSort] Sorting by:', sortBy, 'Order:', this._sortOrder);
         if (this._sortBy === sortBy) {
             this._sortOrder = (this._sortOrder === 'asc' ? 'desc' : 'asc');
         } else {
@@ -568,9 +546,8 @@ export default class DiscardInventoryModal extends HTMLElement {
     _handleDiscardQuantityInputChange(e) {
         const modelId = e.target.dataset.modelId; // The model group ID
         const detailId = e.target.dataset.detailId;
-        const variantId = parseInt(e.target.dataset.variantId, 10); // Get actual variant ID from dataset
+        const variantId = e.target.dataset.variantId; // Changed from parseInt to direct assignment
         const quantity = e.target.value;
-        console.log('[_handleDiscardQuantityInputChange] 입력 변경:', { modelId, detailId, variantId, quantity: e.target.value }); // 추가된 로그
         this._handleDiscardQuantityChange(modelId, detailId, variantId, quantity);
     }
 
@@ -595,7 +572,6 @@ export default class DiscardInventoryModal extends HTMLElement {
      */
     _renderBrandSelectionView() {
         const uniqueBrands = [...new Set(this._products.map(p => p.brand))];
-        console.log('[_renderBrandSelectionView] Unique brands:', uniqueBrands);
         if (uniqueBrands.length === 0) return `<p class="message">${MESSAGES.NO_BRANDS_REGISTERED}</p>`;
         
         return `
@@ -614,7 +590,6 @@ export default class DiscardInventoryModal extends HTMLElement {
      */
     _renderProductSelectionView() {
         const productsForBrand = this._products.filter(p => p.brand === this._currentFilterBrand);
-        console.log('[_renderProductSelectionView] Products for brand:', productsForBrand);
         if (productsForBrand.length === 0) return `<p class="message">${MESSAGES.NO_PRODUCTS_FOR_BRAND(this._currentFilterBrand)}</p>`;
 
         // Group products by model and calculate total quantity
@@ -636,7 +611,6 @@ export default class DiscardInventoryModal extends HTMLElement {
         }, new Map());
 
         const productsToRender = Array.from(groupedProductsMap.values());
-        console.log('[_renderProductSelectionView] Products to render (grouped):', productsToRender);
         
         return `
             <button class="back-button back-to-products-btn">← 제품 목록으로</button>
@@ -661,14 +635,12 @@ export default class DiscardInventoryModal extends HTMLElement {
      */
     _renderPowerOptionSelectionView() {
         const product = this._currentFilterProduct;
-        console.log('[_renderPowerOptionSelectionView] Product for power options:', product);
         if (!product) return `<p class="message">제품을 선택해주세요.</p>`;
 
         if (product.powerOptions.length === 0) return `<p class="message">${MESSAGES.NO_POWER_OPTIONS_FOR_PRODUCT(product.brand, product.model)}</p>`;
         
         const sortedPowerOptions = this._sortPowerOptions(product.powerOptions);
-        console.log('[_renderPowerOptionSelectionView] Sorted power options:', sortedPowerOptions);
-
+        
         return `
             <button class="back-button back-to-products-btn">← 제품 목록으로</button>
             <table class="power-option-table">
@@ -719,15 +691,12 @@ export default class DiscardInventoryModal extends HTMLElement {
         if (!this._currentFilterBrand) { // View 1: Brand Selection
             contentHtml = this._renderBrandSelectionView();
             modalTitle += ' - 브랜드 선택';
-            console.log('[_render] Rendering Brand Selection View');
         } else if (!this._currentFilterProduct) { // View 2: Product Selection for a specific brand
             contentHtml = this._renderProductSelectionView();
             modalTitle = `재고 폐기 - ${this._currentFilterBrand} 제품 선택`;
-            console.log('[_render] Rendering Product Selection View for brand:', this._currentFilterBrand);
         } else { // View 3: Power Option Selection for a specific product
             contentHtml = this._renderPowerOptionSelectionView();
             modalTitle = `재고 폐기 - ${this._currentFilterProduct.brand} - ${this._currentFilterProduct.model} 도수 선택`;
-            console.log('[_render] Rendering Power Option Selection View for product:', this._currentFilterProduct.model);
         }
 
         this.shadowRoot.innerHTML = `
@@ -795,7 +764,7 @@ export default class DiscardInventoryModal extends HTMLElement {
                     }
                     const modelId = row.dataset.modelId;
                     const detailId = row.dataset.detailId;
-                    const variantId = parseInt(row.dataset.variantId, 10);
+                    const variantId = e.target.dataset.variantId; // Changed from parseInt to direct assignment
                     const inputElement = row.querySelector('.discard-quantity-input');
                     this._togglePowerOptionSelection(modelId, detailId, variantId, inputElement);
                 });
@@ -814,7 +783,7 @@ export default class DiscardInventoryModal extends HTMLElement {
      * Toggles the selection state of a power option for discarding.
      * @param {string} modelId - The ID of the model group (brand-model).
      * @param {string} detailId - The unique key for the power option (S-C-AX).
-     * @param {number} variantId - The actual Firestore ID of the variant being toggled.
+     * @param {string} variantId - The actual Firestore ID of the variant being toggled.
      * @param {HTMLInputElement} inputElement - The input element for quantity.
      * @private
      */
@@ -863,11 +832,9 @@ export default class DiscardInventoryModal extends HTMLElement {
         const discardButton = this.shadowRoot.getElementById('discard-confirm-btn');
         if (discardButton) {
             let totalDiscardQuantity = 0;
-            console.log('[_updateDiscardButtonState] 현재 선택된 폐기 제품:', this._selectedProductsToDiscard); // 추가된 로그
             this._selectedProductsToDiscard.forEach(modelSelections => {
                 modelSelections.forEach(selection => totalDiscardQuantity += selection.quantity);
             });
-            console.log('[_updateDiscardButtonState] 총 폐기 수량:', totalDiscardQuantity); // 추가된 로그
             discardButton.disabled = totalDiscardQuantity === 0;
         }
     }
