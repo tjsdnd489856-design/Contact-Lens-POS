@@ -209,7 +209,8 @@ export default class DiscardInventoryModal extends HTMLElement {
         this.closeModal = this.closeModal.bind(this); // New binding
         this._filterByBrand = this._filterByBrand.bind(this);
         this._showAllBrands = this._showAllBrands.bind(this);
-        this._filterByProduct = this._filterByProduct.bind(this);
+        // this._filterByProduct = this._filterByProduct.bind(this); // This will be replaced
+        this._filterByBrandAndModel = this._filterByBrandAndModel.bind(this); // New binding
         this._showAllProductsForBrand = this._showAllProductsForBrand.bind(this);
         this._handleDiscardQuantityChange = this._handleDiscardQuantityChange.bind(this);
         this._discardSelectedProducts = this._discardSelectedProducts.bind(this);
@@ -376,23 +377,31 @@ export default class DiscardInventoryModal extends HTMLElement {
      * @private
      */
     _handleProductSelectionClick(e) {
-        const productId = parseInt(e.currentTarget.dataset.productId, 10);
-        console.log('[_handleProductSelectionClick] Clicked product ID:', productId);
-        this._filterByProduct(productId);
+        const brand = e.currentTarget.dataset.brand;
+        const model = e.currentTarget.dataset.model;
+        console.log('[_handleProductSelectionClick] Clicked brand:', brand, 'model:', model);
+        this._filterByBrandAndModel(brand, model);
     }
 
     /**
-     * Filters by specific product to show its power options.
-     * @param {number} productId - The ID of the product.
+     * Filters by specific product brand and model to show its power options.
+     * Sets _currentFilterProduct to the first product matching brand and model.
+     * @param {string} brand - The brand of the product.
+     * @param {string} model - The model of the product.
      * @private
      */
-    _filterByProduct(productId) {
-        console.log('[_filterByProduct] Searching for product with ID:', productId);
-        this._currentFilterProduct = this._products.find(p => p.id === productId);
-        if (this._currentFilterProduct) {
-            console.log('[_filterByProduct] Found product:', this._currentFilterProduct);
+    _filterByBrandAndModel(brand, model) {
+        console.log('[_filterByBrandAndModel] Searching for product with brand:', brand, 'model:', model);
+        const productsMatchingModel = this._products.filter(p => p.brand === brand && p.model === model);
+        
+        if (productsMatchingModel.length > 0) {
+            // Set _currentFilterProduct to the first found product variant that matches the model.
+            // This ensures _currentFilterProduct has the powerOptions array _renderPowerOptionSelectionView expects.
+            this._currentFilterProduct = productsMatchingModel[0]; 
+            console.log('[_filterByBrandAndModel] Found product for model:', this._currentFilterProduct);
         } else {
-            console.warn('[_filterByProduct] Product not found for ID:', productId);
+            this._currentFilterProduct = null;
+            console.warn('[_filterByBrandAndModel] Product not found for brand:', brand, 'model:', model);
         }
         this._sortBy = 's'; // Default sort by 's' when viewing power options
         this._sortOrder = 'asc';
@@ -530,9 +539,10 @@ export default class DiscardInventoryModal extends HTMLElement {
                 acc.set(key, {
                     brand: product.brand,
                     model: product.model,
-                    firstProductId: product.id, // Keep a product ID for filtering later
+                    // firstProductId is no longer needed here, but keeping it for now if any other logic relies on it
+                    // The _handleProductSelectionClick will now use brand and model directly.
+                    firstProductId: product.id, 
                     totalQuantity: 0,
-                    // We don't need to store powerOptions here as they are not displayed in this view
                 });
             }
             const groupedItem = acc.get(key);
@@ -547,7 +557,7 @@ export default class DiscardInventoryModal extends HTMLElement {
             <button class="back-button back-to-brands-btn">← 전체 브랜드 보기</button>
             <div class="product-selection-list">
                 ${productsToRender.map(groupedProduct => `
-                    <div class="product-selection-list-item" data-product-id="${groupedProduct.firstProductId}">
+                    <div class="product-selection-list-item" data-brand="${groupedProduct.brand}" data-model="${groupedProduct.model}">
                         <div class="product-info-main">
                             <span class="brand-model">${groupedProduct.brand} - ${groupedProduct.model}</span>
                             <span class="quantity-display">총 수량: ${groupedProduct.totalQuantity}</span>
