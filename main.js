@@ -14,6 +14,8 @@ import DiscardInventoryModal from './components/discard-inventory-modal.componen
 import AbnormalInventoryList from './components/abnormal-inventory-list.component.js';
 import UdiScannerModal from './components/udi-scanner-modal.component.js'; // New UDI Scanner Component
 import ProductSelectionModal from './components/product-selection-modal.component.js'; // New Product Selection Modal
+import { ProductService } from './services/product.service.js'; // Import ProductService
+
 
 // Import handlers for various modals and global hotkeys
 import { initAbnormalInventoryPanelHandler } from './modules/abnormal-inventory-panel-handler.js';
