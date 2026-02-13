@@ -843,9 +843,11 @@ export default class DiscardInventoryModal extends HTMLElement {
         const discardButton = this.shadowRoot.getElementById('discard-confirm-btn');
         if (discardButton) {
             let totalDiscardQuantity = 0;
+            console.log('[_updateDiscardButtonState] 현재 선택된 폐기 제품:', this._selectedProductsToDiscard); // 추가된 로그
             this._selectedProductsToDiscard.forEach(modelSelections => {
                 modelSelections.forEach(selection => totalDiscardQuantity += selection.quantity);
             });
+            console.log('[_updateDiscardButtonState] 총 폐기 수량:', totalDiscardQuantity); // 추가된 로그
             discardButton.disabled = totalDiscardQuantity === 0;
         }
     }
