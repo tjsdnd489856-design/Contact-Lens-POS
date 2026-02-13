@@ -35,6 +35,7 @@ export default class SaleTransaction extends HTMLElement {
     this._handleOpenProductSelectionModal = this._handleOpenProductSelectionModal.bind(this); // New binding
     this._handleProductSelectedForSale = this._handleProductSelectedForSale.bind(this); // New binding for product selection event
     this._dispatchSalesCustomerSelectedEvent = this._dispatchSalesCustomerSelectedEvent.bind(this); // Bind new dispatcher
+    this._handleSalesCustomerSelected = this._handleSalesCustomerSelected.bind(this); // NEW: Bind sales customer selected event handler
     this._selectedSearchIndex = -1;
   }
 
@@ -45,6 +46,7 @@ export default class SaleTransaction extends HTMLElement {
     document.addEventListener('productsUpdated', this._render.bind(this));
     document.addEventListener('customersUpdated', this._handleCustomersUpdated);
     document.addEventListener('productSelectedForSale', this._handleProductSelectedForSale); // Listen for product selection
+    document.addEventListener('salesCustomerSelected', this._handleSalesCustomerSelected);
   }
 
   disconnectedCallback() {
@@ -52,6 +54,7 @@ export default class SaleTransaction extends HTMLElement {
     document.removeEventListener('productsUpdated', this._render.bind(this));
     document.removeEventListener('customersUpdated', this._handleCustomersUpdated);
     document.removeEventListener('productSelectedForSale', this._handleProductSelectedForSale); // Remove listener
+    document.removeEventListener('salesCustomerSelected', this._handleSalesCustomerSelected);
   }
 
   /**
@@ -63,6 +66,38 @@ export default class SaleTransaction extends HTMLElement {
   _dispatchSalesCustomerSelectedEvent(customerId) {
     document.dispatchEvent(new CustomEvent('salesCustomerSelected', { detail: customerId }));
   }
+
+  /**
+   * NEW: Handles the custom event when a customer is selected from another tab (e.g., Customer List).
+   * @param {CustomEvent} event - The event containing the full customer object.
+   * @private
+   */
+  _handleSalesCustomerSelected(event) {
+    const customer = event.detail;
+    // The detail might be a customer ID from other parts of the app, or a full object.
+    // Ensure we have the full customer object before proceeding.
+    const fullCustomer = typeof customer === 'object' && customer !== null ? customer : CustomerService.getCustomerById(customer);
+
+    if (fullCustomer) {
+      this.selectedCustomer = fullCustomer;
+      const customerSearchInput = this.shadowRoot.querySelector('#customer-search-input-sale');
+      
+      // Update the input field to show the selected customer
+      if (customerSearchInput) {
+        customerSearchInput.value = `${fullCustomer.name} (${fullCustomer.phone})`;
+      }
+      
+      // Clear any previous search results that might be showing
+      const searchResultsDiv = this.shadowRoot.querySelector('#customer-search-results-sale');
+      if (searchResultsDiv) {
+        searchResultsDiv.innerHTML = '';
+      }
+      
+      this._updateSelectedCustomerDisplay(); // Manages visibility of the 'clear' button
+      this._dispatchSalesCustomerSelectedEvent(this.selectedCustomer.id); // Notify other components like purchase history
+    }
+  }
+
 
   /**
    * Handles the 'customersUpdated' event, often triggered after search or modification.

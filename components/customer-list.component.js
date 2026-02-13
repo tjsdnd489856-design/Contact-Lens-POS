@@ -257,8 +257,11 @@ export default class CustomerList extends HTMLElement {
           row.addEventListener('click', this._selectCustomerRow);
           row.addEventListener('dblclick', (e) => {
               const customerId = row.dataset.id; // ID from Firestore is a string
-              // Dispatch the new sales-specific event
-              document.dispatchEvent(new CustomEvent('salesCustomerSelected', { detail: customerId })); // Changed event name
+              const customer = CustomerService.getCustomerById(customerId); // Get the full customer object
+              if (customer) { // Only dispatch if customer is found
+                  // Dispatch the new sales-specific event with the full customer object
+                  document.dispatchEvent(new CustomEvent('salesCustomerSelected', { detail: customer }));
+              }
               const salesTabButton = document.querySelector('.tab-button[data-tab="sales"]');
               if (salesTabButton) {
                   salesTabButton.click();
