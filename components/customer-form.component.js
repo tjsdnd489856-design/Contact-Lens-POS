@@ -84,10 +84,10 @@ export default class CustomerForm extends HTMLElement {
             return;
         }
 
-        const originalStartsWithPlus = originalValue.startsWith('+'); // Preserve if original input explicitly starts with '+'
-        const originalStartsWithMinus = originalValue.startsWith('-'); // Preserve if original input explicitly starts with '-'
+        const originalStartsWithPlus = value.startsWith('+'); // Preserve if original input explicitly starts with '+'
+        const originalStartsWithMinus = value.startsWith('-'); // Preserve if original input explicitly starts with '-'
 
-        let cleanValue = value.replace(/[^0-9.]/g, ''); // Only digits and dot for parsing num
+        let cleanValue = value.replace(/[^0-9+\-.]/g, ''); // Only digits, +, -, and dot for parsing num
         
         let num = parseFloat(cleanValue);
         if (isNaN(num)) {
@@ -98,14 +98,12 @@ export default class CustomerForm extends HTMLElement {
         let formattedValueNum = num / 100;
         let formattedString = formattedValueNum.toFixed(2);
 
-        if (parseFloat(formattedString) === 0) {
+        if (formattedValueNum === 0) { // Check against the numeric value for 0
             event.target.value = '0.00';
-        } else if (originalStartsWithPlus) { // If original input explicitly had '+', retain it
+        } else if (formattedValueNum > 0) {
             event.target.value = `+${formattedString}`;
-        } else if (formattedValueNum > 0) { // If it's a positive number (without explicit '+'), make it negative
-            event.target.value = `-${formattedString}`;
-        } else { // It's already a negative number
-            event.target.value = formattedString;
+        } else { // formattedValueNum < 0
+            event.target.value = formattedString; // formattedString will already have the '-'
         }
     }
 
