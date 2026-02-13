@@ -308,6 +308,14 @@ export default class ProductSelectionModal extends HTMLElement {
         // No external event listeners to remove
     }
 
+    // This method will detach all dynamically added event listeners
+    // In this component, since innerHTML is replaced, old listeners are garbage collected,
+    // but this method is needed to satisfy the call in _render().
+    _detachEventListeners() {
+        // No persistent listeners to detach explicitly in this component's current structure
+        // If listeners were added to `window` or `document`, they would be removed here.
+    }
+
     // Public method to open the modal
     openModal() {
         this.isOpen = true;
@@ -489,7 +497,7 @@ export default class ProductSelectionModal extends HTMLElement {
             let valB = b[this._sortBy];
 
             valA = (valA === null || valA === undefined || valA === 'N/A') ? (this._sortOrder === 'asc' ? -Infinity : Infinity) : valA;
-            valB = (valB === null || valB === undefined || valB === 'N/A') ? (this._sortOrder === 'asc' ? -Infinity : Infinity) : valB;
+            valB = (valB === null || valB === undefined || valB === 'N/A') ? (this._sortOrder === 'asc' ? 1 : -1) : valB; // 'N/A' should be last for desc
 
             if (valA < valB) {
                 return this._sortOrder === 'asc' ? -1 : 1;
