@@ -132,22 +132,35 @@ const DISCARD_MODAL_STYLES = `
     }
     /* New table styles */
     .power-option-table {
-        width: 97%; /* Reduced overall width by 3% */
+        width: 92%; /* 사용자 요청에 따라 가로 길이를 5% 줄임 (기존 97%에서 92%로) */
         border-collapse: collapse;
         margin-top: 1rem;
-        display: block; /* Necessary for tbody to scroll independently */
+        table-layout: fixed; /* 헤더와 바디의 열 너비를 고정 */
     }
-    .power-option-table thead, .power-option-table tbody tr { /* Apply display: table-row to tbody tr to match thead th */
-        display: table; /* To maintain table semantics */
-        width: 100%; /* Important for column alignment */
-        table-layout: fixed; /* For consistent column widths */
+    .power-option-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background-color: #f2f2f2;
+    }
+    .power-option-table tbody {
+        display: block; /* 스크롤 가능하게 함 */
+        max-height: 520px; /* 10 rows * 52px/row */
+        overflow-y: auto; /* 세로 스크롤 활성화 */
+        width: 100%; /* tbody가 테이블의 전체 너비를 차지하도록 설정 */
+    }
+    .power-option-table tr { /* tbody 내부의 tr 요소에 적용 */
+        display: table; /* 테이블 행처럼 동작하게 함 */
+        width: 100%; /* tr이 tbody의 전체 너비를 차지하도록 하여 스크롤바 공간을 고려 */
+        table-layout: fixed; /* 열 너비를 고정하여 헤더와 정렬 유지 */
     }
     .power-option-table th, .power-option-table td {
-        width: 20%; /* Distribute width equally among 5 columns */
-        white-space: nowrap; /* Prevent wrapping if content is too long */
-        border: 1px solid #ddd; /* Ensure borders are present */
-        padding: 8px; /* Ensure padding is present */
-        text-align: center; /* Ensure text alignment is present */
+        width: 20%; /* 5개 열에 균등하게 너비 배분 */
+        white-space: nowrap; /* 내용이 길어져도 줄바꿈 방지 */
+        border: 1px solid #ddd; /* 테두리 */
+        padding: 8px; /* 패딩 */
+        text-align: center; /* 텍스트 정렬 */
+        box-sizing: border-box; /* 패딩과 테두리를 너비에 포함 */
     }
     .power-option-table th {
         background-color: #f2f2f2;
@@ -180,18 +193,6 @@ const DISCARD_MODAL_STYLES = `
     .discard-quantity-input::-webkit-inner-spin-button {
         -webkit-appearance: none;
         margin: 0;
-    }
-    .power-option-table thead {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-        background-color: #f2f2f2;
-    }
-    .power-option-table tbody {
-        display: block; /* Essential for max-height and overflow-y to work */
-        max-height: 520px; /* 10 rows * 52px/row */
-        overflow-y: auto;
-        width: 100%; /* Ensure tbody takes full width */
     }
 `;
 
@@ -485,7 +486,7 @@ export default class DiscardInventoryModal extends HTMLElement {
             let valB = b[this._sortBy];
 
             valA = (valA === null || valA === undefined || valA === 'N/A') ? (this._sortOrder === 'asc' ? -Infinity : Infinity) : valA;
-            valB = (valB === null || valB === undefined || valB === 'N/A') ? (this._sortOrder === 'asc' ? -Infinity : Infinity) : valB;
+            valB = (valB === null || valB === undefined || valB === 'N/A') ? (this._sortOrder === 'asc' ? 1 : -1) : valB; // Corrected for 'N/A' to be at the end in desc order as well
 
             if (valA < valB) {
                 return this._sortOrder === 'asc' ? -1 : 1;
