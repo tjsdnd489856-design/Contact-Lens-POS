@@ -70,8 +70,7 @@ export default class ProductForm extends HTMLElement {
         this.attachShadow({ mode: 'open' });
             this._product = null; // Store the product being edited
             // Bind handlers
-            this._handleBarcodeScan = this._handleBarcodeScan.bind(this);
-            this._handleBarcodeInput = this._handleBarcodeInput.bind(this);
+            // Removed _handleBarcodeScan and _handleBarcodeInput binding
             this._handleSubmit = this._handleSubmit.bind(this);
           }
         
@@ -88,7 +87,7 @@ export default class ProductForm extends HTMLElement {
               this._detachEventListeners();
               document.removeEventListener('editProduct', this._populateForm);
               document.removeEventListener('clearProductForm', this._clearForm);
-              this._form.barcode.removeEventListener('input', this._handleBarcodeInput); // Remove added listener
+              // Removed barcode event listener removal
           }
         
           /**
@@ -97,8 +96,7 @@ export default class ProductForm extends HTMLElement {
            */
           _attachEventListeners() {
               if (!this._form) return;
-              this._form.barcode.addEventListener('change', this._handleBarcodeScan);
-              this._form.barcode.addEventListener('input', this._handleBarcodeInput);
+              // Removed barcode event listeners
         // Power input formatting
         ['powerS', 'powerC'].forEach(field => {
             this._form[field].addEventListener('change', (e) => this._formatPowerValue(e.target));
@@ -113,8 +111,7 @@ export default class ProductForm extends HTMLElement {
      */
     _detachEventListeners() {
         if (!this._form) return;
-        this._form.barcode.removeEventListener('change', this._handleBarcodeScan);
-        this._form.barcode.removeEventListener('input', this._handleBarcodeInput); // Detach added listener
+        // Removed barcode event listeners
 
         ['powerS', 'powerC'].forEach(field => {
             this._form[field].removeEventListener('change', (e) => this._formatPowerValue(e.target));
@@ -122,19 +119,7 @@ export default class ProductForm extends HTMLElement {
 
         this._form.removeEventListener('submit', this._handleSubmit);
     }
-
-    /**
-     * Handles input to the barcode field, restricting to English letters and numbers, and converting to uppercase.
-     * @param {Event} e - The input event.
-     * @private
-     */
-    _handleBarcodeInput(e) {
-        let input = e.target.value;
-        // Remove any characters that are not English letters or numbers
-        input = input.replace(/[^A-Za-z0-9]/g, '');
-        // Convert to uppercase
-        e.target.value = input.toUpperCase();
-    }
+    // Removed _handleBarcodeInput method
 
     /**
      * Formats power values (S, C) for display and internal storage (x/100).
@@ -173,26 +158,7 @@ export default class ProductForm extends HTMLElement {
         }
     }
 
-    /**
-     * Handles barcode scan input, attempting to fill form with product data.
-     * @param {Event} e - The change event from the barcode input.
-     * @private
-     */
-    _handleBarcodeScan(e) {
-        const barcode = e.target.value;
-        if (!barcode) return;
-
-        const product = ProductService.getProductByLegacyBarcode(barcode);
-        if (product) {
-            this._fillFormWithProductData(product);
-            document.dispatchEvent(new CustomEvent('addProductToModalList', { detail: { ...product, tempId: Date.now() } }));
-            this._form.barcode.value = ''; // Clear barcode input
-        } else {
-            alert(FORM_MESSAGES.PRODUCT_NOT_FOUND);
-            this._clearForm(true); // Clear all fields except barcode
-            this._form.barcode.value = barcode;
-        }
-    }
+    // Removed _handleBarcodeScan method
 
     /**
      * Fills the form fields with provided product data.
@@ -201,7 +167,7 @@ export default class ProductForm extends HTMLElement {
      */
     _fillFormWithProductData(product) {
         this._form.id.value = product.id || '';
-        this._form.barcode.value = product.barcode || '';
+        // Removed barcode field filling
         this._form.gtin.value = product.gtin || '';
         this._form.brand.value = product.brand || '';
         this._form.model.value = product.model || '';
@@ -243,15 +209,12 @@ export default class ProductForm extends HTMLElement {
      * @param {boolean} keepBarcode - If true, keeps the barcode input value.
      * @private
      */
-    _clearForm(keepBarcode = false) {
+    _clearForm() { // Removed keepBarcode parameter
         this._product = null;
         this._form.reset();
         this._form.id.value = '';
         this._form.gtin.value = '';
-        if (keepBarcode) {
-            const currentBarcode = this._form.barcode.value;
-            this._form.barcode.value = currentBarcode;
-        }
+        // Removed barcode-related logic
         this._updateFormDisplay(); // Update title and button
     }
 
@@ -282,11 +245,11 @@ export default class ProductForm extends HTMLElement {
         const formData = new FormData(this._form);
         const id = parseInt(formData.get('id'), 10) || null;
         
-        const barcode = formData.get('barcode');
-        const gtin = (barcode && barcode.length >= 13 && barcode.length <= 14) ? barcode : ''; // Use barcode as gtin if valid length
-        
+        // Removed barcode processing
+        const gtin = formData.get('gtin'); // GTIN is now a separate field, or can be removed if not needed
+
         const product = {
-            barcode: barcode,
+            // Removed barcode field
             gtin: gtin,
             brand: formData.get('brand'),
             model: formData.get('model'),
@@ -309,19 +272,11 @@ export default class ProductForm extends HTMLElement {
             // For new products, add to the temporary list in the modal, not directly to ProductService
             document.dispatchEvent(new CustomEvent('addProductToModalList', { detail: product }));
             this._clearForm(); // Clear form after adding to temp list
-            this.focusBarcodeInput(); // Focus barcode after adding product
+            // Removed focusBarcodeInput
         }
     }
 
-    /**
-     * Sets focus to the barcode input field.
-     * @private
-     */
-    focusBarcodeInput() {
-        setTimeout(() => {
-            this._form.barcode.focus();
-        }, 0); 
-    }
+    // Removed focusBarcodeInput method
 
     /**
      * Renders the component's HTML structure.
@@ -334,10 +289,6 @@ export default class ProductForm extends HTMLElement {
             <h3 class="form-title">${this._product ? FORM_MESSAGES.EDIT_PRODUCT_TITLE : FORM_MESSAGES.ADD_PRODUCT_TITLE}</h3>
             <input type="hidden" name="id" value="${this._product ? this._product.id : ''}">
             <input type="hidden" name="gtin" value="${this._product ? this._product.gtin : ''}">
-            <div class="form-group">
-              <label for="barcode">바코드</label>
-              <input type="text" id="barcode" name="barcode" placeholder="바코드 스캔" value="${this._product ? this._product.barcode : ''}" inputmode="latin" lang="en" pattern="[A-Za-z0-9]*">
-            </div>
             <div class="form-group">
               <label for="brand">브랜드</label>
               <input type="text" id="brand" name="brand" required value="${this._product ? this._product.brand : ''}">
