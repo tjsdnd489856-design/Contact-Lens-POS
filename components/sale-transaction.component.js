@@ -333,14 +333,25 @@ export default class SaleTransaction extends HTMLElement {
    * @private
    */
   _selectCustomerFromSearch(customer) {
+      console.log('[DEBUG] _selectCustomerFromSearch called with customer:', customer);
       this.selectedCustomer = customer;
+      console.log('[DEBUG] this.selectedCustomer set to:', this.selectedCustomer);
+
       const customerSearchInput = this.shadowRoot.querySelector('#customer-search-input-sale');
       const searchResultsDiv = this.shadowRoot.querySelector('#customer-search-results-sale');
       
-      if (customerSearchInput) customerSearchInput.value = `${customer.name} (${customer.phone})`; // Display selected customer in input
-      if (searchResultsDiv) searchResultsDiv.innerHTML = ''; // Clear search results
+      if (customerSearchInput) {
+        customerSearchInput.value = `${customer.name} (${customer.phone})`; // Display selected customer in input
+        console.log('[DEBUG] customerSearchInput.value updated to:', customerSearchInput.value);
+      }
+      if (searchResultsDiv) {
+        searchResultsDiv.innerHTML = ''; // Clear search results
+        console.log('[DEBUG] searchResultsDiv cleared.');
+      }
       this._updateSelectedCustomerDisplay(); // Update internal state and clear button visibility
+      console.log('[DEBUG] _updateSelectedCustomerDisplay called.');
       this._dispatchSalesCustomerSelectedEvent(this.selectedCustomer ? this.selectedCustomer.id : null);
+      console.log('[DEBUG] salesCustomerSelected event dispatched with customerId:', this.selectedCustomer ? this.selectedCustomer.id : null);
   }
 
   /**
