@@ -99,7 +99,7 @@ export default class SaleTransaction extends HTMLElement {
       }
       
       this._updateSelectedCustomerDisplay(); // Manages visibility of the 'clear' button
-      this._dispatchSalesCustomerSelectedEvent(this.selectedCustomer.id); // Notify other components like purchase history
+      // Removed: this._dispatchSalesCustomerSelectedEvent(this.selectedCustomer.id); // This caused infinite recursion
     }
   }
 
@@ -367,7 +367,7 @@ export default class SaleTransaction extends HTMLElement {
         searchResultsDiv.classList.add('hidden'); // Add hidden class after clearing
       }
       this._updateSelectedCustomerDisplay(); // Update internal state and clear button visibility
-      this._dispatchSalesCustomerSelectedEvent(this.selectedCustomer ? this.selectedCustomer.id : null);
+      // Removed: this._dispatchSalesCustomerSelectedEvent(this.selectedCustomer ? this.selectedCustomer.id : null); // This caused infinite recursion
   }
 
   /**
