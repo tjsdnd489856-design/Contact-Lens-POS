@@ -135,11 +135,19 @@ const DISCARD_MODAL_STYLES = `
         width: 100%;
         border-collapse: collapse;
         margin-top: 1rem;
+        display: block; /* Necessary for tbody to scroll independently */
+    }
+    .power-option-table thead, .power-option-table tbody {
+        display: table; /* To maintain table semantics */
+        width: 100%; /* Important for column alignment */
+        table-layout: fixed; /* For consistent column widths */
     }
     .power-option-table th, .power-option-table td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: center;
+        width: auto; /* Let table-layout: fixed handle widths */
+        white-space: nowrap; /* Prevent wrapping if content is too long */
+        border: 1px solid #ddd; /* Ensure borders are present */
+        padding: 8px; /* Ensure padding is present */
+        text-align: center; /* Ensure text alignment is present */
     }
     .power-option-table th {
         background-color: #f2f2f2;
@@ -174,10 +182,23 @@ const DISCARD_MODAL_STYLES = `
         margin: 0;
     }
     .power-options-scroll-container {
-        max-height: 300px; /* Example max height, adjust as needed */
+        /* This container is for the thead to scroll */
+        max-height: 300px; /* This will be overridden by the tbody-scroll, if used */
+        overflow-y: visible; /* Let the tbody-scroll handle vertical scrolling */
+        border: none; /* Remove border, it will be on table */
+        border-radius: 0; /* Remove border-radius */
+    }
+    .power-option-table-body-scroll {
+        max-height: calc(15 * 38px); /* Approximate height for 15 rows (8px padding + default line-height) */
         overflow-y: auto;
-        border: 1px solid #eee; /* Optional: border for clarity */
-        border-radius: 5px;
+        display: block; /* Important for scroll */
+        width: 100%;
+    }
+    .power-option-table thead {
+        position: sticky;
+        top: 0; /* Stick to the top of the .power-options-scroll-container */
+        z-index: 1;
+        background-color: #f2f2f2; /* Ensure background color */
     }
 `;
 
@@ -627,21 +648,21 @@ export default class DiscardInventoryModal extends HTMLElement {
 
         return `
             <button class="back-button back-to-products-btn">← 제품 목록으로</button>
-            <div class="power-options-scroll-container">
-                <table class="power-option-table">
-                    <thead>
-                        <tr>
-                            <th class="${this._sortBy === 's' ? 'active' : ''}" data-sort-by="s">
-                                S ${this._sortBy === 's' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
-                            </th>
-                            <th class="${this._sortBy === 'c' ? 'active' : ''}" data-sort-by="c">
-                                C ${this._sortBy === 'c' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
-                            </th>
-                            <th>AX</th>
-                            <th>수량</th>
-                            <th>폐기 수량</th>
-                        </tr>
-                    </thead>
+            <table class="power-option-table">
+                <thead>
+                    <tr>
+                        <th class="${this._sortBy === 's' ? 'active' : ''}" data-sort-by="s">
+                            S ${this._sortBy === 's' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
+                        </th>
+                        <th class="${this._sortBy === 'c' ? 'active' : ''}" data-sort-by="c">
+                            C ${this._sortBy === 'c' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
+                        </th>
+                        <th>AX</th>
+                        <th>수량</th>
+                        <th>폐기 수량</th>
+                    </tr>
+                </thead>
+                <div class="power-option-table-body-scroll">
                     <tbody>
                         ${sortedPowerOptions.map(option => {
                             const modelId = this._currentFilterProduct.id; // The ID of the model group
@@ -661,8 +682,8 @@ export default class DiscardInventoryModal extends HTMLElement {
                             `;
                         }).join('')}
                     </tbody>
-                </table>
-            </div>
+                </div>
+            </table>
         `;
     }
 
