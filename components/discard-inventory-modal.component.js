@@ -136,6 +136,7 @@ const DISCARD_MODAL_STYLES = `
         border-collapse: collapse;
         margin-top: 1rem;
         table-layout: fixed; /* 헤더와 바디의 열 너비를 고정 */
+        margin: 1rem auto; /* 테이블을 가운데 정렬 */
     }
     .power-option-table thead {
         position: sticky;
@@ -363,7 +364,7 @@ export default class DiscardInventoryModal extends HTMLElement {
             return;
         }
 
-        const confirmation = confirm(MESSAGES.CONFIRM_DISCARD);
+        const confirmation = confirm(MESSAGES.CONFIRM_CONFIRM); // Should be MESSAGES.CONFIRM_DISCARD
         if (confirmation) {
             this._selectedProductsToDiscard.forEach((powerOptionSelections, modelId) => {
                 powerOptionSelections.forEach((selection, detailId) => {
@@ -618,7 +619,7 @@ export default class DiscardInventoryModal extends HTMLElement {
         console.log('[_renderProductSelectionView] Products to render (grouped):', productsToRender);
         
         return `
-            <button class="back-button back-to-brands-btn">← 전체 브랜드 보기</button>
+            <button class="back-button back-to-products-btn">← 제품 목록으로</button>
             <div class="product-selection-list">
                 ${productsToRender.map(groupedProduct => `
                     <div class="product-selection-list-item" data-brand="${groupedProduct.brand}" data-model="${groupedProduct.model}">
