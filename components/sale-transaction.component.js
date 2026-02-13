@@ -243,11 +243,13 @@ export default class SaleTransaction extends HTMLElement {
    * @private
    */
   _handleCustomerSearchKeydown(event) {
+    console.log('[DEBUG] _handleCustomerSearchKeydown called. Key:', event.key);
     const searchResultsDiv = this.shadowRoot.querySelector('#customer-search-results-sale');
     const items = searchResultsDiv ? searchResultsDiv.querySelectorAll('.customer-search-result-item') : [];
 
     if (!items.length) {
       this._selectedSearchIndex = -1;
+      console.log('[DEBUG] No search results, _selectedSearchIndex reset to -1.');
       return;
     }
 
@@ -255,22 +257,29 @@ export default class SaleTransaction extends HTMLElement {
       case 'ArrowDown':
         event.preventDefault();
         this._selectedSearchIndex = (this._selectedSearchIndex + 1) % items.length;
+        console.log('[DEBUG] ArrowDown pressed. New _selectedSearchIndex:', this._selectedSearchIndex);
         this._updateSelectedSearchResult(items);
         break;
       case 'ArrowUp':
         event.preventDefault();
         this._selectedSearchIndex = (this._selectedSearchIndex - 1 + items.length) % items.length;
+        console.log('[DEBUG] ArrowUp pressed. New _selectedSearchIndex:', this._selectedSearchIndex);
         this._updateSelectedSearchResult(items);
         break;
       case 'Enter':
         event.preventDefault();
+        console.log('[DEBUG] Enter pressed. Current _selectedSearchIndex:', this._selectedSearchIndex);
         if (this._selectedSearchIndex > -1) {
           items[this._selectedSearchIndex].click();
+          console.log('[DEBUG] Click simulated on item at index:', this._selectedSearchIndex);
+        } else {
+          console.log('[DEBUG] No item selected for Enter key.');
         }
         break;
       case 'Escape':
         searchResultsDiv.innerHTML = '';
         this._selectedSearchIndex = -1;
+        console.log('[DEBUG] Escape pressed. Search results cleared, _selectedSearchIndex reset to -1.');
         break;
     }
   }
@@ -281,12 +290,15 @@ export default class SaleTransaction extends HTMLElement {
    * @private
    */
   _updateSelectedSearchResult(items) {
+    console.log('[DEBUG] _updateSelectedSearchResult called. Items count:', items.length, 'Current _selectedSearchIndex:', this._selectedSearchIndex);
     items.forEach((item, index) => {
       if (index === this._selectedSearchIndex) {
         item.classList.add('selected');
         item.scrollIntoView({ block: 'nearest' });
+        console.log('[DEBUG] Item at index', index, 'selected. Class added.');
       } else {
         item.classList.remove('selected');
+        console.log('[DEBUG] Item at index', index, 'deselected. Class removed.');
       }
     });
   }
@@ -297,11 +309,13 @@ export default class SaleTransaction extends HTMLElement {
    * @private
    */
   _renderCustomerSearchResults(customers) {
+      console.log('[DEBUG] _renderCustomerSearchResults called. Customers count:', customers.length);
       this._selectedSearchIndex = -1;
       const searchResultsDiv = this.shadowRoot.querySelector('#customer-search-results-sale');
       if (searchResultsDiv) {
           if (customers.length === 0) {
               searchResultsDiv.innerHTML = '';
+              console.log('[DEBUG] No customers, search results div cleared.');
               return;
           }
           searchResultsDiv.innerHTML = customers.map(c => `
@@ -309,6 +323,7 @@ export default class SaleTransaction extends HTMLElement {
                   ${c.name} (${c.phone})
               </div>
           `).join('');
+          console.log('[DEBUG] Search results rendered.');
       }
   }
 
