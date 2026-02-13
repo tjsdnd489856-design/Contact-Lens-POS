@@ -43,7 +43,6 @@ export default class SaleTransaction extends HTMLElement {
   connectedCallback() {
 
     this._render();
-    this._attachEventListeners();
     document.addEventListener('productsUpdated', this._render.bind(this));
     document.addEventListener('customersUpdated', this._handleCustomersUpdated);
     document.addEventListener('productSelectedForSale', this._handleProductSelectedForSale); // Listen for product selection
@@ -198,10 +197,23 @@ export default class SaleTransaction extends HTMLElement {
         customerSearchResultsDiv.removeEventListener('click', this._handleCustomerSearchResultClick);
     }
 
-    shadowRoot.querySelector('#barcode-scanner-input').removeEventListener('keydown', this._handleBarcodeInputKeydown);
-    shadowRoot.querySelector('#barcode-scanner-input').removeEventListener('input', this._handleBarcodeInput);
-    shadowRoot.querySelector('#open-product-selection-modal-btn').removeEventListener('click', this._handleOpenProductSelectionModal); // New listener
-    shadowRoot.querySelector('#complete-sale-btn').removeEventListener('click', this.completeSale);
+    // These querySelector calls might return null if the elements aren't in the shadow DOM yet (or anymore)
+    // Add null checks for robustness
+    const barcodeInput = shadowRoot.querySelector('#barcode-scanner-input');
+    if (barcodeInput) {
+      barcodeInput.removeEventListener('keydown', this._handleBarcodeInputKeydown);
+      barcodeInput.removeEventListener('input', this._handleBarcodeInput);
+    }
+
+    const openProductModalBtn = shadowRoot.querySelector('#open-product-selection-modal-btn');
+    if (openProductModalBtn) {
+      openProductModalBtn.removeEventListener('click', this._handleOpenProductSelectionModal);
+    }
+
+    const completeSaleBtn = shadowRoot.querySelector('#complete-sale-btn');
+    if (completeSaleBtn) {
+      completeSaleBtn.removeEventListener('click', this.completeSale);
+    }
   }
 
   /**
@@ -589,6 +601,7 @@ export default class SaleTransaction extends HTMLElement {
    */
   _render() {
     const products = ProductService.getProducts();
+    this._detachEventListeners(); // Detach existing listeners before re-rendering
     this.shadowRoot.innerHTML = this._getSalesTemplate(products);
     this._renderCart();
     // Re-attach event listeners as shadowRoot.innerHTML was reset
