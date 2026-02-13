@@ -189,7 +189,7 @@ const DISCARD_MODAL_STYLES = `
         border-radius: 0; /* Remove border-radius */
     }
     .power-option-table-body-scroll {
-        max-height: calc(15 * 38px); /* Approximate height for 15 rows (8px padding + default line-height) */
+        max-height: 780px; /* Approximate height for 15 rows (52px per row) */
         overflow-y: auto;
         display: block; /* Important for scroll */
         width: 100%;
@@ -199,10 +199,6 @@ const DISCARD_MODAL_STYLES = `
         top: 0; /* Stick to the top of the .power-options-scroll-container */
         z-index: 1;
         background-color: #f2f2f2; /* Ensure background color */
-    }
-    /* Temporary rule to inspect row height */
-    .power-option-table-body-scroll tbody tr {
-        background-color: yellow !important;
     }
 `;
 
