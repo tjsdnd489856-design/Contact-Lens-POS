@@ -244,6 +244,10 @@ export default class SaleTransaction extends HTMLElement {
    * @private
    */
   _handleCustomerSearchKeydown(event) {
+    if (!this.shadowRoot) { 
+      console.warn("shadowRoot is null in _handleCustomerSearchKeydown. Event ignored.");
+      return;
+    }
     const searchResultsDiv = this.shadowRoot.querySelector('#customer-search-results-sale');
     const items = searchResultsDiv ? searchResultsDiv.querySelectorAll('.customer-search-result-item') : [];
 
@@ -639,12 +643,6 @@ export default class SaleTransaction extends HTMLElement {
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             justify-content: space-between;
-        }
-
-        .scrollable-cart-items {
-            flex-grow: 1;
-            overflow-y: auto;
-            margin-bottom: 1rem;
         }
 
         customer-purchase-history {
