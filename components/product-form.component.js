@@ -148,27 +148,28 @@ export default class ProductForm extends HTMLElement {
             return;
         }
 
-        let cleanValue = value.replace(/[^0-9+\-.]/g, '');
-        const startsWithPlus = cleanValue.startsWith('+');
-        const startsWithMinus = cleanValue.startsWith('-');
-
-        if (startsWithPlus || startsWithMinus) {
-            cleanValue = cleanValue.substring(1); 
-        }
-
-        let num = parseFloat(cleanValue);
+        const originalStartsWithPlus = value.startsWith('+');
+        const originalStartsWithMinus = value.startsWith('-');
+        
+        // Remove all non-numeric characters for parsing magnitude, but keep the original signs check
+        let cleanValueForMagnitude = value.replace(/[^0-9.]/g, ''); 
+        
+        let num = parseFloat(cleanValueForMagnitude);
         if (isNaN(num)) {
             inputElement.value = '';
             return;
         }
 
-        let formattedValue = (num / 100).toFixed(2);
-        if (parseFloat(formattedValue) === 0) { // Use parseFloat on formattedValue
+        let formattedMagnitude = (num / 100).toFixed(2);
+
+        if (num === 0) {
             inputElement.value = '0.00';
-        } else if (startsWithPlus || (!startsWithMinus && parseFloat(formattedValue) > 0)) {
-            inputElement.value = `+${formattedValue}`;
-        } else {
-            inputElement.value = formattedValue; // - is already in formattedValue
+        } else if (originalStartsWithPlus) { // If original input explicitly had '+', it's positive
+            inputElement.value = `+${formattedMagnitude}`;
+        } else if (originalStartsWithMinus) { // If original input explicitly had '-', it's negative
+            inputElement.value = `-${formattedMagnitude}`;
+        } else { // No explicit sign: assume it's a positive input that should become negative
+            inputElement.value = `-${formattedMagnitude}`;
         }
     }
 
@@ -220,7 +221,8 @@ export default class ProductForm extends HTMLElement {
      */
     _formatPowerValueDisplay(value) {
         if (value === null || value === undefined) return '';
-        return (value >= 0 ? '+' : '') + value.toFixed(2);
+        if (value === 0) return '0.00';
+        return (value > 0 ? '+' : '') + value.toFixed(2);
     }
 
     /**
