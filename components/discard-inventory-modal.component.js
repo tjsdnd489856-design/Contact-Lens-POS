@@ -627,40 +627,42 @@ export default class DiscardInventoryModal extends HTMLElement {
 
         return `
             <button class="back-button back-to-products-btn">← 제품 목록으로</button>
-            <table class="power-option-table">
-                <thead>
-                    <tr>
-                        <th class="${this._sortBy === 's' ? 'active' : ''}" data-sort-by="s">
-                            S ${this._sortBy === 's' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
-                        </th>
-                        <th class="${this._sortBy === 'c' ? 'active' : ''}" data-sort-by="c">
-                            C ${this._sortBy === 'c' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
-                        </th>
-                        <th>AX</th>
-                        <th>수량</th>
-                        <th>폐기 수량</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${sortedPowerOptions.map(option => {
-                        const modelId = this._currentFilterProduct.id; // The ID of the model group
-                        const currentSelectedQty = this._selectedProductsToDiscard.get(modelId)?.get(option.detailId)?.quantity || 0;
-                        return `
-                            <tr class="power-option-table-row ${currentSelectedQty > 0 ? 'selected' : ''}" 
-                                data-model-id="${modelId}" data-detail-id="${option.detailId}" data-variant-id="${option.variantId}">
-                                <td>${(option.s !== null && option.s !== undefined) ? (option.s > 0 ? '+' : '') + option.s.toFixed(2) : 'N/A'}</td>
-                                <td>${(option.c !== null && option.c !== undefined) ? (option.c > 0 ? '+' : '') + option.c.toFixed(2) : 'N/A'}</td>
-                                <td>${option.ax !== null ? option.ax : 'N/A'}</td>
-                                <td>${option.quantity}</td>
-                                <td>
-                                    <input type="number" min="0" max="${option.quantity}" value="${currentSelectedQty}"
-                                           data-model-id="${modelId}" data-detail-id="${option.detailId}" data-variant-id="${option.variantId}" class="discard-quantity-input">
-                                </td>
-                            </tr>
-                        `;
-                    }).join('')}
-                </tbody>
-            </table>
+            <div class="power-options-scroll-container">
+                <table class="power-option-table">
+                    <thead>
+                        <tr>
+                            <th class="${this._sortBy === 's' ? 'active' : ''}" data-sort-by="s">
+                                S ${this._sortBy === 's' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
+                            </th>
+                            <th class="${this._sortBy === 'c' ? 'active' : ''}" data-sort-by="c">
+                                C ${this._sortBy === 'c' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
+                            </th>
+                            <th>AX</th>
+                            <th>수량</th>
+                            <th>폐기 수량</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sortedPowerOptions.map(option => {
+                            const modelId = this._currentFilterProduct.id; // The ID of the model group
+                            const currentSelectedQty = this._selectedProductsToDiscard.get(modelId)?.get(option.detailId)?.quantity || 0;
+                            return `
+                                <tr class="power-option-table-row ${currentSelectedQty > 0 ? 'selected' : ''}" 
+                                    data-model-id="${modelId}" data-detail-id="${option.detailId}" data-variant-id="${option.variantId}">
+                                    <td>${(option.s !== null && option.s !== undefined) ? (option.s > 0 ? '+' : '') + option.s.toFixed(2) : 'N/A'}</td>
+                                    <td>${(option.c !== null && option.c !== undefined) ? (option.c > 0 ? '+' : '') + option.c.toFixed(2) : 'N/A'}</td>
+                                    <td>${option.ax !== null ? option.ax : 'N/A'}</td>
+                                    <td>${option.quantity}</td>
+                                    <td>
+                                        <input type="number" min="0" max="${option.quantity}" value="${currentSelectedQty}"
+                                               data-model-id="${modelId}" data-detail-id="${option.detailId}" data-variant-id="${option.variantId}" class="discard-quantity-input">
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
         `;
     }
 
