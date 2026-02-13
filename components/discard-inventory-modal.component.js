@@ -137,13 +137,13 @@ const DISCARD_MODAL_STYLES = `
         margin-top: 1rem;
         display: block; /* Necessary for tbody to scroll independently */
     }
-    .power-option-table thead, .power-option-table tbody {
+    .power-option-table thead, .power-option-table tbody tr { /* Apply display: table-row to tbody tr to match thead th */
         display: table; /* To maintain table semantics */
         width: 100%; /* Important for column alignment */
         table-layout: fixed; /* For consistent column widths */
     }
     .power-option-table th, .power-option-table td {
-        width: auto; /* Let table-layout: fixed handle widths */
+        width: 20%; /* Distribute width equally among 5 columns */
         white-space: nowrap; /* Prevent wrapping if content is too long */
         border: 1px solid #ddd; /* Ensure borders are present */
         padding: 8px; /* Ensure padding is present */
@@ -181,24 +181,17 @@ const DISCARD_MODAL_STYLES = `
         -webkit-appearance: none;
         margin: 0;
     }
-    .power-options-scroll-container {
-        /* This container is for the thead to scroll */
-        max-height: 300px; /* This will be overridden by the tbody-scroll, if used */
-        overflow-y: visible; /* Let the tbody-scroll handle vertical scrolling */
-        border: none; /* Remove border, it will be on table */
-        border-radius: 0; /* Remove border-radius */
-    }
-    .power-option-table-body-scroll {
-        max-height: 780px; /* Approximate height for 15 rows (52px per row) */
-        overflow-y: auto;
-        display: block; /* Important for scroll */
-        width: 100%;
-    }
     .power-option-table thead {
         position: sticky;
-        top: 0; /* Stick to the top of the .power-options-scroll-container */
+        top: 0;
         z-index: 1;
-        background-color: #f2f2f2; /* Ensure background color */
+        background-color: #f2f2f2;
+    }
+    .power-option-table tbody {
+        display: block; /* Essential for max-height and overflow-y to work */
+        max-height: 780px; /* 15 rows * 52px/row */
+        overflow-y: auto;
+        width: 100%; /* Ensure tbody takes full width */
     }
 `;
 
@@ -662,27 +655,25 @@ export default class DiscardInventoryModal extends HTMLElement {
                         <th>폐기 수량</th>
                     </tr>
                 </thead>
-                <div class="power-option-table-body-scroll">
-                    <tbody>
-                        ${sortedPowerOptions.map(option => {
-                            const modelId = this._currentFilterProduct.id; // The ID of the model group
-                            const currentSelectedQty = this._selectedProductsToDiscard.get(modelId)?.get(option.detailId)?.quantity || 0;
-                            return `
-                                <tr class="power-option-table-row ${currentSelectedQty > 0 ? 'selected' : ''}" 
-                                    data-model-id="${modelId}" data-detail-id="${option.detailId}" data-variant-id="${option.variantId}">
-                                    <td>${(option.s !== null && option.s !== undefined) ? (option.s > 0 ? '+' : '') + option.s.toFixed(2) : 'N/A'}</td>
-                                    <td>${(option.c !== null && option.c !== undefined) ? (option.c > 0 ? '+' : '') + option.c.toFixed(2) : 'N/A'}</td>
-                                    <td>${option.ax !== null ? option.ax : 'N/A'}</td>
-                                    <td>${option.quantity}</td>
-                                    <td>
-                                        <input type="number" min="0" max="${option.quantity}" value="${currentSelectedQty}"
-                                               data-model-id="${modelId}" data-detail-id="${option.detailId}" data-variant-id="${option.variantId}" class="discard-quantity-input">
-                                    </td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </div>
+                <tbody>
+                    ${sortedPowerOptions.map(option => {
+                        const modelId = this._currentFilterProduct.id; // The ID of the model group
+                        const currentSelectedQty = this._selectedProductsToDiscard.get(modelId)?.get(option.detailId)?.quantity || 0;
+                        return `
+                            <tr class="power-option-table-row ${currentSelectedQty > 0 ? 'selected' : ''}" 
+                                data-model-id="${modelId}" data-detail-id="${option.detailId}" data-variant-id="${option.variantId}">
+                                <td>${(option.s !== null && option.s !== undefined) ? (option.s > 0 ? '+' : '') + option.s.toFixed(2) : 'N/A'}</td>
+                                <td>${(option.c !== null && option.c !== undefined) ? (option.c > 0 ? '+' : '') + option.c.toFixed(2) : 'N/A'}</td>
+                                <td>${option.ax !== null ? option.ax : 'N/A'}</td>
+                                <td>${option.quantity}</td>
+                                <td>
+                                    <input type="number" min="0" max="${option.quantity}" value="${currentSelectedQty}"
+                                           data-model-id="${modelId}" data-detail-id="${option.detailId}" data-variant-id="${option.variantId}" class="discard-quantity-input">
+                                </td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
             </table>
         `;
     }
