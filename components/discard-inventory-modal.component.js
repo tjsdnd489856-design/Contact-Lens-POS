@@ -173,6 +173,12 @@ const DISCARD_MODAL_STYLES = `
         -webkit-appearance: none;
         margin: 0;
     }
+    .power-options-scroll-container {
+        max-height: 300px; /* Example max height, adjust as needed */
+        overflow-y: auto;
+        border: 1px solid #eee; /* Optional: border for clarity */
+        border-radius: 5px;
+    }
 `;
 
 // Utility to augment products with powerOptions structure
@@ -183,7 +189,8 @@ function augmentProductWithPowerOptions(product) {
     return {
         ...product,
         powerOptions: [{
-            detailId: `${product.id}-${product.powerS}-${product.powerC}-${product.powerAX}`, // Unique ID for this power option
+            detailId: `${product.powerS}-${product.powerC}-${product.powerAX}`, // S-C-AX combination
+            variantId: product.id, // The actual Firestore ID of this variant
             s: product.powerS,
             c: product.powerC,
             ax: product.powerAX,
@@ -198,7 +205,7 @@ export default class DiscardInventoryModal extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this._products = []; // All products with their powerOptions
-        // Stores selections: Map<productId, Map<powerOptionKey, quantity>>
+        // Stores selections: Map<modelId (brand-model), Map<detailId (S-C-AX), { quantity: number, variantId: number }>>
         this._selectedProductsToDiscard = new Map(); 
         this._currentFilterBrand = null; // Currently selected brand for filtering products
         this._currentFilterProduct = null; // Currently selected product for viewing power options
@@ -209,7 +216,6 @@ export default class DiscardInventoryModal extends HTMLElement {
         this.closeModal = this.closeModal.bind(this); // New binding
         this._filterByBrand = this._filterByBrand.bind(this);
         this._showAllBrands = this._showAllBrands.bind(this);
-        // this._filterByProduct = this._filterByProduct.bind(this); // This will be replaced
         this._filterByBrandAndModel = this._filterByBrandAndModel.bind(this); // New binding
         this._showAllProductsForBrand = this._showAllProductsForBrand.bind(this);
         this._handleDiscardQuantityChange = this._handleDiscardQuantityChange.bind(this);
@@ -258,51 +264,58 @@ export default class DiscardInventoryModal extends HTMLElement {
 
     /**
      * Handles quantity change for a product power option to discard.
-     * @param {number} productId - The ID of the product.
-     * @param {string} powerOptionKey - The unique key for the power option.
+     * @param {string} modelId - The ID of the model group (brand-model).
+     * @param {string} detailId - The unique key for the power option (S-C-AX).
+     * @param {number} variantId - The actual Firestore ID of the variant being discarded.
      * @param {string} quantity - The new quantity as a string.
      * @private
      */
-    _handleDiscardQuantityChange(productId, powerOptionKey, quantity) {
-        const product = this._products.find(p => p.id === productId);
-        const powerOption = product?.powerOptions.find(opt => opt.detailId === powerOptionKey);
-        if (!product || !powerOption) return;
+    _handleDiscardQuantityChange(modelId, detailId, variantId, quantity) {
+        // Find original product variant by its Firestore ID to get its max quantity
+        const originalVariant = this._products.find(p => p.id === variantId);
+        const powerOptionFromOriginal = originalVariant?.powerOptions.find(opt => opt.detailId === detailId && opt.variantId === variantId);
+        
+        if (!originalVariant || !powerOptionFromOriginal) return;
 
         const numQuantity = parseInt(quantity, 10);
         
-        let productSelections = this._selectedProductsToDiscard.get(productId);
-        if (!productSelections) {
-            productSelections = new Map();
-            this._selectedProductsToDiscard.set(productId, productSelections);
+        let modelSelections = this._selectedProductsToDiscard.get(modelId);
+        if (!modelSelections) {
+            modelSelections = new Map();
+            this._selectedProductsToDiscard.set(modelId, modelSelections);
         }
 
-        if (!isNaN(numQuantity) && numQuantity >= 0 && numQuantity <= powerOption.quantity) {
+        if (!isNaN(numQuantity) && numQuantity >= 0 && numQuantity <= powerOptionFromOriginal.quantity) {
             if (numQuantity > 0) {
-                productSelections.set(powerOptionKey, numQuantity);
+                modelSelections.set(detailId, { quantity: numQuantity, variantId: variantId });
             } else {
-                productSelections.delete(powerOptionKey);
+                modelSelections.delete(detailId);
             }
         } else {
-            alert(MESSAGES.INVALID_QUANTITY(powerOption.quantity));
-            productSelections.delete(powerOptionKey); // Reset selection
+            alert(MESSAGES.INVALID_QUANTITY(powerOptionFromOriginal.quantity));
+            modelSelections.delete(detailId); // Reset selection
         }
         
-        if (productSelections.size === 0) {
-            this._selectedProductsToDiscard.delete(productId);
+        if (modelSelections.size === 0) {
+            this._selectedProductsToDiscard.delete(modelId);
         }
-        this._updateRenderedSelectionState(productId, powerOptionKey, numQuantity);
+        this._updateRenderedSelectionState(modelId, detailId, variantId, numQuantity);
         this._updateDiscardButtonState();
     }
 
     /**
      * Updates the visual state of a discarded item in the rendered table.
-     * @param {number} productId - The ID of the product.
-     * @param {string} powerOptionKey - The key of the power option.
+     * @param {string} modelId - The ID of the model group (brand-model).
+     * @param {string} detailId - The key of the power option (S-C-AX).
+     * @param {number} variantId - The actual Firestore ID of the variant.
      * @param {number} quantity - The selected quantity.
      * @private
      */
-    _updateRenderedSelectionState(productId, powerOptionKey, quantity) {
-        const itemElement = this.shadowRoot.querySelector(`.power-option-table-row[data-detail-id="${powerOptionKey}"]`);
+    _updateRenderedSelectionState(modelId, detailId, variantId, quantity) {
+        // Use modelId, detailId, and variantId to uniquely identify the row
+        const itemElement = this.shadowRoot.querySelector(
+            `.power-option-table-row[data-model-id="${modelId}"][data-detail-id="${detailId}"][data-variant-id="${variantId}"]`
+        );
         if (itemElement) {
             if (quantity > 0) {
                 itemElement.classList.add('selected');
@@ -329,10 +342,10 @@ export default class DiscardInventoryModal extends HTMLElement {
 
         const confirmation = confirm(MESSAGES.CONFIRM_DISCARD);
         if (confirmation) {
-            this._selectedProductsToDiscard.forEach((powerOptionSelections, productId) => {
-                powerOptionSelections.forEach((quantity, powerOptionKey) => {
-                    if (quantity > 0) {
-                        ProductService.decreaseStock(productId, quantity);
+            this._selectedProductsToDiscard.forEach((powerOptionSelections, modelId) => {
+                powerOptionSelections.forEach((selection, detailId) => {
+                    if (selection.quantity > 0) {
+                        ProductService.decreaseStock(selection.variantId, selection.quantity);
                     }
                 });
             });
@@ -395,30 +408,33 @@ export default class DiscardInventoryModal extends HTMLElement {
         const productsMatchingModel = this._products.filter(p => p.brand === brand && p.model === model);
         
         if (productsMatchingModel.length > 0) {
-            // Set _currentFilterProduct to the first found product variant that matches the model.
-            // This ensures _currentFilterProduct has the powerOptions array _renderPowerOptionSelectionView expects.
+            const consolidatedPowerOptionsMap = new Map();
+
+            productsMatchingModel.forEach(p => {
+                p.powerOptions.forEach(option => {
+                    const key = option.detailId; // This is now S-C-AX
+                    if (!consolidatedPowerOptionsMap.has(key)) {
+                        consolidatedPowerOptionsMap.set(key, { 
+                            ...option, 
+                            variantId: p.id, // Store the original Firestore ID of this specific variant
+                        });
+                    } else {
+                        const existing = consolidatedPowerOptionsMap.get(key);
+                        existing.quantity += option.quantity;
+                        // For simplicity, keep the variantId of the first variant encountered for this power option
+                        // If multiple variants have same S,C,AX with different Firestore IDs,
+                        // this approach uses the variantId from the first one. This is a design choice.
+                    }
+                });
+            });
+
             this._currentFilterProduct = {
-                id: productsMatchingModel[0].id, // Use the ID of one of the variants as the product ID
+                id: `${brand}-${model}`, // A unique ID for the model group, used as top-level key for _selectedProductsToDiscard
                 brand: brand,
                 model: model,
-                // Aggregate all unique power options for this brand and model
-                powerOptions: productsMatchingModel.flatMap(p => p.powerOptions)
-                                .reduce((acc, currentOption) => {
-                                    const key = `${currentOption.s}_${currentOption.c}_${currentOption.ax}`;
-                                    if (!acc.has(key)) {
-                                        acc.set(key, { ...currentOption });
-                                    } else {
-                                        // If already exists, aggregate quantity
-                                        const existing = acc.get(key);
-                                        existing.quantity += currentOption.quantity;
-                                    }
-                                    return acc;
-                                }, new Map())
-                                .values() // Get the values (power option objects) from the map
+                powerOptions: Array.from(consolidatedPowerOptionsMap.values())
             };
-            // Ensure powerOptions is an array
-            this._currentFilterProduct.powerOptions = Array.from(this._currentFilterProduct.powerOptions);
-
+            
             console.log('[_filterByBrandAndModel] Found product for model (consolidated):', this._currentFilterProduct);
         } else {
             this._currentFilterProduct = null;
@@ -507,7 +523,11 @@ export default class DiscardInventoryModal extends HTMLElement {
      * @private
      */
     _handleDiscardQuantityInputChange(e) {
-        this._handleDiscardQuantityChange(parseInt(e.target.dataset.productId, 10), e.target.dataset.detailId, e.target.value);
+        const modelId = e.target.dataset.modelId; // The model group ID
+        const detailId = e.target.dataset.detailId;
+        const variantId = parseInt(e.target.dataset.variantId, 10); // Get actual variant ID from dataset
+        const quantity = e.target.value;
+        this._handleDiscardQuantityChange(modelId, detailId, variantId, quantity);
     }
 
     /**
@@ -623,16 +643,18 @@ export default class DiscardInventoryModal extends HTMLElement {
                 </thead>
                 <tbody>
                     ${sortedPowerOptions.map(option => {
-                        const currentSelectedQty = this._selectedProductsToDiscard.get(product.id)?.get(option.detailId) || 0;
+                        const modelId = this._currentFilterProduct.id; // The ID of the model group
+                        const currentSelectedQty = this._selectedProductsToDiscard.get(modelId)?.get(option.detailId)?.quantity || 0;
                         return `
-                            <tr class="power-option-table-row ${currentSelectedQty > 0 ? 'selected' : ''}" data-product-id="${product.id}" data-detail-id="${option.detailId}">
+                            <tr class="power-option-table-row ${currentSelectedQty > 0 ? 'selected' : ''}" 
+                                data-model-id="${modelId}" data-detail-id="${option.detailId}" data-variant-id="${option.variantId}">
                                 <td>${(option.s !== null && option.s !== undefined) ? (option.s > 0 ? '+' : '') + option.s.toFixed(2) : 'N/A'}</td>
                                 <td>${(option.c !== null && option.c !== undefined) ? (option.c > 0 ? '+' : '') + option.c.toFixed(2) : 'N/A'}</td>
                                 <td>${option.ax !== null ? option.ax : 'N/A'}</td>
                                 <td>${option.quantity}</td>
                                 <td>
                                     <input type="number" min="0" max="${option.quantity}" value="${currentSelectedQty}"
-                                           data-product-id="${product.id}" data-detail-id="${option.detailId}" class="discard-quantity-input">
+                                           data-model-id="${modelId}" data-detail-id="${option.detailId}" data-variant-id="${option.variantId}" class="discard-quantity-input">
                                 </td>
                             </tr>
                         `;
@@ -727,10 +749,11 @@ export default class DiscardInventoryModal extends HTMLElement {
                     if (e.target.classList.contains('discard-quantity-input')) {
                         return;
                     }
-                    const productId = parseInt(row.dataset.productId, 10);
-                    const powerOptionKey = row.dataset.detailId;
+                    const modelId = row.dataset.modelId;
+                    const detailId = row.dataset.detailId;
+                    const variantId = parseInt(row.dataset.variantId, 10);
                     const inputElement = row.querySelector('.discard-quantity-input');
-                    this._togglePowerOptionSelection(productId, powerOptionKey, inputElement);
+                    this._togglePowerOptionSelection(modelId, detailId, variantId, inputElement);
                 });
             });
             this.shadowRoot.querySelectorAll('.discard-quantity-input').forEach(input => {
@@ -745,38 +768,43 @@ export default class DiscardInventoryModal extends HTMLElement {
 
     /**
      * Toggles the selection state of a power option for discarding.
-     * @param {number} productId - The ID of the product.
-     * @param {string} powerOptionKey - The unique key for the power option.
+     * @param {string} modelId - The ID of the model group (brand-model).
+     * @param {string} detailId - The unique key for the power option (S-C-AX).
+     * @param {number} variantId - The actual Firestore ID of the variant being toggled.
      * @param {HTMLInputElement} inputElement - The input element for quantity.
      * @private
      */
-    _togglePowerOptionSelection(productId, powerOptionKey, inputElement) {
-        const product = this._products.find(p => p.id === productId);
-        const powerOption = product?.powerOptions.find(opt => opt.detailId === powerOptionKey);
-        if (!product || !powerOption) return;
+    _togglePowerOptionSelection(modelId, detailId, variantId, inputElement) {
+        // Find original product variant by its Firestore ID to get its maximum available quantity.
+        const originalVariant = this._products.find(p => p.id === variantId);
+        const powerOptionFromOriginal = originalVariant?.powerOptions.find(opt => opt.detailId === detailId && opt.variantId === variantId);
+        
+        if (!originalVariant || !powerOptionFromOriginal) return;
 
-        let productSelections = this._selectedProductsToDiscard.get(productId);
-        const currentSelectedQty = productSelections?.get(powerOptionKey) || 0;
+        let modelSelections = this._selectedProductsToDiscard.get(modelId);
+        if (!modelSelections) {
+            modelSelections = new Map();
+            this._selectedProductsToDiscard.set(modelId, modelSelections);
+        }
+
+        const currentSelection = modelSelections.get(detailId);
+        const currentSelectedQty = currentSelection?.quantity || 0;
         
         if (currentSelectedQty > 0) {
             // Deselect
-            productSelections.delete(powerOptionKey);
-            if (productSelections.size === 0) this._selectedProductsToDiscard.delete(productId);
+            modelSelections.delete(detailId);
+            if (modelSelections.size === 0) this._selectedProductsToDiscard.delete(modelId);
             inputElement.closest('tr').classList.remove('selected');
             inputElement.value = 0;
         } else {
             // Select with default 1, or max if quantity is 0
-            const quantityToSet = Math.min(1, powerOption.quantity);
+            const quantityToSet = Math.min(1, powerOptionFromOriginal.quantity);
             if (quantityToSet > 0) {
-                if (!productSelections) {
-                    productSelections = new Map();
-                    this._selectedProductsToDiscard.set(productId, productSelections);
-                }
-                productSelections.set(powerOptionKey, quantityToSet);
+                modelSelections.set(detailId, { quantity: quantityToSet, variantId: variantId });
                 inputElement.closest('tr').classList.add('selected');
                 inputElement.value = quantityToSet;
             } else {
-                alert(MESSAGES.INVALID_QUANTITY(powerOption.quantity));
+                alert(MESSAGES.INVALID_QUANTITY(powerOptionFromOriginal.quantity));
             }
         }
         this._updateDiscardButtonState();
@@ -791,8 +819,8 @@ export default class DiscardInventoryModal extends HTMLElement {
         const discardButton = this.shadowRoot.getElementById('discard-confirm-btn');
         if (discardButton) {
             let totalDiscardQuantity = 0;
-            this._selectedProductsToDiscard.forEach(productSelections => {
-                productSelections.forEach(qty => totalDiscardQuantity += qty);
+            this._selectedProductsToDiscard.forEach(modelSelections => {
+                modelSelections.forEach(selection => totalDiscardQuantity += selection.quantity);
             });
             discardButton.disabled = totalDiscardQuantity === 0;
         }
