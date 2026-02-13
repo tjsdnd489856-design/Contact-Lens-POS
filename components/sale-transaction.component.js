@@ -343,10 +343,11 @@ export default class SaleTransaction extends HTMLElement {
       if (customerSearchInput) {
         customerSearchInput.value = `${customer.name} (${customer.phone})`; // Display selected customer in input
         console.log('[DEBUG] customerSearchInput.value updated to:', customerSearchInput.value);
+        console.log('[DEBUG] Readback customerSearchInput.value:', customerSearchInput.value); // New log
       }
       if (searchResultsDiv) {
         searchResultsDiv.innerHTML = ''; // Clear search results
-        console.log('[DEBUG] searchResultsDiv cleared.');
+        console.log('[DEBUG] searchResultsDiv cleared. InnerHTML:', searchResultsDiv.innerHTML); // New log
       }
       this._updateSelectedCustomerDisplay(); // Update internal state and clear button visibility
       console.log('[DEBUG] _updateSelectedCustomerDisplay called.');
