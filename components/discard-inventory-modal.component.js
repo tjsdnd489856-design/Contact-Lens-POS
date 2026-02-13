@@ -215,6 +215,11 @@ export default class DiscardInventoryModal extends HTMLElement {
         this._discardSelectedProducts = this._discardSelectedProducts.bind(this);
         this._handleSort = this._handleSort.bind(this);
         this._handleProductSelectionClick = this._handleProductSelectionClick.bind(this); // Bind new method
+        // New bindings for event listeners
+        this._handleBrandButtonClick = this._handleBrandButtonClick.bind(this);
+        this._handleSortClick = this._handleSortClick.bind(this);
+        this._handleDiscardQuantityInputChange = this._handleDiscardQuantityInputChange.bind(this);
+        this._goBackToPreviousView = this._goBackToPreviousView.bind(this);
     }
 
     connectedCallback() {
@@ -344,6 +349,7 @@ export default class DiscardInventoryModal extends HTMLElement {
      * @private
      */
     _filterByBrand(brand) {
+        console.log('[_filterByBrand] Filtering by brand:', brand);
         this._currentFilterBrand = brand;
         this._currentFilterProduct = null;
         this._sortBy = null;
@@ -356,6 +362,7 @@ export default class DiscardInventoryModal extends HTMLElement {
      * @private
      */
     _showAllBrands() {
+        console.log('[_showAllBrands] Showing all brands.');
         this._currentFilterBrand = null;
         this._currentFilterProduct = null;
         this._sortBy = null;
@@ -370,6 +377,7 @@ export default class DiscardInventoryModal extends HTMLElement {
      */
     _handleProductSelectionClick(e) {
         const productId = parseInt(e.currentTarget.dataset.productId, 10);
+        console.log('[_handleProductSelectionClick] Clicked product ID:', productId);
         this._filterByProduct(productId);
     }
 
@@ -379,7 +387,13 @@ export default class DiscardInventoryModal extends HTMLElement {
      * @private
      */
     _filterByProduct(productId) {
+        console.log('[_filterByProduct] Searching for product with ID:', productId);
         this._currentFilterProduct = this._products.find(p => p.id === productId);
+        if (this._currentFilterProduct) {
+            console.log('[_filterByProduct] Found product:', this._currentFilterProduct);
+        } else {
+            console.warn('[_filterByProduct] Product not found for ID:', productId);
+        }
         this._sortBy = 's'; // Default sort by 's' when viewing power options
         this._sortOrder = 'asc';
         this._render();
@@ -390,6 +404,7 @@ export default class DiscardInventoryModal extends HTMLElement {
      * @private
      */
     _showAllProductsForBrand() {
+        console.log('[_showAllProductsForBrand] Showing all products for brand:', this._currentFilterBrand);
         this._currentFilterProduct = null;
         this._sortBy = null;
         this._sortOrder = 'asc';
@@ -428,6 +443,7 @@ export default class DiscardInventoryModal extends HTMLElement {
      * @private
      */
     _handleSort(sortBy) {
+        console.log('[_handleSort] Sorting by:', sortBy, 'Order:', this._sortOrder);
         if (this._sortBy === sortBy) {
             this._sortOrder = (this._sortOrder === 'asc' ? 'desc' : 'asc');
         } else {
@@ -438,12 +454,54 @@ export default class DiscardInventoryModal extends HTMLElement {
     }
 
     /**
+     * Helper for brand button click event.
+     * @param {Event} e - The click event.
+     * @private
+     */
+    _handleBrandButtonClick(e) {
+        this._filterByBrand(e.currentTarget.dataset.brand);
+    }
+
+    /**
+     * Helper for sort column header click event.
+     * @param {Event} e - The click event.
+     * @private
+     */
+    _handleSortClick(e) {
+        this._handleSort(e.currentTarget.dataset.sortBy);
+    }
+
+    /**
+     * Helper for discard quantity input change event.
+     * @param {Event} e - The input or change event.
+     * @private
+     */
+    _handleDiscardQuantityInputChange(e) {
+        this._handleDiscardQuantityChange(parseInt(e.target.dataset.productId, 10), e.target.dataset.detailId, e.target.value);
+    }
+
+    /**
+     * Helper for back button click event.
+     * @param {Event} e - The click event.
+     * @private
+     */
+    _goBackToPreviousView(e) {
+        if (e.currentTarget.classList.contains('back-to-brands-btn')) {
+            this._showAllBrands();
+        } else if (e.currentTarget.classList.contains('back-to-products-btn')) {
+            this._showAllProductsForBrand();
+        }
+    }
+
+
+    /**
      * Renders the brand selection view.
      * @returns {string} HTML for the brand selection view.
      * @private
      */
     _renderBrandSelectionView() {
         const uniqueBrands = [...new Set(this._products.map(p => p.brand))];
+        console.log('[_renderBrandSelectionView] Unique brands:', uniqueBrands);
         if (uniqueBrands.length === 0) return `<p class="message">${MESSAGES.NO_BRANDS_REGISTERED}</p>`;
         
         return `
@@ -462,6 +520,7 @@ export default class DiscardInventoryModal extends HTMLElement {
      */
     _renderProductSelectionView() {
         const productsForBrand = this._products.filter(p => p.brand === this._currentFilterBrand);
+        console.log('[_renderProductSelectionView] Products for brand:', productsForBrand);
         if (productsForBrand.length === 0) return `<p class="message">${MESSAGES.NO_PRODUCTS_FOR_BRAND(this._currentFilterBrand)}</p>`;
 
         // Group products by model and calculate total quantity
@@ -482,6 +541,7 @@ export default class DiscardInventoryModal extends HTMLElement {
         }, new Map());
 
         const productsToRender = Array.from(groupedProductsMap.values());
+        console.log('[_renderProductSelectionView] Products to render (grouped):', productsToRender);
         
         return `
             <button class="back-button back-to-brands-btn">← 전체 브랜드 보기</button>
@@ -506,11 +566,13 @@ export default class DiscardInventoryModal extends HTMLElement {
      */
     _renderPowerOptionSelectionView() {
         const product = this._currentFilterProduct;
+        console.log('[_renderPowerOptionSelectionView] Product for power options:', product);
         if (!product) return `<p class="message">제품을 선택해주세요.</p>`;
 
         if (product.powerOptions.length === 0) return `<p class="message">${MESSAGES.NO_POWER_OPTIONS_FOR_PRODUCT(product.brand, product.model)}</p>`;
         
         const sortedPowerOptions = this._sortPowerOptions(product.powerOptions);
+        console.log('[_renderPowerOptionSelectionView] Sorted power options:', sortedPowerOptions);
 
         return `
             <button class="back-button back-to-products-btn">← 제품 목록으로</button>
@@ -560,12 +622,15 @@ export default class DiscardInventoryModal extends HTMLElement {
         if (!this._currentFilterBrand) { // View 1: Brand Selection
             contentHtml = this._renderBrandSelectionView();
             modalTitle += ' - 브랜드 선택';
+            console.log('[_render] Rendering Brand Selection View');
         } else if (!this._currentFilterProduct) { // View 2: Product Selection for a specific brand
             contentHtml = this._renderProductSelectionView();
             modalTitle = `재고 폐기 - ${this._currentFilterBrand} 제품 선택`;
+            console.log('[_render] Rendering Product Selection View for brand:', this._currentFilterBrand);
         } else { // View 3: Power Option Selection for a specific product
             contentHtml = this._renderPowerOptionSelectionView();
             modalTitle = `재고 폐기 - ${this._currentFilterProduct.brand} - ${this._currentFilterProduct.model} 도수 선택`;
+            console.log('[_render] Rendering Power Option Selection View for product:', this._currentFilterProduct.model);
         }
 
         this.shadowRoot.innerHTML = `
@@ -595,14 +660,14 @@ export default class DiscardInventoryModal extends HTMLElement {
 
         // Remove previous listeners to prevent duplicates before re-attaching
         const previousBrandButtons = this.shadowRoot.querySelectorAll('.brand-filter-button');
-        previousBrandButtons.forEach(btn => btn.removeEventListener('click', this._filterByBrand));
+        previousBrandButtons.forEach(btn => btn.removeEventListener('click', this._handleBrandButtonClick));
 
         const previousProductItems = this.shadowRoot.querySelectorAll('.product-selection-list-item');
         previousProductItems.forEach(item => item.removeEventListener('click', this._handleProductSelectionClick)); // Use bound method
 
         const previousPowerQuantityInputs = this.shadowRoot.querySelectorAll('.discard-quantity-input');
         previousPowerQuantityInputs.forEach(input => {
-            input.removeEventListener('change', this._handleDiscardQuantityChange);
+            input.removeEventListener('change', this._handleDiscardQuantityInputChange);
             input.removeEventListener('input', this._handleDiscardQuantityInputChange);
         });
 
@@ -616,15 +681,15 @@ export default class DiscardInventoryModal extends HTMLElement {
         // Attach new listeners based on current view
         if (!this._currentFilterBrand) { // View 1: Brand Selection
             this.shadowRoot.querySelectorAll('.brand-filter-button').forEach(button => {
-                button.addEventListener('click', (e) => this._filterByBrand(e.currentTarget.dataset.brand));
+                button.addEventListener('click', this._handleBrandButtonClick);
             });
         } else if (!this._currentFilterProduct) { // View 2: Product Selection
-            this.shadowRoot.querySelector('.back-button.back-to-brands-btn')?.addEventListener('click', this._showAllBrands);
+            this.shadowRoot.querySelector('.back-button.back-to-brands-btn')?.addEventListener('click', this._goBackToPreviousView);
             this.shadowRoot.querySelectorAll('.product-selection-list-item').forEach(item => {
                 item.addEventListener('click', this._handleProductSelectionClick); // Use bound method
             });
         } else { // View 3: Power Option Selection
-            this.shadowRoot.querySelector('.back-button.back-to-products-btn')?.addEventListener('click', this._showAllProductsForBrand);
+            this.shadowRoot.querySelector('.back-button.back-to-products-btn')?.addEventListener('click', this._goBackToPreviousView);
             this.shadowRoot.querySelectorAll('.power-option-table-row').forEach(row => {
                 row.addEventListener('click', (e) => {
                     // Prevent row click from affecting input
@@ -638,11 +703,11 @@ export default class DiscardInventoryModal extends HTMLElement {
                 });
             });
             this.shadowRoot.querySelectorAll('.discard-quantity-input').forEach(input => {
-                input.addEventListener('change', (e) => this._handleDiscardQuantityChange(parseInt(e.target.dataset.productId, 10), e.target.dataset.detailId, e.target.value));
-                input.addEventListener('input', (e) => this._handleDiscardQuantityChange(parseInt(e.target.dataset.productId, 10), e.target.dataset.detailId, e.target.value));
+                input.addEventListener('change', this._handleDiscardQuantityInputChange);
+                input.addEventListener('input', this._handleDiscardQuantityInputChange);
             });
             this.shadowRoot.querySelectorAll('.power-option-table th[data-sort-by]').forEach(header => {
-                header.addEventListener('click', (e) => this._handleSort(e.currentTarget.dataset.sortBy));
+                header.addEventListener('click', this._handleSortClick);
             });
         }
     }
