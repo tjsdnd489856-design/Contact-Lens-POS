@@ -36,6 +36,7 @@ export default class SaleTransaction extends HTMLElement {
     this._handleProductSelectedForSale = this._handleProductSelectedForSale.bind(this); // New binding for product selection event
     this._dispatchSalesCustomerSelectedEvent = this._dispatchSalesCustomerSelectedEvent.bind(this); // Bind new dispatcher
     this._handleSalesCustomerSelected = this._handleSalesCustomerSelected.bind(this); // NEW: Bind sales customer selected event handler
+    this._handleCustomerSearchResultClick = this._handleCustomerSearchResultClick.bind(this); // NEW: Bind for customer search result clicks
     this._selectedSearchIndex = -1;
   }
 
@@ -98,6 +99,19 @@ export default class SaleTransaction extends HTMLElement {
     }
   }
 
+  /**
+   * Handles click events on the customer search results div, delegating to individual items.
+   * @param {Event} e - The click event.
+   * @private
+   */
+  _handleCustomerSearchResultClick(e) {
+    const selectedResult = e.target.closest('.customer-search-result-item');
+    if (selectedResult) {
+      const customerId = selectedResult.dataset.customerId; // customerId can be a string from dataset
+      const customer = CustomerService.getCustomerById(customerId);
+      if (customer) this._selectCustomerFromSearch(customer);
+    }
+  }
 
   /**
    * Handles the 'customersUpdated' event, often triggered after search or modification.
@@ -154,14 +168,7 @@ export default class SaleTransaction extends HTMLElement {
     }
     if (clearCustomerSelectionBtn) clearCustomerSelectionBtn.addEventListener('click', this._clearCustomerSelection);
     if (customerSearchResultsDiv) {
-        customerSearchResultsDiv.addEventListener('click', (e) => {
-            const selectedResult = e.target.closest('.customer-search-result-item');
-            if (selectedResult) {
-                const customerId = selectedResult.dataset.customerId;
-                const customer = CustomerService.getCustomerById(customerId);
-                if (customer) this._selectCustomerFromSearch(customer);
-            }
-        });
+        customerSearchResultsDiv.addEventListener('click', this._handleCustomerSearchResultClick);
     }
 
     // Product and barcode listeners
@@ -187,14 +194,7 @@ export default class SaleTransaction extends HTMLElement {
     }
     if (clearCustomerSelectionBtn) clearCustomerSelectionBtn.removeEventListener('click', this._clearCustomerSelection);
     if (customerSearchResultsDiv) {
-        customerSearchResultsDiv.removeEventListener('click', (e) => { // This anonymous function might not be removed
-            const selectedResult = e.target.closest('.customer-search-result-item');
-            if (selectedResult) {
-                const customerId = parseInt(selectedResult.dataset.customerId, 10);
-                const customer = CustomerService.getCustomerById(customerId);
-                if (customer) this._selectCustomerFromSearch(customer);
-            }
-        });
+        customerSearchResultsDiv.removeEventListener('click', this._handleCustomerSearchResultClick);
     }
 
     shadowRoot.querySelector('#barcode-scanner-input').removeEventListener('keydown', this._handleBarcodeInputKeydown);
@@ -390,6 +390,7 @@ export default class SaleTransaction extends HTMLElement {
   /**
    * Processes a barcode string, attempting to find or fetch product details.
    * @param {string} barcodeString - The raw barcode string.
+   * @returns {Promise<Object|null>} The found or fetched product, or null.
    * @private
    */
   async _processBarcodeString(barcodeString) {
