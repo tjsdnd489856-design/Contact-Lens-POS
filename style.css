@@ -125,7 +125,7 @@ main {
 
 #reset-sales-tab-btn {
     background-color: #ffc107; /* Yellow for reset */
-    color: #333; /* Text color for yellow background */
+    color: white; /* Text color for yellow background */
     padding: 0.9rem 1.2rem;
     border: none;
     border-radius: 6px;
@@ -209,16 +209,25 @@ footer {
 body #product-modal .modal-content {
     width: 90%;
     max-width: 1200px; /* 1.5 times original */
-    margin: 10% auto; /* Restore margin for centering */
+    position: absolute; /* Set position to absolute for transform to work relative to modal parent */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0; /* Reset margin */
     animation-name: animatetop; /* Restore animation */
     animation-duration: 0.4s; /* Restore animation duration */
 }
 
-/* Specific size for the product modal */
+/* Specific size and central positioning for other modals */
 body #discard-inventory-modal .modal-content,
 body #udi-scanner-modal .modal-content,
-body #customer-modal .modal-content { /* Add customer modal here */
-    margin: 10% auto; /* Restore margin for centering */
+body #customer-modal .modal-content,
+body #brand-product-list-modal .modal-content { /* Added brand-product-list-modal here */
+    position: absolute; /* Set position to absolute for transform to work relative to modal parent */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0; /* Reset margin */
     animation-name: animatetop; /* Restore animation */
     animation-duration: 0.4s; /* Restore animation duration */
 }
@@ -226,7 +235,7 @@ body #customer-modal .modal-content { /* Add customer modal here */
 /* Add Animation */
 @keyframes animatetop {
   from {top: -300px; opacity: 0}
-  to {top: 10%; opacity: 1}
+  to {top: 50%; opacity: 1} /* Adjusted 'to' value for central animation */
 }
 
 .close-button {
