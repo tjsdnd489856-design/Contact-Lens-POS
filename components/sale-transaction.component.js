@@ -92,6 +92,7 @@ export default class SaleTransaction extends HTMLElement {
       const searchResultsDiv = this.shadowRoot.querySelector('#customer-search-results-sale');
       if (searchResultsDiv) {
         searchResultsDiv.innerHTML = '';
+        searchResultsDiv.classList.add('hidden'); // Add hidden class after clearing
       }
       
       this._updateSelectedCustomerDisplay(); // Manages visibility of the 'clear' button
@@ -270,6 +271,7 @@ export default class SaleTransaction extends HTMLElement {
         break;
       case 'Escape':
         searchResultsDiv.innerHTML = '';
+        searchResultsDiv.classList.add('hidden'); // Hide the results on escape
         this._selectedSearchIndex = -1;
         break;
     }
@@ -302,6 +304,7 @@ export default class SaleTransaction extends HTMLElement {
       if (searchResultsDiv) {
           if (customers.length === 0) {
               searchResultsDiv.innerHTML = '';
+              searchResultsDiv.classList.add('hidden'); // Hide if no results
               return;
           }
           searchResultsDiv.innerHTML = customers.map(c => `
@@ -309,6 +312,7 @@ export default class SaleTransaction extends HTMLElement {
                   ${c.name} (${c.phone})
               </div>
           `).join('');
+          searchResultsDiv.classList.remove('hidden'); // Show results
       }
   }
 
@@ -327,6 +331,7 @@ export default class SaleTransaction extends HTMLElement {
       }
       if (searchResultsDiv) {
         searchResultsDiv.innerHTML = ''; // Clear search results
+        searchResultsDiv.classList.add('hidden'); // Add hidden class after clearing
       }
       this._updateSelectedCustomerDisplay(); // Update internal state and clear button visibility
       this._dispatchSalesCustomerSelectedEvent(this.selectedCustomer ? this.selectedCustomer.id : null);
@@ -764,6 +769,9 @@ export default class SaleTransaction extends HTMLElement {
             list-style: none; /* Remove bullet points */
             padding: 0; /* Remove default padding */
             margin: 0; /* Remove default margin */
+        }
+        .customer-search-results.hidden { /* NEW: Hidden class for search results */
+            display: none;
         }
         .customer-search-result-item {
             padding: 10px 15px;
