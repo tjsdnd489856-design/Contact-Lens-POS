@@ -84,26 +84,28 @@ export default class CustomerForm extends HTMLElement {
             return;
         }
 
-        const originalStartsWithPlus = value.startsWith('+'); // Preserve if original input explicitly starts with '+'
-        const originalStartsWithMinus = value.startsWith('-'); // Preserve if original input explicitly starts with '-'
-
-        let cleanValue = value.replace(/[^0-9+\-.]/g, ''); // Only digits, +, -, and dot for parsing num
+        const originalStartsWithPlus = value.startsWith('+');
+        const originalStartsWithMinus = value.startsWith('-');
         
-        let num = parseFloat(cleanValue);
+        // Remove all non-numeric characters for parsing magnitude, but keep the original signs check
+        let cleanValueForMagnitude = value.replace(/[^0-9.]/g, ''); 
+        
+        let num = parseFloat(cleanValueForMagnitude);
         if (isNaN(num)) {
             event.target.value = '';
             return;
         }
 
-        let formattedValueNum = num / 100;
-        let formattedString = formattedValueNum.toFixed(2);
+        let formattedMagnitude = (num / 100).toFixed(2);
 
-        if (formattedValueNum === 0) { // Check against the numeric value for 0
+        if (num === 0) {
             event.target.value = '0.00';
-        } else if (formattedValueNum > 0) {
-            event.target.value = `+${formattedString}`;
-        } else { // formattedValueNum < 0
-            event.target.value = formattedString; // formattedString will already have the '-'
+        } else if (originalStartsWithPlus) { // If original input explicitly had '+', it's positive
+            event.target.value = `+${formattedMagnitude}`;
+        } else if (originalStartsWithMinus) { // If original input explicitly had '-', it's negative
+            event.target.value = `-${formattedMagnitude}`;
+        } else { // No explicit sign: assume it's a positive input that should become negative
+            event.target.value = `-${formattedMagnitude}`;
         }
     }
 
