@@ -1,11 +1,9 @@
-
-
 import { db } from '../modules/firebase-init.js'; // Import Firestore instance
 
 // Constants for better maintainability
-const API_GATEWAY_URL = 'https://oupi92eoc7.execute-api.ap-southeast-2.amazonaws.com/default/getMedicalDeviceDetails';
-const DEFAULT_LENS_TYPE = '투명';
-const DEFAULT_WEAR_TYPE = 'N/A';
+const API_GATEWAY_URL = 'https://oupi92eoc7.lambda-url.ap-southeast-2.on.aws/'; // Updated to Function URL
+export const DEFAULT_LENS_TYPE = '투명';
+export const DEFAULT_WEAR_TYPE = 'N/A';
 const DEFAULT_PRODUCT_NAME = 'N/A';
 const DEFAULT_BRAND = 'N/A';
 const DEFAULT_MODEL = 'N/A';
