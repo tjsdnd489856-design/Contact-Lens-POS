@@ -5,41 +5,13 @@ export default class CustomerForm extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        this.populateForm = this.populateForm.bind(this);
-        this.handleSubmit = this.handleSubmit.bind(this);
-        this.clearForm = this.clearForm.bind(this);
-        this.formatPhoneNumber = this.formatPhoneNumber.bind(this);
-        this.formatDose = this.formatDose.bind(this);
-        this.formatAX = this.formatAX.bind(this); // New AX formatter
-        this.handleDeleteClick = this.handleDeleteClick.bind(this); // Bind new delete handler
-        this.handleVipCautionChange = this.handleVipCautionChange.bind(this);
+        // No longer need to bind here due to arrow function class fields
     }
     
     connectedCallback() {
         this._render();
         this._form = this.shadowRoot.querySelector('form');
-        this._form.phone.addEventListener('input', this.formatPhoneNumber); // Add event listener for phone formatting
-        // Attaching formatDose to blur event for cleaner input
-        this._form.rightS.addEventListener('blur', this.formatDose);
-        this._form.rightC.addEventListener('blur', this.formatDose);
-        this._form.leftS.addEventListener('blur', this.formatDose);
-        this._form.leftC.addEventListener('blur', this.formatDose);
-        // On input, allow user to type freely
-        this._form.rightS.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9.-]/g, ''); });
-        this._form.rightC.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9.-]/g, ''); });
-        this._form.leftS.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9.-]/g, ''); });
-        this._form.leftC.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9.-]/g, ''); });
-
-        // AX fields
-        this._form.rightAX.addEventListener('blur', this.formatAX);
-        this._form.leftAX.addEventListener('blur', this.formatAX);
-        this._form.rightAX.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9]/g, ''); }); // Only digits
-        this._form.leftAX.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9]/g, ''); }); // Only digits
-
-
-        this._form.isVIP.addEventListener('change', this.handleVipCautionChange);
-        this._form.isCaution.addEventListener('change', this.handleVipCautionChange);
-
+        this._attachEventListeners();
         document.addEventListener('editCustomer', this.populateForm);
         document.addEventListener('clearCustomerForm', this.clearForm); // Listen for clear event
         this._form.addEventListener('submit', this.handleSubmit);
@@ -48,26 +20,50 @@ export default class CustomerForm extends HTMLElement {
     }
     
     disconnectedCallback() {
-        this._form.phone.removeEventListener('input', this.formatPhoneNumber); // Remove event listener
-        this._form.rightS.removeEventListener('blur', this.formatDose);
-        this._form.rightC.removeEventListener('blur', this.formatDose);
-        this._form.leftS.removeEventListener('blur', this.formatDose);
-        this._form.leftC.removeEventListener('blur', this.formatDose);
-        // Need to remove listeners for anonymous functions using a stored reference or re-create the listeners
-        // For simplicity, re-assigning null or empty function if original anonymous function reference is not stored
-        // A better approach would be to store the anonymous function reference if needed for removal.
-        // For now, these anonymous listeners might remain if the element is re-attached without full DOM refresh.
-        // Given the Web Component lifecycle, a full render often replaces innerHTML, effectively cleaning listeners.
-        
-        this._form.isVIP.removeEventListener('change', this.handleVipCautionChange);
-        this._form.isCaution.removeEventListener('change', this.handleVipCautionChange);
-
+        this._detachEventListeners(); // Detach all listeners
         document.removeEventListener('editCustomer', this.populateForm);
         document.removeEventListener('clearCustomerForm', this.clearForm);
+    }
+
+    _attachEventListeners = () => {
+        if (!this._form) return;
+        this._form.phone.addEventListener('input', this.formatPhoneNumber);
+
+        ['rightS', 'rightC', 'leftS', 'leftC'].forEach(field => {
+            this._form[field].addEventListener('blur', this.formatDose);
+            this._form[field].addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9+\-.]/g, ''); });
+        });
+
+        ['rightAX', 'leftAX'].forEach(field => {
+            this._form[field].addEventListener('blur', this.formatAX);
+            this._form[field].addEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9]/g, ''); });
+        });
+
+        this._form.isVIP.addEventListener('change', this.handleVipCautionChange);
+        this._form.isCaution.addEventListener('change', this.handleVipCautionChange);
+    }
+
+    _detachEventListeners = () => {
+        if (!this._form) return;
+        this._form.phone.removeEventListener('input', this.formatPhoneNumber);
+
+        ['rightS', 'rightC', 'leftS', 'leftC'].forEach(field => {
+            this._form[field].removeEventListener('blur', this.formatDose);
+            this._form[field].removeEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9+\-.]/g, ''); });
+        });
+
+        ['rightAX', 'leftAX'].forEach(field => {
+            this._form[field].removeEventListener('blur', this.formatAX);
+            this._form[field].removeEventListener('input', (e) => { e.target.value = e.target.value.replace(/[^0-9]/g, ''); });
+        });
+
+        this._form.isVIP.removeEventListener('change', this.handleVipCautionChange);
+        this._form.isCaution.removeEventListener('change', this.handleVipCautionChange);
+        this._form.removeEventListener('submit', this.handleSubmit);
         this.shadowRoot.querySelector('#delete-customer-from-form-btn')?.removeEventListener('click', this.handleDeleteClick);
     }
 
-    formatPhoneNumber(event) {
+    formatPhoneNumber = (event) => {
         let input = event.target.value.replace(/\D/g, ''); // Remove all non-digit characters
         let formattedInput = '';
 
@@ -81,31 +77,39 @@ export default class CustomerForm extends HTMLElement {
         event.target.value = formattedInput;
     }
 
-    formatDose(event) {
-        let input = event.target.value;
-        if (input === '' || input === null) {
+    formatDose = (event) => {
+        let value = event.target.value.trim();
+        if (!value) {
             event.target.value = '';
             return;
         }
-        // Remove non-numeric characters except for '-' and '.'
-        input = input.replace(/[^0-9.-]/g, ''); 
-        let floatValue = parseFloat(input);
 
-        if (isNaN(floatValue)) {
+        let cleanValue = value.replace(/[^0-9+\-.]/g, '');
+        const startsWithPlus = cleanValue.startsWith('+');
+        const startsWithMinus = cleanValue.startsWith('-');
+
+        if (startsWithPlus || startsWithMinus) {
+            cleanValue = cleanValue.substring(1); 
+        }
+
+        let num = parseFloat(cleanValue);
+        if (isNaN(num)) {
             event.target.value = '';
             return;
         }
-        
-        if (floatValue === 0) {
+
+        // Apply division by 100 for proper formatting
+        let formattedValue = (num / 100).toFixed(2);
+        if (parseFloat(formattedValue) === 0) {
             event.target.value = '0.00';
-        } else if (floatValue < 0) {
-            event.target.value = floatValue.toFixed(2);
+        } else if (startsWithPlus || (!startsWithMinus && parseFloat(formattedValue) > 0)) {
+            event.target.value = `+${formattedValue}`;
         } else {
-            event.target.value = '+' + floatValue.toFixed(2);
+            event.target.value = formattedValue;
         }
     }
 
-    formatAX(event) {
+    formatAX = (event) => {
         let input = event.target.value;
         if (input === '' || input === null) {
             event.target.value = '';
@@ -119,7 +123,7 @@ export default class CustomerForm extends HTMLElement {
         event.target.value = intValue.toString(); // Store as plain number string, will parse as int for saving.
     }
 
-    handleVipCautionChange(event) {
+    handleVipCautionChange = (event) => {
         const isVIPChecked = this._form.isVIP.checked;
         const isCautionChecked = this._form.isCaution.checked;
 
@@ -149,7 +153,7 @@ export default class CustomerForm extends HTMLElement {
         }
     }
 
-    async handleDeleteClick() {
+    handleDeleteClick = async () => {
         const customerId = this._form.id.value;
         if (customerId && confirm('이 고객 정보를 삭제하시겠습니까?')) {
             try {
@@ -326,7 +330,7 @@ export default class CustomerForm extends HTMLElement {
         `;
         this.shadowRoot.appendChild(template.content.cloneNode(true));
     }
-    clearForm() {
+    clearForm = () => {
         this._form.reset();
         this._form.id.value = '';
         this._form.querySelector('button[type="submit"]').textContent = '고객 추가';
@@ -334,7 +338,7 @@ export default class CustomerForm extends HTMLElement {
         this.handleVipCautionChange(); // Reset checkbox states
     }
 
-    populateForm(e) {
+    populateForm = (e) => {
         const customer = e.detail;
         this._form.id.value = customer.id;
         this._form.name.value = customer.name;
@@ -356,7 +360,7 @@ export default class CustomerForm extends HTMLElement {
         this.handleVipCautionChange(); // Set checkbox states
     }
 
-    async handleSubmit(e) {
+    handleSubmit = async (e) => {
         e.preventDefault();
         const formData = new FormData(this._form);
         const customer = {
