@@ -794,7 +794,7 @@ export default class DiscardInventoryModal extends HTMLElement {
         
         if (!originalVariant || !powerOptionFromOriginal) return;
 
-        let modelSelections = this._selectedProductsToDiscard.get(modelId);
+        let modelSelections = new Map(this._selectedProductsToDiscard.get(modelId)); // Create a new Map to ensure reactivity
         if (!modelSelections) {
             modelSelections = new Map();
             this._selectedProductsToDiscard.set(modelId, modelSelections);
