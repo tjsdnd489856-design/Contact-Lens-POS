@@ -124,18 +124,26 @@ main {
 }
 
 #reset-sales-tab-btn {
-    background-color: #ffc107; /* Yellow for reset */
-    color: #333;
-    padding: 8px 15px; /* Slightly smaller than main buttons for header context */
+    background-color: #6c757d; /* Muted grey for reset */
+    color: white;
+    padding: 0.9rem 1.2rem;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 0.9rem;
-    transition: background-color 0.3s ease;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 #reset-sales-tab-btn:hover {
-    background-color: #e0a800; /* Darker yellow on hover */
+    background-color: #5a6268; /* Darker grey on hover */
+    transform: translateY(-1px);
+}
+
+#reset-sales-tab-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 /* Styles for Sale Actions container */
@@ -510,16 +518,24 @@ discard-inventory-modal, udi-scanner-modal, abnormal-inventory-list {
 }
 
 #reset-sales-tab-btn {
-    background-color: #ffc107; /* Yellow for reset */
-    color: #333;
-    padding: 8px 15px; /* Slightly smaller than main buttons for header context */
+    background-color: #6c757d; /* Muted grey for reset */
+    color: white;
+    padding: 0.9rem 1.2rem;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 0.9rem;
-    transition: background-color 0.3s ease;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 #reset-sales-tab-btn:hover {
-    background-color: #e0a800; /* Darker yellow on hover */
+    background-color: #5a6268; /* Darker grey on hover */
+    transform: translateY(-1px);
+}
+
+#reset-sales-tab-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
