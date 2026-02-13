@@ -200,6 +200,10 @@ const DISCARD_MODAL_STYLES = `
         z-index: 1;
         background-color: #f2f2f2; /* Ensure background color */
     }
+    /* Temporary rule to inspect row height */
+    .power-option-table-body-scroll tbody tr {
+        background-color: yellow !important;
+    }
 `;
 
 // Utility to augment products with powerOptions structure
