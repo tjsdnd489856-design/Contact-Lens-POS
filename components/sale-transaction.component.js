@@ -868,6 +868,10 @@ export default class SaleTransaction extends HTMLElement {
             box-shadow: 0 2px 4px rgba(0,0,0,0.08);
             margin-bottom: 0.5rem; /* Small gap to button */
         }
+        .sale-actions {
+            display: flex;
+            justify-content: flex-end; /* Move button to the right */
+        }
       </style>
       <div class="overall-sales-layout-container">
         <div class="top-sales-section">
