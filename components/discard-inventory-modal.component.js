@@ -149,6 +149,14 @@ const DISCARD_MODAL_STYLES = `
         overflow-y: auto; /* 세로 스크롤 활성화 */
         width: 100%; /* tbody가 테이블의 전체 너비를 차지하도록 설정 */
     }
+    /* 스크롤바 숨기기 */
+    .power-option-table tbody::-webkit-scrollbar {
+        display: none; /* Webkit 기반 브라우저 (Chrome, Safari, Edge) */
+    }
+    .power-option-table tbody {
+        -ms-overflow-style: none; /* Internet Explorer 10+ */
+        scrollbar-width: none; /* Firefox */
+    }
     .power-option-table tr { /* tbody 내부의 tr 요소에 적용 */
         display: table; /* 테이블 행처럼 동작하게 함 */
         width: 100%; /* tr이 tbody의 전체 너비를 차지하도록 하여 스크롤바 공간을 고려 */
