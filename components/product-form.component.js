@@ -1,4 +1,4 @@
-import { ProductService } from '../services/product.service.js';
+import { ProductService, DEFAULT_LENS_TYPE, DEFAULT_WEAR_TYPE } from '../services/product.service.js';
 
 // --- Constants ---
 const FORM_MESSAGES = {
