@@ -214,6 +214,7 @@ export default class DiscardInventoryModal extends HTMLElement {
         this._handleDiscardQuantityChange = this._handleDiscardQuantityChange.bind(this);
         this._discardSelectedProducts = this._discardSelectedProducts.bind(this);
         this._handleSort = this._handleSort.bind(this);
+        this._handleProductSelectionClick = this._handleProductSelectionClick.bind(this); // Bind new method
     }
 
     connectedCallback() {
@@ -360,6 +361,16 @@ export default class DiscardInventoryModal extends HTMLElement {
         this._sortBy = null;
         this._sortOrder = 'asc';
         this._render();
+    }
+
+    /**
+     * Handles click on a product selection item in View 2.
+     * @param {Event} e - The click event.
+     * @private
+     */
+    _handleProductSelectionClick(e) {
+        const productId = parseInt(e.currentTarget.dataset.productId, 10);
+        this._filterByProduct(productId);
     }
 
     /**
@@ -587,11 +598,11 @@ export default class DiscardInventoryModal extends HTMLElement {
         previousBrandButtons.forEach(btn => btn.removeEventListener('click', this._filterByBrand));
 
         const previousProductItems = this.shadowRoot.querySelectorAll('.product-selection-list-item');
-        previousProductItems.forEach(item => item.removeEventListener('click', this._handleProductSelectionClick));
+        previousProductItems.forEach(item => item.removeEventListener('click', this._handleProductSelectionClick)); // Use bound method
 
         const previousPowerQuantityInputs = this.shadowRoot.querySelectorAll('.discard-quantity-input');
         previousPowerQuantityInputs.forEach(input => {
-            input.removeEventListener('change', this._handleDiscardQuantityInputChange);
+            input.removeEventListener('change', this._handleDiscardQuantityChange);
             input.removeEventListener('input', this._handleDiscardQuantityInputChange);
         });
 
@@ -610,7 +621,7 @@ export default class DiscardInventoryModal extends HTMLElement {
         } else if (!this._currentFilterProduct) { // View 2: Product Selection
             this.shadowRoot.querySelector('.back-button.back-to-brands-btn')?.addEventListener('click', this._showAllBrands);
             this.shadowRoot.querySelectorAll('.product-selection-list-item').forEach(item => {
-                item.addEventListener('click', (e) => this._filterByProduct(e.currentTarget.dataset.productId));
+                item.addEventListener('click', this._handleProductSelectionClick); // Use bound method
             });
         } else { // View 3: Power Option Selection
             this.shadowRoot.querySelector('.back-button.back-to-products-btn')?.addEventListener('click', this._showAllProductsForBrand);
