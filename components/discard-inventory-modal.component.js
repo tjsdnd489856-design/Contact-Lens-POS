@@ -300,10 +300,10 @@ export default class DiscardInventoryModal extends HTMLElement {
         const powerOptionFromOriginal = originalVariant?.powerOptions.find(opt => opt.detailId === detailId && opt.variantId === variantId);
         
         if (!originalVariant || !powerOptionFromOriginal) {
-            // Log cleaned up, only warn message, no verbose object.
-            // console.warn('[_handleDiscardQuantityChange] 원본 변형 또는 도수 옵션을 찾을 수 없음. variantId:', variantId, 'detailId:', detailId);
             return; 
         }
+
+        console.log('[_handleDiscardQuantityChange] powerOptionFromOriginal.quantity:', powerOptionFromOriginal.quantity); // --- ADDED LOG ---
 
         const numQuantity = parseInt(quantity, 10);
         
@@ -546,7 +546,7 @@ export default class DiscardInventoryModal extends HTMLElement {
     _handleDiscardQuantityInputChange(e) {
         const modelId = e.target.dataset.modelId; // The model group ID
         const detailId = e.target.dataset.detailId;
-        const variantId = e.target.dataset.variantId; // Changed from parseInt to direct assignment
+        const variantId = e.target.dataset.variantId; 
         const quantity = e.target.value;
         this._handleDiscardQuantityChange(modelId, detailId, variantId, quantity);
     }
@@ -764,7 +764,7 @@ export default class DiscardInventoryModal extends HTMLElement {
                     }
                     const modelId = row.dataset.modelId;
                     const detailId = row.dataset.detailId;
-                    const variantId = e.target.dataset.variantId; // Changed from parseInt to direct assignment
+                    const variantId = row.dataset.variantId; 
                     const inputElement = row.querySelector('.discard-quantity-input');
                     this._togglePowerOptionSelection(modelId, detailId, variantId, inputElement);
                 });
