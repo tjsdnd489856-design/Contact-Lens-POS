@@ -595,7 +595,7 @@ export default class DiscardInventoryModal extends HTMLElement {
         } else if (!this._currentFilterProduct) { // View 2: Product Selection
             this.shadowRoot.querySelector('.back-button.back-to-brands-btn')?.addEventListener('click', this._showAllBrands);
             this.shadowRoot.querySelectorAll('.product-selection-list-item').forEach(item => {
-                item.addEventListener('click', (e) => this._filterByProduct(parseInt(e.currentTarget.dataset.productId, 10)));
+                item.addEventListener('click', (e) => this._filterByProduct(e.currentTarget.dataset.productId));
             });
         } else { // View 3: Power Option Selection
             this.shadowRoot.querySelector('.back-button.back-to-products-btn')?.addEventListener('click', this._showAllProductsForBrand);
