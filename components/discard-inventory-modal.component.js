@@ -302,7 +302,14 @@ export default class DiscardInventoryModal extends HTMLElement {
         const powerOptionFromOriginal = originalVariant?.powerOptions.find(opt => opt.detailId === detailId && opt.variantId === variantId);
         
         if (!originalVariant || !powerOptionFromOriginal) {
-            console.warn('[_handleDiscardQuantityChange] 원본 변형 또는 도수 옵션을 찾을 수 없음:', { variantId, detailId });
+            console.warn('[_handleDiscardQuantityChange] 원본 변형 또는 도수 옵션을 찾을 수 없음. 상세 정보:', { 
+                passedVariantId: variantId, 
+                passedDetailId: detailId,
+                originalVariantFound: !!originalVariant, 
+                originalVariantId: originalVariant ? originalVariant.id : 'N/A',
+                originalVariantPowerOptions: originalVariant ? originalVariant.powerOptions : 'N/A',
+                powerOptionFromOriginalFound: !!powerOptionFromOriginal
+            });
             return; 
         }
 
@@ -563,6 +570,7 @@ export default class DiscardInventoryModal extends HTMLElement {
         const detailId = e.target.dataset.detailId;
         const variantId = parseInt(e.target.dataset.variantId, 10); // Get actual variant ID from dataset
         const quantity = e.target.value;
+        console.log('[_handleDiscardQuantityInputChange] 입력 변경:', { modelId, detailId, variantId, quantity: e.target.value }); // 추가된 로그
         this._handleDiscardQuantityChange(modelId, detailId, variantId, quantity);
     }
 
