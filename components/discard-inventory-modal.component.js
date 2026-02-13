@@ -590,7 +590,7 @@ export default class DiscardInventoryModal extends HTMLElement {
         // Attach new listeners based on current view
         if (!this._currentFilterBrand) { // View 1: Brand Selection
             this.shadowRoot.querySelectorAll('.brand-filter-button').forEach(button => {
-                button.addEventListener('click', this._filterByBrand);
+                button.addEventListener('click', (e) => this._filterByBrand(e.currentTarget.dataset.brand));
             });
         } else if (!this._currentFilterProduct) { // View 2: Product Selection
             this.shadowRoot.querySelector('.back-button.back-to-brands-btn')?.addEventListener('click', this._showAllBrands);
