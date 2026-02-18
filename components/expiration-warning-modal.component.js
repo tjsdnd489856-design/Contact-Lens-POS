@@ -43,6 +43,7 @@ const EXPIRATION_MODAL_STYLES = `
         max-height: calc(var(--header-height) + 5 * var(--row-height)); /* 1 header + 5 body rows = 6 visible rows */
         overflow-y: auto; /* 세로 스크롤 활성화 */
         width: 100%;
+        border: 2px solid red; /* TEMPORARY: Visual cue for tbody */
     }
     /* 스크롤바 숨기기 (선택 사항) */
     .expiration-table tbody::-webkit-scrollbar {
@@ -57,6 +58,7 @@ const EXPIRATION_MODAL_STYLES = `
         width: 100%; /* tr이 tbody의 전체 너비를 차지하도록 하여 스크롤바 공간을 고려 */
         table-layout: fixed; /* 열 너비를 고정하여 헤더와 정렬 유지 */
         height: var(--row-height); /* Apply row height variable */
+        border: 1px dashed blue; /* TEMPORARY: Visual cue for rows */
     }
     .expiration-table th, .expiration-table td {
         border: 1px solid #ddd;
@@ -136,6 +138,7 @@ export default class ExpirationWarningModal extends HTMLElement {
 
         this._closeDetailPopup = this._closeDetailPopup.bind(this);
         this._handleSort = this._handleSort.bind(this);
+        console.log('[ExpirationWarningModal] Constructor called.'); // DEBUG LOG
     }
 
     /**
@@ -149,6 +152,7 @@ export default class ExpirationWarningModal extends HTMLElement {
 
     connectedCallback() {
         this._groupAndRenderProducts();
+        console.log('[ExpirationWarningModal] connectedCallback called.'); // DEBUG LOG
     }
 
     /**
@@ -206,6 +210,7 @@ export default class ExpirationWarningModal extends HTMLElement {
      * @private
      */
     _handleSort(sortBy) {
+        console.log(`[ExpirationWarningModal] _handleSort called with sortBy: ${sortBy}, current order: ${this._sortOrder}`); // DEBUG LOG
         if (this._sortBy === sortBy) {
             this._sortOrder = (this._sortOrder === 'asc' ? 'desc' : 'asc');
         } else {
@@ -319,6 +324,7 @@ export default class ExpirationWarningModal extends HTMLElement {
      * @private
      */
     _render() {
+        console.log('[ExpirationWarningModal] _render called.'); // DEBUG LOG
         this.shadowRoot.innerHTML = `
             <style>${EXPIRATION_MODAL_STYLES}</style>
             <div class="expiration-container">
