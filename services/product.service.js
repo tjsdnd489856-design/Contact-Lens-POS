@@ -104,18 +104,20 @@ export const ProductService = {
     }
   },
 
+  /**
+   * GET 방식을 사용하여 API를 호출합니다. (CORS 에러를 줄이기 위한 가장 단순한 방식)
+   */
   async _makeExternalApiRequest(gtin) {
-    // 'text/plain'을 사용하여 브라우저의 CORS Preflight 보안 점검을 우회 시도합니다.
-    const response = await fetch(API_GATEWAY_URL, {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'text/plain' 
-      },
-      body: JSON.stringify({ udiDi: gtin }),
+    const url = `${API_GATEWAY_URL}?udiDi=${encodeURIComponent(gtin)}`;
+    
+    // 단순 GET 요청은 보안 검사(Preflight)가 생략될 가능성이 매우 높습니다.
+    const response = await fetch(url, {
+      method: 'GET',
+      mode: 'cors'
     });
 
     if (!response.ok) {
-      throw new Error(`API Request Failed: ${response.status}`);
+      throw new Error(`API 호출 실패: ${response.status}`);
     }
     
     return response.json();
@@ -146,14 +148,13 @@ export const ProductService = {
   async fetchProductDetailsFromExternalApi(gtin) {
     if (!gtin) return null;
     try {
-      console.log(`[ProductService] API 호출 시작 (GTIN: ${gtin})`);
+      console.log(`[ProductService] API(GET) 호출 시작: ${gtin}`);
       const apiResponse = await this._makeExternalApiRequest(gtin);
       console.log('[ProductService] API 응답 성공:', apiResponse);
       
-      const mappedProduct = this._mapExternalApiResponseToProduct(apiResponse, gtin);
-      return mappedProduct;
+      return this._mapExternalApiResponseToProduct(apiResponse, gtin);
     } catch (error) {
-      console.error('[ProductService] API 호출 에러:', error);
+      console.error('[ProductService] API 에러:', error);
       return null;
     }
   },
