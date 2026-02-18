@@ -134,26 +134,38 @@ export const ProductService = {
 
   /**
    * Makes a POST request to the AWS API Function URL.
+   * CORS safe implementation.
    */
   async _makeExternalApiRequest(gtin) {
+    // Note: Simple request without custom headers can sometimes bypass complex preflights,
+    // but here we must use JSON.
     const response = await fetch(API_GATEWAY_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      mode: 'cors', // Explicitly set CORS mode
+      headers: { 
+          'Content-Type': 'text/plain' // Use text/plain to avoid some preflight issues if possible, or application/json
+      },
       body: JSON.stringify({ udiDi: gtin }),
     });
 
     if (!response.ok) {
       throw new Error(`API Request Failed: ${response.status}`);
     }
-    return response.json();
+    
+    // Attempt to parse text response as JSON
+    const textData = await response.text();
+    try {
+        return JSON.parse(textData);
+    } catch (e) {
+        console.error('Failed to parse API response as JSON:', textData);
+        throw new Error('Invalid JSON response from API');
+    }
   },
 
   /**
    * Maps the external API response to the internal product structure.
-   * Improved to be more resilient to different response formats.
    */
   _mapExternalApiResponseToProduct(apiResponse, gtin) {
-    // If the response has item details regardless of the 'productFound' flag
     const data = apiResponse.item_details || apiResponse;
     
     if (data && (data.brand || data.model || data.productName)) {
