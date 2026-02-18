@@ -295,15 +295,22 @@ export default class DiscardInventoryModal extends HTMLElement {
      * @private
      */
     _handleDiscardQuantityChange(modelId, detailId, variantId, quantity) {
-        // Find original product variant by its Firestore ID to get its max quantity
-        const originalVariant = this._products.find(p => p.id === variantId);
-        const powerOptionFromOriginal = originalVariant?.powerOptions.find(opt => opt.detailId === detailId && opt.variantId === variantId);
+        // 통합된 최대 수량이 필요하며, 이는 _currentFilterProduct.powerOptions에 저장되어 있습니다.
+        const productGroup = this._currentFilterProduct; // 통합된 도수 옵션을 보유합니다.
+        if (!productGroup) {
+            console.error('[_handleDiscardQuantityChange] _currentFilterProduct가 설정되지 않았습니다.');
+            return;
+        }
+
+        const powerOptionFromConsolidated = productGroup.powerOptions.find(opt => opt.detailId === detailId);
         
-        if (!originalVariant || !powerOptionFromOriginal) {
+        if (!powerOptionFromConsolidated) {
+            console.error('[_handleDiscardQuantityChange] detailId에 대한 통합된 도수 옵션을 찾을 수 없습니다:', detailId);
             return; 
         }
 
-        console.log('[_handleDiscardQuantityChange] powerOptionFromOriginal.quantity:', powerOptionFromOriginal.quantity); // --- ADDED LOG ---
+        const maxAvailableQuantity = powerOptionFromConsolidated.quantity; // 이것이 올바른 최대 수량입니다.
+        console.log('[_handleDiscardQuantityChange] maxAvailableQuantity:', maxAvailableQuantity); 
 
         const numQuantity = parseInt(quantity, 10);
         
@@ -313,15 +320,16 @@ export default class DiscardInventoryModal extends HTMLElement {
             this._selectedProductsToDiscard.set(modelId, modelSelections);
         }
 
-        if (!isNaN(numQuantity) && numQuantity >= 0 && numQuantity <= powerOptionFromOriginal.quantity) {
+        if (!isNaN(numQuantity) && numQuantity >= 0 && numQuantity <= maxAvailableQuantity) { // 여기서 maxAvailableQuantity 사용
             if (numQuantity > 0) {
-                modelSelections.set(detailId, { quantity: numQuantity, variantId: variantId });
+                // 저장된 variantId가 통합 옵션의 것이거나 전달된 것인지 확인합니다.
+                modelSelections.set(detailId, { quantity: numQuantity, variantId: powerOptionFromConsolidated.variantId });
             } else {
                 modelSelections.delete(detailId);
             }
         } else {
-            alert(MESSAGES.INVALID_QUANTITY(powerOptionFromOriginal.quantity));
-            modelSelections.delete(detailId); // Reset selection
+            alert(MESSAGES.INVALID_QUANTITY(maxAvailableQuantity)); // 여기서 maxAvailableQuantity 사용
+            modelSelections.delete(detailId); // 선택 초기화
         }
         
         if (modelSelections.size === 0) {
@@ -788,11 +796,20 @@ export default class DiscardInventoryModal extends HTMLElement {
      * @private
      */
     _togglePowerOptionSelection(modelId, detailId, variantId, inputElement) {
-        // Find original product variant by its Firestore ID to get its maximum available quantity.
-        const originalVariant = this._products.find(p => p.id === variantId);
-        const powerOptionFromOriginal = originalVariant?.powerOptions.find(opt => opt.detailId === detailId && opt.variantId === variantId);
+        const productGroup = this._currentFilterProduct;
+        if (!productGroup) {
+            console.error('[_togglePowerOptionSelection] _currentFilterProduct is not set.');
+            return;
+        }
+
+        const powerOptionFromConsolidated = productGroup.powerOptions.find(opt => opt.detailId === detailId);
         
-        if (!originalVariant || !powerOptionFromOriginal) return;
+        if (!powerOptionFromConsolidated) {
+            console.error('[_togglePowerOptionSelection] Consolidated power option not found for detailId:', detailId);
+            return;
+        }
+
+        const maxAvailableQuantity = powerOptionFromConsolidated.quantity;
 
         let modelSelections = new Map(this._selectedProductsToDiscard.get(modelId)); // Create a new Map to ensure reactivity
         if (!modelSelections) {
@@ -811,13 +828,13 @@ export default class DiscardInventoryModal extends HTMLElement {
             inputElement.value = 0;
         } else {
             // Select with default 1, or max if quantity is 0
-            const quantityToSet = Math.min(1, powerOptionFromOriginal.quantity);
+            const quantityToSet = Math.min(1, maxAvailableQuantity);
             if (quantityToSet > 0) {
-                modelSelections.set(detailId, { quantity: quantityToSet, variantId: variantId });
+                modelSelections.set(detailId, { quantity: quantityToSet, variantId: powerOptionFromConsolidated.variantId });
                 inputElement.closest('tr').classList.add('selected');
                 inputElement.value = quantityToSet;
             } else {
-                alert(MESSAGES.INVALID_QUANTITY(powerOptionFromOriginal.quantity));
+                alert(MESSAGES.INVALID_QUANTITY(maxAvailableQuantity));
             }
         }
         this._updateDiscardButtonState();
