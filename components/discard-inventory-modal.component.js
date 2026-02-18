@@ -221,7 +221,6 @@ function augmentProductWithPowerOptions(product) {
             quantity: product.quantity // Total quantity for this specific power option
         }]
     };
-    // Removed console.log for debugging purposes
     // console.log(`[augmentProductWithPowerOptions] Product ID: ${augmentedProduct.id}, Original Quantity: ${product.quantity}, Power Option Quantity: ${augmentedProduct.powerOptions[0].quantity}`);
     return augmentedProduct;
 }
@@ -824,11 +823,13 @@ export default class DiscardInventoryModal extends HTMLElement {
 
         const maxAvailableQuantity = powerOptionFromConsolidated.quantity;
 
-        let modelSelections = new Map(this._selectedProductsToDiscard.get(modelId)); // Create a new Map to ensure reactivity
+        // Fix starts here: Get the actual map or create a new one if it doesn't exist.
+        let modelSelections = this._selectedProductsToDiscard.get(modelId);
         if (!modelSelections) {
             modelSelections = new Map();
             this._selectedProductsToDiscard.set(modelId, modelSelections);
         }
+        // Fix ends here.
 
         const currentSelection = modelSelections.get(detailId);
         const currentSelectedQty = currentSelection?.quantity || 0;
