@@ -210,7 +210,7 @@ function augmentProductWithPowerOptions(product) {
     if (product.powerOptions && product.powerOptions.length > 0) {
         return product;
     }
-    return {
+    const augmentedProduct = {
         ...product,
         powerOptions: [{
             detailId: `${product.powerS}-${product.powerC}-${product.powerAX}`, // S-C-AX combination
@@ -221,6 +221,8 @@ function augmentProductWithPowerOptions(product) {
             quantity: product.quantity // Total quantity for this specific power option
         }]
     };
+    console.log(`[augmentProductWithPowerOptions] Product ID: ${augmentedProduct.id}, Original Quantity: ${product.quantity}, Power Option Quantity: ${augmentedProduct.powerOptions[0].quantity}`);
+    return augmentedProduct;
 }
 
 // --- DiscardInventoryModal Component ---
@@ -440,6 +442,11 @@ export default class DiscardInventoryModal extends HTMLElement {
         const productsMatchingModel = this._products.filter(p => p.brand === brand && p.model === model);
         
         if (productsMatchingModel.length > 0) {
+            console.log(`[_filterByBrandAndModel] Processing products for brand: ${brand}, model: ${model}`);
+            productsMatchingModel.forEach(p => {
+                console.log(`  Product ID: ${p.id}, Brand: ${p.brand}, Model: ${p.model}, Power Options:`, p.powerOptions);
+            });
+
             const consolidatedPowerOptionsMap = new Map();
 
             productsMatchingModel.forEach(p => {
@@ -466,6 +473,7 @@ export default class DiscardInventoryModal extends HTMLElement {
                 model: model,
                 powerOptions: Array.from(consolidatedPowerOptionsMap.values())
             };
+            console.log('[_filterByBrandAndModel] Consolidated power options for _currentFilterProduct:', this._currentFilterProduct.powerOptions);
             
         } else {
             this._currentFilterProduct = null;
