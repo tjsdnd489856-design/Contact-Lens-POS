@@ -30,10 +30,13 @@ export function closeCustomerPurchaseHistorySalesPanel() {
 
 /**
  * Handles the 'salesCustomerSelected' event to update the customer history component.
- * @param {CustomEvent} e - The event containing the customer ID.
+ * @param {CustomEvent} e - The event containing the customer ID or customer object.
  */
 function handleSalesCustomerSelected(e) {
-    _lastSelectedCustomerId = e.detail; // Store the ID
+    const detail = e.detail;
+    // Extract ID if an object is passed, otherwise use as is
+    _lastSelectedCustomerId = (typeof detail === 'object' && detail !== null) ? detail.id : detail;
+    
     if (_customerHistoryComponent) {
         _customerHistoryComponent.setCustomerId(_lastSelectedCustomerId);
     }
@@ -72,7 +75,7 @@ export function initCustomerPurchaseHistorySalesPanelHandler() {
         }
     });
 
-    // Listen for the new sales-specific customer selection event
+    // Listen for the sales-specific customer selection event
     document.addEventListener('salesCustomerSelected', handleSalesCustomerSelected);
 
     // Handle visibility based on active tab
