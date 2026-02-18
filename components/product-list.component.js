@@ -397,7 +397,7 @@ export default class ProductList extends HTMLElement {
                 <td>${earliestExpiringProduct.lensType}</td>
                 <td>${earliestExpiringProduct.wearType || 'N/A'}</td>
                 <td>${totalQuantity}</td>
-                <td>${earliestExpiringProduct.expirationDate}</td>
+                <!-- <td>${earliestExpiringProduct.expirationDate}</td> Removed as per user request -->
             </tr>
         `;
     }).join('');
@@ -411,7 +411,7 @@ export default class ProductList extends HTMLElement {
                     <th data-sort-by="lensType">유형</th>
                     <th data-sort-by="wearType">착용 방식</th>
                     <th data-sort-by="quantity">총 수량</th>
-                    <th data-sort-by="expirationDate">유통기한</th>
+                    <!-- <th data-sort-by="expirationDate">유통기한</th> Removed as per user request -->
                 </tr>
             </thead>
             <tbody>
