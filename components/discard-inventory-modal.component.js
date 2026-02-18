@@ -221,7 +221,8 @@ function augmentProductWithPowerOptions(product) {
             quantity: product.quantity // Total quantity for this specific power option
         }]
     };
-    console.log(`[augmentProductWithPowerOptions] Product ID: ${augmentedProduct.id}, Original Quantity: ${product.quantity}, Power Option Quantity: ${augmentedProduct.powerOptions[0].quantity}`);
+    // Removed console.log for debugging purposes
+    // console.log(`[augmentProductWithPowerOptions] Product ID: ${augmentedProduct.id}, Original Quantity: ${product.quantity}, Power Option Quantity: ${augmentedProduct.powerOptions[0].quantity}`);
     return augmentedProduct;
 }
 
@@ -312,7 +313,8 @@ export default class DiscardInventoryModal extends HTMLElement {
         }
 
         const maxAvailableQuantity = powerOptionFromConsolidated.quantity; // 이것이 올바른 최대 수량입니다.
-        console.log('[_handleDiscardQuantityChange] maxAvailableQuantity:', maxAvailableQuantity); 
+        // Removed console.log for debugging purposes
+        // console.log('[_handleDiscardQuantityChange] maxAvailableQuantity:', maxAvailableQuantity); 
 
         const numQuantity = parseInt(quantity, 10);
         
@@ -442,10 +444,11 @@ export default class DiscardInventoryModal extends HTMLElement {
         const productsMatchingModel = this._products.filter(p => p.brand === brand && p.model === model);
         
         if (productsMatchingModel.length > 0) {
-            console.log(`[_filterByBrandAndModel] Processing products for brand: ${brand}, model: ${model}`);
-            productsMatchingModel.forEach(p => {
-                console.log(`  Product ID: ${p.id}, Brand: ${p.brand}, Model: ${p.model}, Power Options:`, p.powerOptions);
-            });
+            // Removed console.logs for debugging purposes
+            // console.log(`[_filterByBrandAndModel] Processing products for brand: ${brand}, model: ${model}`);
+            // productsMatchingModel.forEach(p => {
+            //     console.log(`  Product ID: ${p.id}, Brand: ${p.brand}, Model: ${p.model}, Power Options:`, p.powerOptions);
+            // });
 
             const consolidatedPowerOptionsMap = new Map();
 
@@ -473,7 +476,8 @@ export default class DiscardInventoryModal extends HTMLElement {
                 model: model,
                 powerOptions: Array.from(consolidatedPowerOptionsMap.values())
             };
-            console.log('[_filterByBrandAndModel] Consolidated power options for _currentFilterProduct:', this._currentFilterProduct.powerOptions);
+            // Removed console.log for debugging purposes
+            // console.log('[_filterByBrandAndModel] Consolidated power options for _currentFilterProduct:', this._currentFilterProduct.powerOptions);
             
         } else {
             this._currentFilterProduct = null;
@@ -677,6 +681,7 @@ export default class DiscardInventoryModal extends HTMLElement {
                     ${sortedPowerOptions.map(option => {
                         const modelId = this._currentFilterProduct.id; // The ID of the model group
                         const currentSelectedQty = this._selectedProductsToDiscard.get(modelId)?.get(option.detailId)?.quantity || 0;
+                        const isDisabled = option.quantity === 0 ? 'disabled' : ''; // Disable if quantity is 0
                         return `
                             <tr class="power-option-table-row ${currentSelectedQty > 0 ? 'selected' : ''}" 
                                 data-model-id="${modelId}" data-detail-id="${option.detailId}" data-variant-id="${option.variantId}">
@@ -686,7 +691,7 @@ export default class DiscardInventoryModal extends HTMLElement {
                                 <td>${option.quantity}</td>
                                 <td>
                                     <input type="number" min="0" max="${option.quantity}" value="${currentSelectedQty}"
-                                           data-model-id="${modelId}" data-detail-id="${option.detailId}" data-variant-id="${option.variantId}" class="discard-quantity-input">
+                                           data-model-id="${modelId}" data-detail-id="${option.detailId}" data-variant-id="${option.variantId}" class="discard-quantity-input" ${isDisabled}>
                                 </td>
                             </tr>
                         `;
