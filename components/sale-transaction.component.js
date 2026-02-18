@@ -89,11 +89,11 @@ export default class SaleTransaction extends HTMLElement {
   }
 
   /**
-   * Handles click events on the customer search results div, delegating to individual items.
-   * @param {Event} e - The click event.
+   * Handles click and double-click events on the customer search results div.
+   * @param {Event} e - The mouse event.
    * @private
    */
-  _handleCustomerSearchResultClick = (e) => {
+  _handleCustomerSearchResultAction = (e) => {
     const selectedResult = e.target.closest('.customer-search-result-item');
     if (selectedResult) {
       const customerId = selectedResult.dataset.customerId; // customerId can be a string from dataset
@@ -157,7 +157,8 @@ export default class SaleTransaction extends HTMLElement {
     }
     if (clearCustomerSelectionBtn) clearCustomerSelectionBtn.addEventListener('click', this._clearCustomerSelection);
     if (customerSearchResultsDiv) {
-        customerSearchResultsDiv.addEventListener('click', this._handleCustomerSearchResultClick);
+        customerSearchResultsDiv.addEventListener('click', this._handleCustomerSearchResultAction);
+        customerSearchResultsDiv.addEventListener('dblclick', this._handleCustomerSearchResultAction);
     }
 
     // Product and barcode listeners
@@ -196,7 +197,8 @@ export default class SaleTransaction extends HTMLElement {
     }
     if (clearCustomerSelectionBtn) clearCustomerSelectionBtn.removeEventListener('click', this._clearCustomerSelection);
     if (customerSearchResultsDiv) {
-        customerSearchResultsDiv.removeEventListener('click', this._handleCustomerSearchResultClick);
+        customerSearchResultsDiv.removeEventListener('click', this._handleCustomerSearchResultAction);
+        customerSearchResultsDiv.removeEventListener('dblclick', this._handleCustomerSearchResultAction);
     }
 
     // These querySelector calls might return null if the elements aren't in the shadow DOM yet (or anymore)
