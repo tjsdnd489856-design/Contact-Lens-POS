@@ -92,7 +92,7 @@ const MODAL_STYLES = `
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
         gap: 16px;
-        margin-top: 12px; /* 상단 구분선과의 거리를 늘림 */
+        margin-top: 12px;
     }
     .brand-card {
         background: #fff;
@@ -160,7 +160,7 @@ const MODAL_STYLES = `
         border-bottom: 2px solid #dee2e6;
     }
     .power-table th, .power-table td {
-        padding: 0 12px; /* 세로 패딩 제거하고 높이로 조절 */
+        padding: 0 12px;
         height: var(--row-height);
         text-align: center;
         border-right: 1px solid #eee;
@@ -182,13 +182,13 @@ const MODAL_STYLES = `
     }
     .power-table tbody {
         display: block;
-        height: calc(var(--row-height) * 10); /* 정확히 10개 행 높이 */
+        height: calc(var(--row-height) * 10);
         overflow-y: scroll;
-        scrollbar-width: none; /* Firefox 스크롤바 숨기기 */
-        -ms-overflow-style: none; /* IE/Edge 스크롤바 숨기기 */
+        scrollbar-width: none;
+        -ms-overflow-style: none;
     }
     .power-table tbody::-webkit-scrollbar {
-        display: none; /* Chrome/Safari 스크롤바 숨기기 */
+        display: none;
     }
     .power-table thead, .power-table tbody tr {
         display: table;
@@ -263,7 +263,7 @@ export default class ProductSelectionModal extends HTMLElement {
         this._selectedBrand = null;
         this._selectedModel = null;
         this._selectedProduct = null;
-        this._selectedQuantity = 1;
+        this._selectedQuantity = 0; // 기본값을 0으로 설정
 
         this._sortBy = 'powerS';
         this._sortOrder = 'asc';
@@ -271,10 +271,27 @@ export default class ProductSelectionModal extends HTMLElement {
         // Bindings
         this.openModal = this.openModal.bind(this);
         this.closeModal = this.closeModal.bind(this);
+        this._handleProductsUpdated = this._handleProductsUpdated.bind(this);
     }
 
     connectedCallback() {
         this._render();
+        // 데이터베이스 제품 정보 업데이트 이벤트 리스너 추가 (실시간 연동)
+        document.addEventListener('productsUpdated', this._handleProductsUpdated);
+    }
+
+    disconnectedCallback() {
+        document.removeEventListener('productsUpdated', this._handleProductsUpdated);
+    }
+
+    /**
+     * 데이터베이스 업데이트 시 호출되어 화면을 갱신합니다.
+     */
+    _handleProductsUpdated() {
+        if (this.isOpen) {
+            this._groupedData = groupProducts(ProductService.getProducts());
+            this._render();
+        }
     }
 
     openModal() {
@@ -283,7 +300,7 @@ export default class ProductSelectionModal extends HTMLElement {
         this._selectedBrand = null;
         this._selectedModel = null;
         this._selectedProduct = null;
-        this._selectedQuantity = 1;
+        this._selectedQuantity = 0; // 모달을 열 때도 수량을 0으로 초기화
         this._groupedData = groupProducts(ProductService.getProducts());
         this._render();
     }
@@ -307,6 +324,12 @@ export default class ProductSelectionModal extends HTMLElement {
     _handleAddToCart() {
         if (!this._selectedProduct) return;
         
+        // 수량이 0인 경우 경고 및 중단
+        if (this._selectedQuantity <= 0) {
+            alert('수량을 1개 이상 입력해주세요.');
+            return;
+        }
+
         document.dispatchEvent(new CustomEvent('productSelectedForSale', {
             detail: {
                 product: this._selectedProduct,
@@ -328,6 +351,7 @@ export default class ProductSelectionModal extends HTMLElement {
     }
 
     _renderProductStep() {
+        if (!this._selectedBrand || !this._groupedData[this._selectedBrand]) return '';
         const models = Object.keys(this._groupedData[this._selectedBrand]).sort();
         return `
             <div class="back-nav">
@@ -345,6 +369,7 @@ export default class ProductSelectionModal extends HTMLElement {
     }
 
     _renderPowerStep() {
+        if (!this._selectedBrand || !this._selectedModel || !this._groupedData[this._selectedBrand][this._selectedModel]) return '';
         let options = this._groupedData[this._selectedBrand][this._selectedModel];
         
         // Sorting
@@ -382,8 +407,8 @@ export default class ProductSelectionModal extends HTMLElement {
                                 <td>${opt.powerAX || '0'}</td>
                                 <td>${opt.quantity}</td>
                                 <td onclick="event.stopPropagation()">
-                                    <input type="number" value="${this._selectedProduct?.id === opt.id ? this._selectedQuantity : 1}" 
-                                           min="1" max="${opt.quantity}" class="qty-input" data-id="${opt.id}">
+                                    <input type="number" value="${this._selectedProduct?.id === opt.id ? this._selectedQuantity : 0}" 
+                                           min="0" max="${opt.quantity}" class="qty-input" data-id="${opt.id}">
                                 </td>
                             </tr>
                         `).join('')}
@@ -420,7 +445,7 @@ export default class ProductSelectionModal extends HTMLElement {
                         ${content}
                     </div>
                     <div class="modal-actions">
-                        <button class="btn-primary" id="add-to-cart" ${!this._selectedProduct ? 'disabled' : ''}>카트에 추가</button>
+                        <button class="btn-primary" id="add-to-cart" ${!this._selectedProduct || this._selectedQuantity <= 0 ? 'disabled' : ''}>카트에 추가</button>
                     </div>
                 </div>
             </div>
@@ -446,8 +471,10 @@ export default class ProductSelectionModal extends HTMLElement {
                 };
             });
         } else if (this._currentStep === 2) {
-            root.querySelector('#back-to-brands').onclick = () => {
+            const backBtn = root.querySelector('#back-to-brands');
+            if (backBtn) backBtn.onclick = () => {
                 this._currentStep = 1;
+                this._selectedBrand = null;
                 this._render();
             };
             root.querySelectorAll('.product-card').forEach(card => {
@@ -458,8 +485,12 @@ export default class ProductSelectionModal extends HTMLElement {
                 };
             });
         } else if (this._currentStep === 3) {
-            root.querySelector('#back-to-products').onclick = () => {
+            const backBtn = root.querySelector('#back-to-products');
+            if (backBtn) backBtn.onclick = () => {
                 this._currentStep = 2;
+                this._selectedModel = null;
+                this._selectedProduct = null;
+                this._selectedQuantity = 0;
                 this._render();
             };
             root.querySelectorAll('.power-table th[data-sort]').forEach(th => {
@@ -470,17 +501,26 @@ export default class ProductSelectionModal extends HTMLElement {
                     const id = tr.dataset.id;
                     const products = this._groupedData[this._selectedBrand][this._selectedModel];
                     this._selectedProduct = products.find(p => p.id === id);
+                    // 행 선택 시 수량이 0이면 1로 자동 변경 (사용자 편의성)
+                    if (this._selectedQuantity === 0) this._selectedQuantity = 1;
                     this._render();
                 };
             });
             root.querySelectorAll('.qty-input').forEach(input => {
                 input.onchange = (e) => {
                     this._selectedQuantity = parseInt(e.target.value, 10);
+                    this._render(); // 버튼 상태 업데이트를 위해 리렌더링
+                };
+                input.oninput = (e) => {
+                    this._selectedQuantity = parseInt(e.target.value, 10) || 0;
                 };
             });
         }
 
-        root.querySelector('#add-to-cart').onclick = this._handleAddToCart.bind(this);
+        const addToCartBtn = root.querySelector('#add-to-cart');
+        if (addToCartBtn) {
+            addToCartBtn.onclick = this._handleAddToCart.bind(this);
+        }
     }
 }
 
