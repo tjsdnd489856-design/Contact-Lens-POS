@@ -23,6 +23,7 @@ export default class SaleTransaction extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this.cart = [];
     this.selectedCustomer = null; // To store selected customer object
+    this._selectedSearchIndex = -1; // Index for keyboard navigation in search results
   }
 
   connectedCallback() {
@@ -84,7 +85,6 @@ export default class SaleTransaction extends HTMLElement {
       }
       
       this._updateSelectedCustomerDisplay(); // Manages visibility of the 'clear' button
-      // Removed: this._dispatchSalesCustomerSelectedEvent(this.selectedCustomer.id); // This caused infinite recursion
     }
   }
 
@@ -283,7 +283,11 @@ export default class SaleTransaction extends HTMLElement {
       case 'Enter':
         event.preventDefault();
         if (this._selectedSearchIndex > -1) {
+          // If an item is explicitly selected via arrows, select it
           items[this._selectedSearchIndex].click();
+        } else if (items.length > 0) {
+          // If no item is selected but results exist, select the first one
+          items[0].click();
         }
         break;
       case 'Escape':
@@ -351,7 +355,7 @@ export default class SaleTransaction extends HTMLElement {
         searchResultsDiv.classList.add('hidden'); // Add hidden class after clearing
       }
       this._updateSelectedCustomerDisplay(); // Update internal state and clear button visibility
-      // Removed: this._dispatchSalesCustomerSelectedEvent(this.selectedCustomer ? this.selectedCustomer.id : null); // This caused infinite recursion
+      this._dispatchSalesCustomerSelectedEvent(this.selectedCustomer ? this.selectedCustomer.id : null);
   }
 
   /**
