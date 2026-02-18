@@ -9,14 +9,14 @@ const MESSAGES = {
 };
 
 const PURCHASE_HISTORY_STYLES = `
-    h4 { margin-top: 2rem; } /* Removed border-top and padding-top */
+    h4 { margin-top: 2rem; }
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    th, td { border: 1px solid #ddd; padding: 12px; text-align: center; } /* 검색 결과 가운데 정렬 */
-    thead { background-color: #5cb85c; color: white; } /* Green header for purchase history */
+    th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+    thead { background-color: #5cb85c; color: white; }
     tbody tr:nth-child(even) { background-color: #f2f2f2; }
     .message { text-align: center; padding: 1rem; color: #555; }
-    thead tr:hover { background-color: #5cb85c; cursor: default; } /* Prevent hover on header */
-    thead th { text-align: center; } /* Center align header text */
+    thead tr:hover { background-color: #5cb85c; cursor: default; }
+    thead th { text-align: center; }
 `;
 
 // --- CustomerPurchaseHistory Component ---
@@ -24,14 +24,14 @@ export default class CustomerPurchaseHistory extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
-        this._selectedCustomerId = null; // Internal property
+        this._selectedCustomerId = null;
 
-        // Bind event handlers (no longer listening to global event here)
+        // Bind event handlers
         this._handleSalesUpdated = this._handleSalesUpdated.bind(this);
     }
 
     connectedCallback() {
-        this._render(); // Initial render
+        this._render();
         document.addEventListener('salesUpdated', this._handleSalesUpdated);
     }
 
@@ -55,7 +55,6 @@ export default class CustomerPurchaseHistory extends HTMLElement {
      * @private
      */
     _handleSalesUpdated() {
-        // Re-render only if a customer is currently selected
         if (this._selectedCustomerId !== null) {
             this._render();
         }
@@ -70,6 +69,7 @@ export default class CustomerPurchaseHistory extends HTMLElement {
     _groupPurchases(sales) {
         const groupedPurchases = {};
         sales.forEach(sale => {
+            if (!sale.date) return;
             const date = new Date(sale.date).toISOString().split('T')[0]; // YYYY-MM-DD
             if (!groupedPurchases[date]) {
                 groupedPurchases[date] = {
@@ -79,20 +79,20 @@ export default class CustomerPurchaseHistory extends HTMLElement {
             }
 
             sale.items.forEach(item => {
-                const product = ProductService.getProductById(item.productId); // Fetch full product details
-                if (!product) return; // Skip if product not found
+                const product = ProductService.getProductById(item.productId);
+                if (!product) return;
 
                 if (!groupedPurchases[date].items[item.productId]) {
                     groupedPurchases[date].items[item.productId] = {
-                        product: product, // Store the full product object
+                        product: product,
                         quantity: 0,
                         itemTotal: 0
                     };
                 }
                 groupedPurchases[date].items[item.productId].quantity += item.quantity;
-                groupedPurchases[date].items[item.productId].itemTotal += (product.price * item.quantity);
+                groupedPurchases[date].items[item.productId].itemTotal += (item.price * item.quantity);
             });
-            groupedPurchases[date].totalAmount += sale.total;
+            groupedPurchases[date].totalAmount += (sale.total || 0);
         });
         return groupedPurchases;
     }
@@ -111,13 +111,18 @@ export default class CustomerPurchaseHistory extends HTMLElement {
             const rowspan = itemsArray.length;
 
             itemsArray.forEach((item, itemIndex) => {
+                const p = item.product;
+                const formattedS = (p.powerS !== null && p.powerS !== undefined) ? (p.powerS > 0 ? '+' : '') + p.powerS.toFixed(2) : 'N/A';
+                const formattedC = (p.powerC !== null && p.powerC !== undefined) ? (p.powerC > 0 ? '+' : '') + p.powerC.toFixed(2) : 'N/A';
+                const formattedAX = (p.powerAX !== null && p.powerAX !== undefined) ? p.powerAX : 'N/A';
+
                 tbodyContent += `
                     <tr>
                         ${itemIndex === 0 ? `<td rowspan="${rowspan}">${date}</td>` : ''}
-                        <td>${item.product.brand} ${item.product.model}</td>
-                        <td>${item.product.s || ''}</td>
-                        <td>${item.product.c || ''}</td>
-                        <td>${item.product.ax || ''}</td>
+                        <td>${p.brand} ${p.model}</td>
+                        <td>${formattedS}</td>
+                        <td>${formattedC}</td>
+                        <td>${formattedAX}</td>
                         <td>${item.quantity}</td>
                     </tr>
                 `;
@@ -127,7 +132,7 @@ export default class CustomerPurchaseHistory extends HTMLElement {
     }
 
     /**
-     * Renders the customer purchase history table or appropriate messages.
+     * Renders the customer purchase history table.
      * @private
      */
     _render() {
@@ -151,9 +156,9 @@ export default class CustomerPurchaseHistory extends HTMLElement {
                             <th rowspan="2">수량</th>
                         </tr>
                         <tr>
-                            <th>s</th>
-                            <th>c</th>
-                            <th>ax</th>
+                            <th>S</th>
+                            <th>C</th>
+                            <th>AX</th>
                         </tr>
                     </thead>
                     <tbody>
