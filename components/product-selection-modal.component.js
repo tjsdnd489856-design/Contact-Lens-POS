@@ -1,27 +1,22 @@
 import { ProductService } from '../services/product.service.js';
 
-// Utility to augment products with powerOptions structure
-function augmentProductWithPowerOptions(product) {
-    if (product.powerOptions && product.powerOptions.length > 0) {
-        return product;
-    }
-    return {
-        ...product,
-        powerOptions: [{
-            detailId: `${product.id}-${product.powerS}-${product.powerC}-${product.powerAX}`, // Unique ID for this power option
-            s: product.powerS,
-            c: product.powerC,
-            ax: product.powerAX,
-            quantity: product.quantity // Total quantity for this specific power option
-        }]
-    };
+/**
+ * Utility to group products by brand and model.
+ * This helps in the multi-step selection process.
+ */
+function groupProducts(products) {
+    const brands = {};
+    products.forEach(p => {
+        if (!brands[p.brand]) brands[p.brand] = {};
+        if (!brands[p.brand][p.model]) brands[p.brand][p.model] = [];
+        brands[p.brand][p.model].push(p);
+    });
+    return brands;
 }
 
 const MODAL_STYLES = `
     :host {
         display: block;
-        --power-option-header-height: 40px; /* Default header height for power option table */
-        --power-option-row-height: 36px;    /* Default row height for power option table body */
     }
     .modal-overlay {
         position: fixed;
@@ -44,266 +39,235 @@ const MODAL_STYLES = `
     }
     .modal-content {
         background: white;
-        padding: 20px;
-        border-radius: 8px;
-        width: 90%;
-        max-width: 800px;
-        max-height: 90%;
+        padding: 24px;
+        border-radius: 12px;
+        width: 95%;
+        max-width: 900px;
+        max-height: 85vh;
         display: flex;
         flex-direction: column;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     }
     .modal-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 10px;
-        margin-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 16px;
+        margin-bottom: 20px;
     }
     .modal-header h3 {
         margin: 0;
-        font-size: 1.5em;
-        color: #333;
+        font-size: 1.4rem;
+        color: #1a1a1a;
     }
     .close-button {
-        background: none;
+        background: #f0f0f0;
         border: none;
-        font-size: 1.5em;
+        font-size: 1.2rem;
         cursor: pointer;
         color: #666;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
     }
     .close-button:hover {
+        background: #e0e0e0;
         color: #333;
     }
-    .filters {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 15px;
-        flex-wrap: wrap;
-    }
-    .filters select {
-        padding: 8px;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-    }
-    .product-table-container {
+    .modal-body {
         flex-grow: 1;
         overflow-y: auto;
-        margin-bottom: 15px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
+        display: flex;
+        flex-direction: column;
     }
-    .product-table {
+    
+    /* Step 1: Brand Grid */
+    .brand-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 16px;
+    }
+    .brand-card {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        padding: 24px 16px;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .brand-card:hover {
+        border-color: #007bff;
+        color: #007bff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,123,255,0.1);
+    }
+
+    /* Step 2: Product List */
+    .product-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 12px;
+    }
+    .product-card {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        padding: 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .product-card:hover {
+        background: #fff;
+        border-color: #007bff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .product-card .model-name {
+        display: block;
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    .product-card .brand-name {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    /* Step 3: Power Option Table */
+    .table-wrapper {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .power-table {
         width: 100%;
         border-collapse: collapse;
+        table-layout: fixed;
     }
-    .product-table th, .product-table td {
-        border: 1px solid #eee;
-        padding: 10px;
-        text-align: left;
-        font-size: 0.9em;
+    .power-table thead {
+        background: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
     }
-    .product-table th {
-        background-color: #f8f8f8;
-        cursor: pointer;
-        white-space: nowrap;
-    }
-    .product-table th:hover {
-        background-color: #f0f0f0;
-    }
-    .product-table tbody tr:hover {
-        background-color: #f5f5f5;
-    }
-    .product-table tbody tr.selected {
-        background-color: #e0f7fa;
-    }
-    .add-to-cart-button {
-        background-color: #28a745;
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        align-self: flex-end;
-        font-size: 1em;
-    }
-    .add-to-cart-button:hover {
-        background-color: #218838;
-    }
-    .no-products-message {
+    .power-table th, .power-table td {
+        padding: 12px;
         text-align: center;
-        padding: 20px;
-        color: #777;
+        border-right: 1px solid #eee;
     }
+    .power-table th {
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+    }
+    .power-table th:hover {
+        background: #e9ecef;
+    }
+    .power-table th.sort-active {
+        color: #007bff;
+        background: #e7f1ff;
+    }
+    .power-table tbody {
+        display: block;
+        max-height: 400px;
+        overflow-y: scroll;
+    }
+    .power-table thead, .power-table tbody tr {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+    .power-table tbody tr {
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+    }
+    .power-table tbody tr:hover {
+        background: #f1f3f5;
+    }
+    .power-table tbody tr.selected {
+        background: #e7f1ff;
+        border-left: 4px solid #007bff;
+    }
+    .power-table td input {
+        width: 60px;
+        padding: 4px 8px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        text-align: center;
+    }
+
+    /* Pagination */
     .pagination {
         display: flex;
         justify-content: center;
-        padding: 10px 0;
-        gap: 5px;
+        align-items: center;
+        gap: 12px;
+        margin-top: 20px;
+        padding-top: 10px;
+        border-top: 1px solid #eee;
     }
-    .pagination button {
-        background-color: #f0f0f0;
-        border: 1px solid #ccc;
-        padding: 5px 10px;
+    .page-btn {
+        background: #fff;
+        border: 1px solid #dee2e6;
+        padding: 6px 12px;
         border-radius: 4px;
         cursor: pointer;
+        font-size: 0.9rem;
     }
-    .pagination button.active {
-        background-color: #007bff;
-        color: white;
-        border-color: #007bff;
+    .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
-
-    /* New styles for multi-step selection, from discard-inventory-modal */
-    .modal-body {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-    }
-    .brand-buttons-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        gap: 15px;
-        margin-top: 1rem;
-    }
-    .brand-filter-button {
-        background-color: #f0f0f0;
-        border: 1px solid #ccc;
-        padding: 15px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1em;
-        font-weight: bold;
-        text-align: center;
-        transition: background-color 0.2s, border-color 0.2s;
-    }
-    .brand-filter-button:hover {
-        background-color: #e0e0e0;
-        border-color: #a0a0a0;
-    }
-    .product-selection-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-top: 1rem;
-    }
-    .product-selection-list-item {
-        background-color: #f9f9f9;
-        border: 1px solid #eee;
-        border-radius: 8px;
-        padding: 15px;
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        transition: all 0.2s ease-in-out;
-        cursor: pointer;
-    }
-    .product-selection-list-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    .product-info-main {
-        display: flex;
-        justify-content: space-between;
-        font-weight: bold;
-        color: #333;
-        font-size: 1.1em;
-    }
-    .product-info-detail {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .power-axis-combined {
-        font-size: 0.9em;
+    .page-info {
+        font-size: 0.9rem;
         color: #666;
     }
-    .back-button {
-        background-color: #6c757d;
-        color: white;
-        padding: 8px 15px;
+
+    .back-nav {
+        margin-bottom: 16px;
+    }
+    .btn-back {
+        background: none;
         border: none;
-        border-radius: 5px;
+        color: #007bff;
         cursor: pointer;
-        margin-bottom: 15px;
-        font-size: 0.9em;
-        transition: background-color 0.2s;
+        font-weight: 600;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
-    .back-button:hover {
-        background-color: #5a6268;
+    .btn-back:hover {
+        text-decoration: underline;
     }
-    .power-option-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 1rem;
-        table-layout: fixed; /* 헤더와 바디의 열 너비를 고정 */
+
+    .modal-actions {
+        margin-top: 24px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
     }
-    .power-option-table thead {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-        background-color: #f2f2f2;
-        height: var(--power-option-header-height); /* Apply header height variable */
-    }
-    .power-option-table tbody {
-        display: block; /* 스크롤 가능하게 함 */
-        max-height: calc(var(--power-option-header-height) + 10 * var(--power-option-row-height)); /* 1 header + 10 body rows = 11 visible rows */
-        overflow-y: auto; /* 세로 스크롤 활성화 */
-        width: 100%;
-    }
-    /* 스크롤바 숨기기 (선택 사항) */
-    .power-option-table tbody::-webkit-scrollbar {
-        display: none; /* Webkit 기반 브라우저 */
-    }
-    .power-option-table tbody {
-        -ms-overflow-style: none; /* Internet Explorer 10+ */
-        scrollbar-width: none; /* Firefox */
-    }
-    .power-option-table tr { /* tbody 내부의 tr 요소에 적용 */
-        display: table; /* 테이블 행처럼 동작하게 함 */
-        width: 100%; /* tr이 tbody의 전체 너비를 차지하도록 하여 스크롤바 공간을 고려 */
-        table-layout: fixed; /* 열 너비를 고정하여 헤더와 정렬 유지 */
-        height: var(--power-option-row-height); /* Apply row height variable */
-    }
-    .power-option-table th, .power-option-table td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: center;
-        box-sizing: border-box; /* 패딩과 테두리를 너비에 포함 */
-    }
-    .power-option-table th {
-        background-color: #f2f2f2;
-        cursor: pointer;
-    }
-    .power-option-table th.active {
-        background-color: #007bff;
+    .btn-primary {
+        background: #007bff;
         color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
     }
-    .power-option-table tbody tr:nth-child(even) {
-        background-color: #f9f9f9;
-    }
-    .power-option-table tbody tr:hover {
-        background-color: #e0e0e0;
-    }
-    .power-option-table-row.selected {
-        border-color: #007bff;
-        box-shadow: 0 0 10px rgba(0, 123, 255, 0.2);
-        background-color: #e7f3ff;
-    }
-    .select-quantity-input {
-        width: 70px;
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        text-align: center;
-        -moz-appearance: textfield; /* Firefox */
-    }
-    .select-quantity-input::-webkit-outer-spin-button,
-    .select-quantity-input::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
+    .btn-primary:disabled {
+        background: #ccc;
+        cursor: not-allowed;
     }
 `;
 
@@ -312,341 +276,169 @@ export default class ProductSelectionModal extends HTMLElement {
         super();
         this.attachShadow({ mode: 'open' });
         this.isOpen = false;
-        this._products = []; // All products with their powerOptions
-        this._currentFilterBrand = null; // Currently selected brand for filtering products
-        this._currentFilterProduct = null; // Currently selected product for viewing power options
-        this._sortBy = null; // 's' or 'c' or 'ax' for power options
-        this._sortOrder = 'asc'; // 'asc' or 'desc'
-        this._selectedPowerOptionForSale = null; // Stores the final selected power option variant for sale
-        this._selectedQuantityForSale = 1; // Stores the quantity for the selected power option
+        this._groupedData = {};
+        this._currentStep = 1; // 1: Brand, 2: Product, 3: Power
+        this._selectedBrand = null;
+        this._selectedModel = null;
+        this._selectedProduct = null; // The final specific product item
+        this._selectedQuantity = 1;
 
-        // Bind event handlers
+        this._sortBy = 'powerS';
+        this._sortOrder = 'asc';
+        this._currentPage = 1;
+        this._itemsPerPage = 10;
+
+        // Bindings
         this.openModal = this.openModal.bind(this);
         this.closeModal = this.closeModal.bind(this);
-        this._filterByBrand = this._filterByBrand.bind(this);
-        this._showAllBrands = this._showAllBrands.bind(this);
-        this._filterByProduct = this._filterByProduct.bind(this);
-        this._showAllProductsForBrand = this._showAllProductsForBrand.bind(this);
-        this._handlePowerOptionSelection = this._handlePowerOptionSelection.bind(this);
-        this._handleQuantityChange = this._handleQuantityChange.bind(this);
-        this._handleSort = this._handleSort.bind(this);
-        this._handleAddToCart = this._handleAddToCart.bind(this);
-        this._handleProductDoubleClick = this._handleProductDoubleClick.bind(this);
     }
 
     connectedCallback() {
         this._render();
     }
 
-    disconnectedCallback() {
-        // No external event listeners to remove
-    }
-
-    // This method will detach all dynamically added event listeners
-    // In this component, since innerHTML is replaced, old listeners are garbage collected,
-    // but this method is needed to satisfy the call in _render().
-    _detachEventListeners() {
-        // No persistent listeners to detach explicitly in this component's current structure
-        // If listeners were added to `window` or `document`, they would be removed here.
-    }
-
-    // Public method to open the modal
     openModal() {
         this.isOpen = true;
-        this._products = ProductService.getProducts().map(augmentProductWithPowerOptions); // Re-fetch and augment products
-        this._currentFilterBrand = null; // Reset to brand selection view
-        this._currentFilterProduct = null;
-        this._selectedPowerOptionForSale = null;
-        this._selectedQuantityForSale = 1;
-        this._sortBy = null;
-        this._sortOrder = 'asc';
-
-        const modalOverlay = this.shadowRoot.querySelector('.modal-overlay');
-        if (modalOverlay) {
-            modalOverlay.classList.add('open');
-        }
-        this._render(); // Initial render to show brand selection
+        this._currentStep = 1;
+        this._selectedBrand = null;
+        this._selectedModel = null;
+        this._selectedProduct = null;
+        this._selectedQuantity = 1;
+        this._currentPage = 1;
+        this._groupedData = groupProducts(ProductService.getProducts());
+        this._render();
     }
 
-    // Public method to close the modal
     closeModal() {
         this.isOpen = false;
-        this._selectedPowerOptionForSale = null; // Clear selection on close
-        this._selectedQuantityForSale = 1;
-        const modalOverlay = this.shadowRoot.querySelector('.modal-overlay');
-        if (modalOverlay) {
-            modalOverlay.classList.remove('open');
-        }
+        this._render();
         document.dispatchEvent(new CustomEvent('closeProductSelectionModal'));
     }
 
-    _filterByBrand(brand) {
-        this._currentFilterBrand = brand;
-        this._currentFilterProduct = null;
-        this._selectedPowerOptionForSale = null;
-        this._selectedQuantityForSale = 1;
-        this._sortBy = null;
-        this._sortOrder = 'asc';
-        this._render();
-    }
-
-    _showAllBrands() {
-        this._currentFilterBrand = null;
-        this._currentFilterProduct = null;
-        this._selectedPowerOptionForSale = null;
-        this._selectedQuantityForSale = 1;
-        this._sortBy = null;
-        this._sortOrder = 'asc';
-        this._render();
-    }
-
-    _filterByProduct(productId) {
-        this._currentFilterProduct = this._products.find(p => p.id === productId);
-        this._selectedPowerOptionForSale = null;
-        this._selectedQuantityForSale = 1;
-        this._sortBy = 's'; // Default sort by 's' when viewing power options
-        this._sortOrder = 'asc';
-        this._render();
-    }
-
-    _showAllProductsForBrand() {
-        this._currentFilterProduct = null;
-        this._selectedPowerOptionForSale = null;
-        this._selectedQuantityForSale = 1;
-        this._sortBy = null;
-        this._sortOrder = 'asc';
-        this._render();
-    }
-
-    _handlePowerOptionSelection(productId, powerOptionKey) {
-        const product = this._products.find(p => p.id === productId);
-        const powerOption = product?.powerOptions.find(opt => opt.detailId === powerOptionKey);
-        
-        if (!product || !powerOption) return;
-
-        if (this._selectedPowerOptionForSale && this._selectedPowerOptionForSale.detailId === powerOptionKey) {
-            // Deselect if already selected
-            this._selectedPowerOptionForSale = null;
-            this._selectedQuantityForSale = 1;
+    _handleSort(field) {
+        if (this._sortBy === field) {
+            this._sortOrder = this._sortOrder === 'asc' ? 'desc' : 'asc';
         } else {
-            // Select new power option
-            this._selectedPowerOptionForSale = powerOption;
-            this._selectedQuantityForSale = Math.min(1, powerOption.quantity); // Default to 1 or max available
-        }
-        this._render(); // Re-render to update selection visual and button state
-    }
-
-    _handleQuantityChange(powerOptionKey, quantity) {
-        if (!this._selectedPowerOptionForSale || this._selectedPowerOptionForSale.detailId !== powerOptionKey) {
-            console.warn("Quantity changed for unselected or mismatching power option.");
-            return;
-        }
-
-        // The product ID for selectedPowerOptionForSale needs to be the original product.id (Firestore ID)
-        const originalProduct = this._products.find(p => p.id === this._selectedPowerOptionForSale.detailId.split('-')[0]); 
-        const powerOption = originalProduct?.powerOptions.find(opt => opt.detailId === powerOptionKey);
-        
-        if (!originalProduct || !powerOption) return;
-
-        const numQuantity = parseInt(quantity, 10);
-        if (!isNaN(numQuantity) && numQuantity > 0 && numQuantity <= powerOption.quantity) {
-            this._selectedQuantityForSale = numQuantity;
-        } else {
-            alert(`수량은 1 이상 ${powerOption.quantity} 이하로 입력해주세요.`);
-            this._selectedQuantityForSale = Math.min(1, powerOption.quantity); // Reset to valid quantity
-        }
-        this._render(); // Re-render to update input value and button state
-    }
-
-    _handleSort(sortBy) {
-        if (this._sortBy === sortBy) {
-            this._sortOrder = (this._sortOrder === 'asc' ? 'desc' : 'asc');
-        } else {
-            this._sortBy = sortBy;
+            this._sortBy = field;
             this._sortOrder = 'asc';
         }
+        this._currentPage = 1;
         this._render();
     }
 
     _handleAddToCart() {
-        if (this._selectedPowerOptionForSale) {
-            // Find the full product object that contains this power option
-            const originalProduct = this._products.find(p => p.id === this._selectedPowerOptionForSale.detailId.split('-')[0]);
-            if (originalProduct) {
-                // Combine original product details with selected power option details
-                const productToAdd = { 
-                    ...originalProduct, 
-                    ...this._selectedPowerOptionForSale,
-                    // Ensure the quantity is the selected quantity for sale, not the total stock quantity
-                    quantity: this._selectedQuantityForSale 
-                };
-                
-                document.dispatchEvent(new CustomEvent('productSelectedForSale', {
-                    detail: {
-                        product: productToAdd,
-                        quantity: this._selectedQuantityForSale
-                    }
-                }));
-                this.closeModal();
-            } else {
-                alert('제품 정보를 찾을 수 없습니다.');
-            }
-        } else {
-            alert('카트에 추가할 제품 도수를 선택해주세요.');
-        }
-    }
-
-    _handleProductDoubleClick(event) {
-        const row = event.currentTarget;
-        const productId = row.dataset.productId;
-        const powerOptionKey = row.dataset.detailId; // This is the detailId, not necessarily the productId for `find`
+        if (!this._selectedProduct) return;
         
-        const product = this._products.find(p => p.id === productId); // Find the original product (variant)
-        const powerOption = product?.powerOptions.find(opt => opt.detailId === powerOptionKey);
-
-        if (product && powerOption) {
-            const productToAdd = { 
-                ...product, 
-                ...powerOption,
-                quantity: Math.min(1, powerOption.quantity) // Double-click adds 1 or max available
-            };
-
-            document.dispatchEvent(new CustomEvent('productSelectedForSale', {
-                detail: {
-                    product: productToAdd,
-                    quantity: productToAdd.quantity
-                }
-            }));
-            this.closeModal();
-        } else {
-            alert('유효한 제품 도수 옵션을 선택해주세요.');
-        }
+        document.dispatchEvent(new CustomEvent('productSelectedForSale', {
+            detail: {
+                product: this._selectedProduct,
+                quantity: this._selectedQuantity
+            }
+        }));
+        this.closeModal();
     }
 
-    _sortPowerOptions(powerOptions) {
-        if (!this._sortBy) return powerOptions;
-
-        return [...powerOptions].sort((a, b) => {
-            let valA = a[this._sortBy];
-            let valB = b[this._sortBy];
-
-            valA = (valA === null || valA === undefined || valA === 'N/A') ? (this._sortOrder === 'asc' ? -Infinity : Infinity) : valA;
-            valB = (valB === null || valB === undefined || valB === 'N/A') ? (this._sortOrder === 'asc' ? 1 : -1) : valB; // 'N/A' should be last for desc
-
-            if (valA < valB) {
-                return this._sortOrder === 'asc' ? -1 : 1;
-            }
-            if (valA > valB) {
-                return this._sortOrder === 'asc' ? 1 : -1;
-            }
-            return 0;
-        });
-    }
-
-    _renderBrandSelectionView() {
-        const uniqueBrands = [...new Set(this._products.map(p => p.brand))];
-        if (uniqueBrands.length === 0) return `<p class="message">등록된 브랜드가 없습니다.</p>`;
-        
+    _renderBrandStep() {
+        const brands = Object.keys(this._groupedData).sort();
         return `
-            <div class="brand-buttons-grid">
-                ${uniqueBrands.map(brand => `
-                    <button class="brand-filter-button" data-brand="${brand}">${brand}</button>
+            <div class="brand-grid">
+                ${brands.map(brand => `
+                    <div class="brand-card" data-brand="${brand}">${brand}</div>
                 `).join('')}
             </div>
         `;
     }
 
-    _renderProductSelectionView() {
-        const productsForBrand = this._products.filter(p => p.brand === this._currentFilterBrand);
-        if (productsForBrand.length === 0) return `<p class="message">"${this._currentFilterBrand}" 브랜드의 제품이 없습니다.</p>`;
-        
+    _renderProductStep() {
+        const models = Object.keys(this._groupedData[this._selectedBrand]).sort();
         return `
-            <button class="back-button back-to-brands-btn">← 전체 브랜드 보기</button>
-            <div class="product-selection-list">
-                ${productsForBrand.map(product => `
-                    <div class="product-selection-list-item" data-product-id="${product.id}">
-                        <div class="product-info-main">
-                            <span class="brand-model">${product.brand} - ${product.model}</span>
-                            <span class="quantity-display">총 수량: ${product.powerOptions.reduce((sum, opt) => sum + opt.quantity, 0)}</span>
-                        </div>
-                        <div class="product-info-detail">
-                            <span class="power-axis-combined">
-                                ${product.powerOptions.map(opt => `S:${(opt.s !== null && opt.s !== undefined) ? (opt.s > 0 ? '+' : '') + opt.s.toFixed(2) : 'N/A'} C:${(opt.c !== null && opt.c !== undefined) ? (opt.c > 0 ? '+' : '') + opt.c.toFixed(2) : 'N/A'} AX:${opt.ax !== null ? opt.ax : 'N/A'}`).join(' / ')}
-                            </span>
-                        </div>
+            <div class="back-nav">
+                <button class="btn-back" id="back-to-brands">← 브랜드 다시 선택</button>
+            </div>
+            <div class="product-list">
+                ${models.map(model => `
+                    <div class="product-card" data-model="${model}">
+                        <span class="model-name">${model}</span>
+                        <span class="brand-name">${this._selectedBrand}</span>
                     </div>
                 `).join('')}
             </div>
         `;
     }
 
-    _renderPowerOptionSelectionView() {
-        const product = this._currentFilterProduct;
-        if (!product) return `<p class="message">제품을 선택해주세요.</p>`;
-
-        if (product.powerOptions.length === 0) return `<p class="message">"${product.brand} - ${product.model}" 제품에 도수 정보가 없습니다.</p>`;
+    _renderPowerStep() {
+        let options = this._groupedData[this._selectedBrand][this._selectedModel];
         
-        const sortedPowerOptions = this._sortPowerOptions(product.powerOptions);
+        // Sorting
+        options.sort((a, b) => {
+            const valA = a[this._sortBy] ?? 0;
+            const valB = b[this._sortBy] ?? 0;
+            return this._sortOrder === 'asc' ? valA - valB : valB - valA;
+        });
+
+        // Pagination
+        const totalItems = options.length;
+        const totalPages = Math.ceil(totalItems / this._itemsPerPage);
+        const startIndex = (this._currentPage - 1) * this._itemsPerPage;
+        const paginatedOptions = options.slice(startIndex, startIndex + this._itemsPerPage);
+
+        const sortIcon = (field) => {
+            if (this._sortBy !== field) return '';
+            return this._sortOrder === 'asc' ? ' ▲' : ' ▼';
+        };
 
         return `
-            <button class="back-button back-to-products-btn">← 제품 목록으로</button>
-            <table class="power-option-table">
-                <thead>
-                    <tr>
-                        <th class="${this._sortBy === 's' ? 'active' : ''}" data-sort-by="s">
-                            S ${this._sortBy === 's' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
-                        </th>
-                        <th class="${this._sortBy === 'c' ? 'active' : ''}" data-sort-by="c">
-                            C ${this._sortBy === 'c' ? (this._sortOrder === 'asc' ? '▲' : '▼') : ''}
-                        </th>
-                        <th>AX</th>
-                        <th>수량</th>
-                        <th>선택 수량</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${sortedPowerOptions.map(option => {
-                        const isSelected = this._selectedPowerOptionForSale && this._selectedPowerOptionForSale.detailId === option.detailId;
-                        const quantityToDisplay = isSelected ? this._selectedQuantityForSale : '';
-                        return `
-                            <tr class="power-option-table-row ${isSelected ? 'selected' : ''}" data-product-id="${product.id}" data-detail-id="${option.detailId}">
-                                <td>${(option.s !== null && option.s !== undefined) ? (option.s > 0 ? '+' : '') + option.s.toFixed(2) : 'N/A'}</td>
-                                <td>${(option.c !== null && option.c !== undefined) ? (option.c > 0 ? '+' : '') + option.c.toFixed(2) : 'N/A'}</td>
-                                <td>${product.powerAX !== null ? product.powerAX : 'N/A'}</td>
-                                <td>${option.quantity}</td>
-                                <td>
-                                    <input type="number" min="1" max="${option.quantity}" value="${quantityToDisplay}"
-                                           data-product-id="${product.id}" data-detail-id="${option.detailId}" 
-                                           class="select-quantity-input" ${isSelected ? '' : 'disabled'}>
+            <div class="back-nav">
+                <button class="btn-back" id="back-to-products">← 제품 다시 선택</button>
+            </div>
+            <div class="table-wrapper">
+                <table class="power-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="powerS" class="${this._sortBy === 'powerS' ? 'sort-active' : ''}">S${sortIcon('powerS')}</th>
+                            <th data-sort="powerC" class="${this._sortBy === 'powerC' ? 'sort-active' : ''}">C${sortIcon('powerC')}</th>
+                            <th data-sort="powerAX" class="${this._sortBy === 'powerAX' ? 'sort-active' : ''}">AX${sortIcon('powerAX')}</th>
+                            <th data-sort="quantity" class="${this._sortBy === 'quantity' ? 'sort-active' : ''}">재고${sortIcon('quantity')}</th>
+                            <th>수량</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${paginatedOptions.map(opt => `
+                            <tr class="${this._selectedProduct?.id === opt.id ? 'selected' : ''}" data-id="${opt.id}">
+                                <td>${opt.powerS > 0 ? '+' : ''}${opt.powerS.toFixed(2)}</td>
+                                <td>${opt.powerC > 0 ? '+' : ''}${opt.powerC.toFixed(2)}</td>
+                                <td>${opt.powerAX || '0'}</td>
+                                <td>${opt.quantity}</td>
+                                <td onclick="event.stopPropagation()">
+                                    <input type="number" value="${this._selectedProduct?.id === opt.id ? this._selectedQuantity : 1}" 
+                                           min="1" max="${opt.quantity}" class="qty-input" data-id="${opt.id}">
                                 </td>
                             </tr>
-                        `;
-                    }).join('')}
-                </tbody>
-            </table>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <button class="page-btn" id="prev-page" ${this._currentPage === 1 ? 'disabled' : ''}>이전</button>
+                <span class="page-info">${this._currentPage} / ${totalPages || 1}</span>
+                <button class="page-btn" id="next-page" ${this._currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}>다음</button>
+            </div>
         `;
     }
 
-
     _render() {
-        this._detachEventListeners(); // Detach existing listeners before re-rendering
-        let contentHtml = '';
-        let modalTitle = '제품 선택';
-        let showAddToCartButton = true;
+        let content = '';
+        let title = '제품 선택';
 
-        if (!this._currentFilterBrand) { // View 1: Brand Selection
-            contentHtml = this._renderBrandSelectionView();
-            modalTitle += ' - 브랜드 선택';
-            showAddToCartButton = false;
-        } else if (!this._currentFilterProduct) { // View 2: Product Selection for a specific brand
-            contentHtml = this._renderProductSelectionView();
-            modalTitle = `제품 선택 - ${this._currentFilterBrand} 제품 선택`;
-            showAddToCartButton = false;
-        } else { // View 3: Power Option Selection for a specific product
-            contentHtml = this._renderPowerOptionSelectionView();
-            modalTitle = `제품 선택 - ${this._currentFilterProduct.brand} - ${this._currentFilterProduct.model} 도수 선택`;
-            // Add to cart button visibility based on whether a power option is selected
-            showAddToCartButton = !!this._selectedPowerOptionForSale; 
+        if (this._currentStep === 1) {
+            content = this._renderBrandStep();
+            title = '제품 선택 - 브랜드';
+        } else if (this._currentStep === 2) {
+            content = this._renderProductStep();
+            title = `제품 선택 - ${this._selectedBrand}`;
+        } else if (this._currentStep === 3) {
+            content = this._renderPowerStep();
+            title = `제품 선택 - ${this._selectedModel}`;
         }
 
         this.shadowRoot.innerHTML = `
@@ -654,71 +446,87 @@ export default class ProductSelectionModal extends HTMLElement {
             <div class="modal-overlay ${this.isOpen ? 'open' : ''}">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3>${modalTitle}</h3>
+                        <h3>${title}</h3>
                         <button class="close-button">&times;</button>
                     </div>
                     <div class="modal-body">
-                        ${contentHtml}
+                        ${content}
                     </div>
-                    <div class="modal-actions" style="${showAddToCartButton ? '' : 'display: none;'}">
-                        <button class="add-to-cart-button" ${this._selectedPowerOptionForSale && this._selectedQuantityForSale > 0 ? '' : 'disabled'}>선택한 제품 카트에 추가</button>
+                    <div class="modal-actions">
+                        <button class="btn-primary" id="add-to-cart" ${!this._selectedProduct ? 'disabled' : ''}>카트에 추가</button>
                     </div>
                 </div>
             </div>
         `;
 
-        this.shadowRoot.querySelector('.close-button').addEventListener('click', this.closeModal);
-        this.shadowRoot.querySelector('.modal-overlay').addEventListener('click', (e) => {
-            if (e.target === e.currentTarget) {
-                this.closeModal();
-            }
-        });
+        this._attachEvents();
+    }
+
+    _attachEvents() {
+        const root = this.shadowRoot;
         
-        // Dynamic event listeners based on the current view
-        if (!this._currentFilterBrand) { // View 1: Brand Selection
-            this.shadowRoot.querySelectorAll('.brand-filter-button').forEach(button => {
-                button.addEventListener('click', (e) => this._filterByBrand(e.currentTarget.dataset.brand));
+        root.querySelector('.close-button').onclick = this.closeModal;
+        root.querySelector('.modal-overlay').onclick = (e) => {
+            if (e.target === e.currentTarget) this.closeModal();
+        };
+
+        if (this._currentStep === 1) {
+            root.querySelectorAll('.brand-card').forEach(card => {
+                card.onclick = () => {
+                    this._selectedBrand = card.dataset.brand;
+                    this._currentStep = 2;
+                    this._render();
+                };
             });
-        } else if (!this._currentFilterProduct) { // View 2: Product Selection
-            this.shadowRoot.querySelector('.back-button.back-to-brands-btn')?.addEventListener('click', this._showAllBrands);
-            this.shadowRoot.querySelectorAll('.product-selection-list-item').forEach(item => {
-                item.addEventListener('click', (e) => this._filterByProduct(e.currentTarget.dataset.productId));
+        } else if (this._currentStep === 2) {
+            root.querySelector('#back-to-brands').onclick = () => {
+                this._currentStep = 1;
+                this._render();
+            };
+            root.querySelectorAll('.product-card').forEach(card => {
+                card.onclick = () => {
+                    this._selectedModel = card.dataset.model;
+                    this._currentStep = 3;
+                    this._render();
+                };
             });
-        } else { // View 3: Power Option Selection
-            this.shadowRoot.querySelector('.back-button.back-to-products-btn')?.addEventListener('click', this._showAllProductsForBrand);
-            this.shadowRoot.querySelectorAll('.power-option-table-row').forEach(row => {
-                row.addEventListener('click', (e) => {
-                    // Prevent row click from affecting input
-                    if (e.target.classList.contains('select-quantity-input')) {
-                        return;
-                    }
-                    const productId = row.dataset.productId; // Keep as string
-                    const powerOptionKey = row.dataset.detailId;
-                    this._handlePowerOptionSelection(productId, powerOptionKey);
-                });
-                row.addEventListener('dblclick', (e) => {
-                    if (e.target.classList.contains('select-quantity-input')) {
-                        return;
-                    }
-                    const productId = row.dataset.productId;
-                    const powerOptionKey = row.dataset.detailId;
-                    this._handleProductDoubleClick({ currentTarget: row, dataset: { productId, detailId: powerOptionKey } });
-                });
+        } else if (this._currentStep === 3) {
+            root.querySelector('#back-to-products').onclick = () => {
+                this._currentStep = 2;
+                this._render();
+            };
+            root.querySelectorAll('.power-table th[data-sort]').forEach(th => {
+                th.onclick = () => this._handleSort(th.dataset.sort);
             });
-            this.shadowRoot.querySelectorAll('.select-quantity-input').forEach(input => {
-                input.addEventListener('change', (e) => this._handleQuantityChange(e.target.dataset.detailId, e.target.value));
-                input.addEventListener('input', (e) => this._handleQuantityChange(e.target.dataset.detailId, e.target.value));
+            root.querySelectorAll('.power-table tbody tr').forEach(tr => {
+                tr.onclick = () => {
+                    const id = tr.dataset.id;
+                    const products = this._groupedData[this._selectedBrand][this._selectedModel];
+                    this._selectedProduct = products.find(p => p.id === id);
+                    this._render();
+                };
             });
-            this.shadowRoot.querySelectorAll('.power-option-table th[data-sort-by]').forEach(header => {
-                header.addEventListener('click', (e) => this._handleSort(e.currentTarget.dataset.sortBy));
+            root.querySelectorAll('.qty-input').forEach(input => {
+                input.onchange = (e) => {
+                    this._selectedQuantity = parseInt(e.target.value, 10);
+                };
             });
+            root.querySelector('#prev-page').onclick = () => {
+                if (this._currentPage > 1) {
+                    this._currentPage--;
+                    this._render();
+                }
+            };
+            root.querySelector('#next-page').onclick = () => {
+                const options = this._groupedData[this._selectedBrand][this._selectedModel];
+                if (this._currentPage < Math.ceil(options.length / this._itemsPerPage)) {
+                    this._currentPage++;
+                    this._render();
+                }
+            };
         }
-        
-        // Add to Cart button listener
-        const addToCartBtn = this.shadowRoot.querySelector('.add-to-cart-button');
-        if (addToCartBtn) {
-            addToCartBtn.addEventListener('click', this._handleAddToCart);
-        }
+
+        root.querySelector('#add-to-cart').onclick = this._handleAddToCart.bind(this);
     }
 }
 
