@@ -104,25 +104,35 @@ const PRODUCT_LIST_STYLES = `
         background-color: #e0e0e0;
     }
     /* 상세 팝업 스타일 */
-    .detail-popup {
+    .detail-popup-overlay {
         position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .detail-popup {
         background-color: white;
         border: 1px solid #ccc;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         z-index: 1000;
-        padding: 20px;
-        width: 80%;
-        max-width: 500px;
-        border-radius: 8px;
+        padding: 24px;
+        width: 90%;
+        max-width: 600px;
+        border-radius: 12px;
+        position: relative;
     }
     .detail-popup h4 {
         margin-top: 0;
         color: #333;
         text-align: center;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
+        font-size: 1.2rem;
     }
     .detail-popup .detail-table { /* New style for popup table */
         width: 100%;
@@ -132,13 +142,14 @@ const PRODUCT_LIST_STYLES = `
     }
     .detail-popup .detail-table th, .detail-popup .detail-table td {
         border: 1px solid #eee;
-        padding: 8px;
+        padding: 10px;
         text-align: center;
         box-sizing: border-box;
     }
     .detail-popup .detail-table th {
         background-color: #f9f9f9;
         cursor: pointer;
+        font-size: 0.9rem;
     }
     .detail-popup .detail-table th.active {
         background-color: #007bff;
@@ -150,15 +161,20 @@ const PRODUCT_LIST_STYLES = `
     .detail-popup .detail-table tbody tr:hover {
         background-color: #f0f0f0;
     }
-    .detail-popup button {
+    .detail-popup .close-popup-btn {
         display: block;
-        margin: 15px auto 0;
-        padding: 8px 20px;
+        margin: 20px auto 0;
+        padding: 10px 24px;
         background-color: #007bff;
         color: white;
         border: none;
-        border-radius: 5px;
+        border-radius: 6px;
         cursor: pointer;
+        font-weight: 600;
+        transition: background-color 0.2s;
+    }
+    .detail-popup .close-popup-btn:hover {
+        background-color: #0056b3;
     }
 `;
 
@@ -520,23 +536,25 @@ export default class ProductList extends HTMLElement {
       `).join('');
 
       return `
-          <div class="detail-popup">
-              <h4>${this._currentDetailedExpiringProducts[0]?.model} 상세 정보</h4>
-              <table class="detail-table">
-                  <thead>
-                      <tr>
-                          <th data-sort-by="powerS">S</th>
-                          <th data-sort-by="powerC">C</th>
-                          <th data-sort-by="powerAX">AX</th>
-                          <th data-sort-by="quantity">수량</th>
-                          <th data-sort-by="expirationDate">유통기한</th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      ${tableRows}
-                  </tbody>
-              </table>
-              <button class="close-popup-btn">닫기</button>
+          <div class="detail-popup-overlay">
+              <div class="detail-popup">
+                  <h4>${this._currentDetailedExpiringProducts[0]?.model} 상세 정보</h4>
+                  <table class="detail-table">
+                      <thead>
+                          <tr>
+                              <th data-sort-by="powerS">S</th>
+                              <th data-sort-by="powerC">C</th>
+                              <th data-sort-by="powerAX">AX</th>
+                              <th data-sort-by="quantity">수량</th>
+                              <th data-sort-by="expirationDate">유통기한</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          ${tableRows}
+                      </tbody>
+                  </table>
+                  <button class="close-popup-btn">닫기</button>
+              </div>
           </div>
       `;
   }
@@ -558,10 +576,21 @@ export default class ProductList extends HTMLElement {
           row.addEventListener('dblclick', this._handleExpiringRowDoubleClick);
       });
 
+      // Close button listener
       const closeButton = this.shadowRoot.querySelector('.detail-popup .close-popup-btn');
       if (closeButton) {
           closeButton.removeEventListener('click', this._closeDetailExpiringPopup); // Remove existing
           closeButton.addEventListener('click', this._closeDetailExpiringPopup);
+      }
+
+      // Overlay click listener to close popup
+      const overlay = this.shadowRoot.querySelector('.detail-popup-overlay');
+      if (overlay) {
+          overlay.addEventListener('click', (e) => {
+              if (e.target === overlay) {
+                  this._closeDetailExpiringPopup();
+              }
+          });
       }
 
       // Attach event listeners for detail popup table headers
