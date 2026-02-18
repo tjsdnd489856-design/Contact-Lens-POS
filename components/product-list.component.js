@@ -6,6 +6,11 @@ const MESSAGES = {
 };
 
 const PRODUCT_LIST_STYLES = `
+    :host {
+        display: block;
+        --header-height: 40px; /* Default header height for expiration table */
+        --row-height: 36px;    /* Default row height for expiration table body */
+    }
     .brand-filter-buttons {
         margin-bottom: 1rem;
         display: grid; /* Use grid for layout */
@@ -49,22 +54,97 @@ const PRODUCT_LIST_STYLES = `
         width: 100%;
         border-collapse: collapse;
         margin-top: 1rem;
+        table-layout: fixed; /* 헤더와 바디의 열 너비를 고정 */
+    }
+    .expiration-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background-color: #f2f2f2;
+        height: var(--header-height); /* Apply header height variable */
+    }
+    .expiration-table tbody {
+        display: block; /* 스크롤 가능하게 함 */
+        max-height: calc(var(--header-height) + 5 * var(--row-height)); /* 1 header + 5 body rows = 6 visible rows */
+        overflow-y: auto; /* 세로 스크롤 활성화 */
+        width: 100%;
+    }
+    /* 스크롤바 숨기기 (선택 사항) */
+    .expiration-table tbody::-webkit-scrollbar {
+        display: none; /* Webkit 기반 브라우저 */
+    }
+    .expiration-table tbody {
+        -ms-overflow-style: none; /* Internet Explorer 10+ */
+        scrollbar-width: none; /* Firefox */
+    }
+    .expiration-table tr { /* tbody 내부의 tr 요소에 적용 */
+        display: table; /* 테이블 행처럼 동작하게 함 */
+        width: 100%; /* tr이 tbody의 전체 너비를 차지하도록 하여 스크롤바 공간을 고려 */
+        table-layout: fixed; /* 열 너비를 고정하여 헤더와 정렬 유지 */
+        height: var(--row-height); /* Apply row height variable */
     }
     .expiration-table th, .expiration-table td {
         border: 1px solid #ddd;
         padding: 8px;
         text-align: center;
+        box-sizing: border-box; /* 패딩과 테두리를 너비에 포함 */
     }
     .expiration-table th {
         background-color: #f2f2f2;
+        cursor: pointer;
+    }
+    .expiration-table th.active {
+        background-color: #007bff;
+        color: white;
     }
     .expiration-table tbody tr:nth-child(even) {
         background-color: #f9f9f9;
     }
-    .message {
-        text-align: center;
+    .expiration-table tbody tr:hover {
+        background-color: #e0e0e0;
+    }
+    /* 상세 팝업 스타일 */
+    .detail-popup {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        border: 1px solid #ccc;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        z-index: 1000;
         padding: 20px;
-        color: #555;
+        width: 80%;
+        max-width: 500px;
+        border-radius: 8px;
+    }
+    .detail-popup h4 {
+        margin-top: 0;
+        color: #333;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    .detail-popup ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .detail-popup ul li {
+        padding: 8px 0;
+        border-bottom: 1px dashed #eee;
+    }
+    .detail-popup ul li:last-child {
+        border-bottom: none;
+    }
+    .detail-popup button {
+        display: block;
+        margin: 15px auto 0;
+        padding: 8px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
     }
 `;
 
@@ -74,14 +154,24 @@ export default class ProductList extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
     this._currentFilterBrand = null; // Default filter, no brand selected initially
+    this._allExpiringProducts = []; // 원본 모든 유통 기한 임박 제품 데이터
+    this._groupedExpiringProducts = new Map(); // 모델명으로 그룹화된 유통 기한 임박 제품 데이터
+    this._sortExpiringBy = null; // 'brand', 'model', 'expirationDate' 등
+    this._sortExpiringOrder = 'asc'; // 'asc' 또는 'desc'
+    this._detailPopupVisible = false;
+    this._currentDetailedExpiringProducts = [];
     
     // Bind event handlers
     this._handleProductsUpdated = this._handleProductsUpdated.bind(this);
     this._filterByBrand = this._filterByBrand.bind(this);
+    this._handleSortExpiring = this._handleSortExpiring.bind(this);
+    this._handleExpiringRowDoubleClick = this._handleExpiringRowDoubleClick.bind(this);
+    this._closeDetailExpiringPopup = this._closeDetailExpiringPopup.bind(this);
   }
     
   connectedCallback() {
-      this._render(); // Initial render to show message or empty state
+      this._groupExpiringProductsAndRender(); // Initial render for expiring products
+      this._render(); // Initial render for general product list
       document.addEventListener('productsUpdated', this._handleProductsUpdated);
   }
 
@@ -94,7 +184,8 @@ export default class ProductList extends HTMLElement {
    * @private
    */
   _handleProductsUpdated() {
-    this._render();
+    this._groupExpiringProductsAndRender(); // Re-group and re-render expiring products
+    this._render(); // Re-render general product list
   }
 
   /**
@@ -135,6 +226,7 @@ export default class ProductList extends HTMLElement {
    * @private
    */
   _generateExpirationTableHtml(expiringProducts) {
+    // This method will be replaced by _generateGroupedExpirationTableHtml later
     if (expiringProducts.length === 0) {
         return `<p class="message">${MESSAGES.NO_EXPIRING_PRODUCTS}</p>`;
     }
@@ -179,7 +271,7 @@ export default class ProductList extends HTMLElement {
    */
   _render() {
     const uniqueBrands = ProductService.getUniqueBrands();
-    const expiringProducts = ProductService.getExpiringProducts();
+    // const expiringProducts = ProductService.getExpiringProducts(); // This will be handled by _groupExpiringProductsAndRender
 
     this.shadowRoot.innerHTML = `
       <style>${PRODUCT_LIST_STYLES}</style>
@@ -188,10 +280,202 @@ export default class ProductList extends HTMLElement {
       </div>
       <div class="expiration-warning-section">
           <h3>유통 기한 임박 제품</h3>
-          ${this._generateExpirationTableHtml(expiringProducts)}
+          ${this._generateGroupedExpirationTableHtml()} <!-- Use grouped table -->
+          ${this._renderDetailExpiringPopup()} <!-- Render detail popup -->
       </div>
     `;
     this.shadowRoot.querySelectorAll('.brand-filter-button').forEach(btn => btn.addEventListener('click', this._filterByBrand));
+    this._attachExpiringEventListeners(); // Attach new event listeners
   }
+
+  // --- New methods for Expiring Products Table ---
+
+  /**
+   * Groups expiring products by model name and then renders the table.
+   * @private
+   */
+  _groupExpiringProductsAndRender() {
+    this._groupedExpiringProducts.clear();
+    const expiringProducts = ProductService.getExpiringProducts(); // Get fresh data
+    this._allExpiringProducts = expiringProducts; // Keep a copy of all expiring products
+
+    this._allExpiringProducts.forEach(product => {
+        if (!this._groupedExpiringProducts.has(product.model)) {
+            this._groupedExpiringProducts.set(product.model, []);
+        }
+        this._groupedExpiringProducts.get(product.model).push(product);
+    });
+    this._render();
+  }
+
+  /**
+   * Sorts the expiring products based on the current _sortExpiringBy and _sortExpiringOrder.
+   * @param {Array<Object>} products - The list of products to sort.
+   * @returns {Array<Object>} Sorted products.
+   * @private
+   */
+  _sortExpiringProducts(products) {
+    if (!this._sortExpiringBy) {
+        // Default sort by expirationDate if no specific sort is set
+        return [...products].sort((a, b) => new Date(a.expirationDate) - new Date(b.expirationDate));
+    }
+
+    return [...products].sort((a, b) => {
+        let valA = a[this._sortExpiringBy];
+        let valB = b[this._sortExpiringBy];
+
+        // Handle date comparison for expirationDate
+        if (this._sortExpiringBy === 'expirationDate') {
+            valA = new Date(valA);
+            valB = new Date(valB);
+        }
+
+        if (valA < valB) {
+            return this._sortExpiringOrder === 'asc' ? -1 : 1;
+        }
+        if (valA > valB) {
+            return this._sortExpiringOrder === 'asc' ? 1 : -1;
+        }
+        return 0;
+    });
+  }
+
+  /**
+   * Handles sorting when a sortable column header is clicked for expiring products.
+   * @param {string} sortBy - The key to sort by ('brand', 'model', 'expirationDate', etc.).
+   * @private
+   */
+  _handleSortExpiring(sortBy) {
+    if (this._sortExpiringBy === sortBy) {
+        this._sortExpiringOrder = (this._sortExpiringOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+        this._sortExpiringBy = sortBy;
+        this._sortExpiringOrder = 'asc';
+    }
+    this._groupExpiringProductsAndRender(); // Re-group and re-render after sort order changes
+  }
+
+  /**
+   * Generates the HTML table for displaying grouped expiring products.
+   * @returns {string} The HTML string for the expiration table or a message.
+   * @private
+   */
+  _generateGroupedExpirationTableHtml() {
+    if (this._groupedExpiringProducts.size === 0) {
+        return `<p class="message">${MESSAGES.NO_EXPIRING_PRODUCTS}</p>`;
+    }
+
+    // Sort the grouped products by model name for consistent display, then by expirationDate for summary
+    const sortedModels = Array.from(this._groupedExpiringProducts.keys()).sort();
+    const tableRows = sortedModels.map(modelName => {
+        const productsInGroup = this._groupedExpiringProducts.get(modelName);
+        // Find the product with the earliest expiration date to display as summary
+        const earliestExpiringProduct = this._sortExpiringProducts(productsInGroup)[0]; // Apply sort
+        const totalQuantity = productsInGroup.reduce((sum, p) => sum + p.quantity, 0);
+
+        return `
+            <tr data-model="${modelName}" class="grouped-expiring-product-row">
+                <td>${earliestExpiringProduct.brand}</td>
+                <td>${earliestExpiringProduct.model}</td>
+                <td>${earliestExpiringProduct.lensType}</td>
+                <td>${earliestExpiringProduct.wearType || 'N/A'}</td>
+                <td>${totalQuantity}</td>
+                <td>${earliestExpiringProduct.expirationDate}</td>
+            </tr>
+        `;
+    }).join('');
+
+    return `
+        <table class="expiration-table">
+            <thead>
+                <tr>
+                    <th data-sort-by="brand">브랜드</th>
+                    <th data-sort-by="model">모델명</th>
+                    <th data-sort-by="lensType">유형</th>
+                    <th data-sort-by="wearType">착용 방식</th>
+                    <th data-sort-by="quantity">총 수량</th>
+                    <th data-sort-by="expirationDate">유통기한</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${tableRows}
+            </tbody>
+        </table>
+    `;
+  }
+
+  /**
+   * Handles double-click on a grouped product row to show details.
+   * @param {Event} event - The double-click event.
+   * @private
+   */
+  _handleExpiringRowDoubleClick(event) {
+      const row = event.currentTarget;
+      const modelName = row.dataset.model;
+      this._currentDetailedExpiringProducts = this._sortExpiringProducts(this._groupedExpiringProducts.get(modelName) || []);
+      this._detailPopupVisible = true;
+      this._render();
+  }
+
+  /**
+   * Closes the detail popup.
+   * @private
+   */
+  _closeDetailExpiringPopup() {
+      this._detailPopupVisible = false;
+      this._currentDetailedExpiringProducts = [];
+      this._render();
+  }
+
+  /**
+   * Renders the detail popup HTML.
+   * @private
+   */
+  _renderDetailExpiringPopup() {
+      if (!this._detailPopupVisible) return '';
+
+      const detailListItems = this._currentDetailedExpiringProducts.map(product => `
+          <li>
+              <strong>도수:</strong> S ${product.powerS !== null ? product.powerS.toFixed(2) : 'N/A'},
+                       C ${product.powerC !== null ? product.powerC.toFixed(2) : 'N/A'},
+                       AX ${product.powerAX !== null ? product.powerAX : 'N/A'}<br>
+              <strong>수량:</strong> ${product.quantity}<br>
+              <strong>유통기한:</strong> ${product.expirationDate}
+          </li>
+      `).join('');
+
+      return `
+          <div class="detail-popup">
+              <h4>${this._currentDetailedExpiringProducts[0]?.model} 상세 정보</h4>
+              <ul>${detailListItems}</ul>
+              <button class="close-popup-btn">닫기</button>
+          </div>
+      `;
+  }
+
+  /**
+   * Attaches event listeners to dynamically created elements for the expiring products table.
+   * @private
+   */
+  _attachExpiringEventListeners() {
+      const tableHeaders = this.shadowRoot.querySelectorAll('.expiration-table th[data-sort-by]');
+      tableHeaders.forEach(header => {
+          header.removeEventListener('click', this._handleSortExpiring); // Remove existing to prevent duplicates
+          header.addEventListener('click', () => this._handleSortExpiring(header.dataset.sortBy));
+      });
+
+      const groupedRows = this.shadowRoot.querySelectorAll('.grouped-expiring-product-row');
+      groupedRows.forEach(row => {
+          row.removeEventListener('dblclick', this._handleExpiringRowDoubleClick); // Remove existing
+          row.addEventListener('dblclick', this._handleExpiringRowDoubleClick);
+      });
+
+      const closeButton = this.shadowRoot.querySelector('.detail-popup .close-popup-btn');
+      if (closeButton) {
+          closeButton.removeEventListener('click', this._closeDetailExpiringPopup); // Remove existing
+          closeButton.addEventListener('click', this._closeDetailExpiringPopup);
+      }
+  }
+
 }
 customElements.define('product-list', ProductList);
