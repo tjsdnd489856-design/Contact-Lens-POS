@@ -8,6 +8,8 @@ const MESSAGES = {
 const EXPIRATION_MODAL_STYLES = `
     :host {
         display: block;
+        --header-height: 40px; /* Default header height for table */
+        --row-height: 36px;    /* Default row height for table body */
     }
     .expiration-container {
         padding: 20px;
@@ -34,10 +36,11 @@ const EXPIRATION_MODAL_STYLES = `
         top: 0;
         z-index: 1;
         background-color: #f2f2f2;
+        height: var(--header-height); /* Apply header height variable */
     }
     .expiration-table tbody {
         display: block; /* 스크롤 가능하게 함 */
-        max-height: calc(var(--header-height) + 6 * var(--row-height)); /* 6행 (헤더 포함) 높이로 제한 */
+        max-height: calc(var(--header-height) + 5 * var(--row-height)); /* 1 header + 5 body rows = 6 visible rows */
         overflow-y: auto; /* 세로 스크롤 활성화 */
         width: 100%;
     }
@@ -53,6 +56,7 @@ const EXPIRATION_MODAL_STYLES = `
         display: table; /* 테이블 행처럼 동작하게 함 */
         width: 100%; /* tr이 tbody의 전체 너비를 차지하도록 하여 스크롤바 공간을 고려 */
         table-layout: fixed; /* 열 너비를 고정하여 헤더와 정렬 유지 */
+        height: var(--row-height); /* Apply row height variable */
     }
     .expiration-table th, .expiration-table td {
         border: 1px solid #ddd;
