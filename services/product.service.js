@@ -67,7 +67,6 @@ export const ProductService = {
    */
   getProductByGtin(gtin) {
     if (!gtin) return undefined;
-    // Handle both 13 and 14 digit GTINs by padding with leading zeros
     const paddedGtin = gtin.padStart(14, '0');
     return this._firestoreProducts.find(p => (p.gtin && p.gtin.padStart(14, '0') === paddedGtin) || p.barcode === gtin);
   },
@@ -134,17 +133,12 @@ export const ProductService = {
 
   /**
    * Makes a POST request to the AWS API Function URL.
-   * CORS safe implementation.
+   * CORS-safe request.
    */
   async _makeExternalApiRequest(gtin) {
-    // Note: Simple request without custom headers can sometimes bypass complex preflights,
-    // but here we must use JSON.
+    // Content-Type을 생략하거나 단순하게 설정하여 Preflight(사전점검)를 우회합니다.
     const response = await fetch(API_GATEWAY_URL, {
       method: 'POST',
-      mode: 'cors', // Explicitly set CORS mode
-      headers: { 
-          'Content-Type': 'text/plain' // Use text/plain to avoid some preflight issues if possible, or application/json
-      },
       body: JSON.stringify({ udiDi: gtin }),
     });
 
@@ -152,14 +146,7 @@ export const ProductService = {
       throw new Error(`API Request Failed: ${response.status}`);
     }
     
-    // Attempt to parse text response as JSON
-    const textData = await response.text();
-    try {
-        return JSON.parse(textData);
-    } catch (e) {
-        console.error('Failed to parse API response as JSON:', textData);
-        throw new Error('Invalid JSON response from API');
-    }
+    return response.json();
   },
 
   /**
@@ -194,27 +181,21 @@ export const ProductService = {
   async fetchProductDetailsFromExternalApi(gtin) {
     if (!gtin) return null;
     try {
-      console.log(`Calling API for GTIN: ${gtin}`);
+      console.log(`[ProductService] Calling API for GTIN: ${gtin}`);
       const apiResponse = await this._makeExternalApiRequest(gtin);
-      console.log('API Raw Response:', apiResponse);
+      console.log('[ProductService] API Response:', apiResponse);
       
       const mappedProduct = this._mapExternalApiResponseToProduct(apiResponse, gtin);
       if (mappedProduct) {
-          console.log('Successfully mapped product:', mappedProduct);
           return mappedProduct;
       }
-      
-      console.warn('API returned data but it could not be mapped to a product.');
       return null;
     } catch (error) {
-      console.error('External API Call Error:', error);
+      console.error('[ProductService] API Error:', error);
       return null;
     }
   },
 
-  /**
-   * Retrieves products expiring within a specified number of days.
-   */
   getExpiringProducts(days = 90) {
     const today = new Date();
     const warningDate = new Date();
@@ -226,9 +207,6 @@ export const ProductService = {
     }).sort((a, b) => new Date(a.expirationDate) - new Date(b.expirationDate));
   },
 
-  /**
-   * Retrieves products with abnormal (negative) inventory quantities.
-   */
   getAbnormalInventory() {
     return this._firestoreProducts.filter(p => p.quantity < 0);
   },

@@ -1,7 +1,7 @@
 // utils/udi-parser.js
 
 /**
- * GS1 Application Identifiers (AIs) that we are interested in.
+ * GS1 Application Identifiers (AIs)
  */
 const AIS = {
     GTIN: '01',
@@ -24,29 +24,21 @@ function _parseGs1Date(dateStr) {
     const currentCentury = Math.floor(currentYearFull / 100) * 100;
     const yearGuess = currentCentury + year;
 
-    if (yearGuess > currentYearFull + 20) {
-        year = (currentCentury - 100) + year;
-    } else {
-        year = yearGuess;
-    }
+    year = (yearGuess > currentYearFull + 20) ? (currentCentury - 100) + year : yearGuess;
     
-    if (day === 0) {
-        day = new Date(year, month, 0).getDate(); 
-    }
+    if (day === 0) day = new Date(year, month, 0).getDate(); 
 
     if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
         const checkDate = new Date(year, month - 1, day);
         if (checkDate.getFullYear() === year && checkDate.getMonth() === month - 1 && checkDate.getDate() === day) {
-            const paddedMonth = month.toString().padStart(2, '0');
-            const paddedDay = day.toString().padStart(2, '0');
-            return `${year}-${paddedMonth}-${paddedDay}`;
+            return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
         }
     }
     return null;
 }
 
 /**
- * Robustly parses a UDI barcode string (GS1-128 or simpler).
+ * UDI 바코드를 분석하여 GTIN, 유통기한 등을 추출합니다.
  */
 export function parseUdiBarcode(udiString) {
     const parsedData = {
@@ -60,46 +52,41 @@ export function parseUdiBarcode(udiString) {
 
     if (!udiString) return parsedData;
 
-    // 1. Try AI-based parsing (GS1-128)
-    // Remove invisible control characters like FNC1 (ASCII 29 or <GS>)
-    const cleanUdi = udiString.replace(/[\u001D]/g, '');
-    
-    // Pattern for (AI)Value or AIValue
-    const aiPattern = /(\(?\d{2,}\)?)([a-zA-Z0-9]+)/g;
-    let match;
-    
-    while ((match = aiPattern.exec(cleanUdi)) !== null) {
-        let ai = match[1].replace(/[()]/g, ''); // Remove parentheses
-        const value = match[2];
+    // 보이지 않는 제어 문자 제거
+    const cleanUdi = udiString.replace(/[\u001D\u001E\u001F\u0004]/g, '').trim();
 
-        // Specific AI Handling
-        if (ai === AIS.GTIN) {
-            // GTIN is fixed 14 digits. If value is longer, the rest might be another AI
-            parsedData.gtin = value.substring(0, 14);
-            parsedData.barcode = parsedData.gtin;
-            // Adjust regex index if we consumed too much
-            if (value.length > 14) aiPattern.lastIndex -= (value.length - 14);
-        } else if (ai === AIS.EXPIRATION_DATE) {
-            parsedData.expirationDate = _parseGs1Date(value.substring(0, 6));
-            if (value.length > 6) aiPattern.lastIndex -= (value.length - 6);
-        } else if (ai === AIS.LOT_NUMBER) {
-            // Lot number is variable, but often followed by another (AI)
-            // This is complex, so we'll just take the whole value for now
-            parsedData.lotNumber = value;
-        } else if (ai === AIS.SERIAL_NUMBER) {
-            parsedData.serialNumber = value;
+    // 1. 가장 흔한 GS1-128 패턴 처리 (01로 시작하는 경우)
+    if (cleanUdi.startsWith('01') && cleanUdi.length >= 16) {
+        parsedData.gtin = cleanUdi.substring(2, 16); // 01 뒤의 14자리 추출
+        parsedData.barcode = parsedData.gtin;
+        
+        let remaining = cleanUdi.substring(16);
+        
+        // 유통기한(17) 찾기
+        if (remaining.startsWith('17') && remaining.length >= 8) {
+            parsedData.expirationDate = _parseGs1Date(remaining.substring(2, 8));
+            remaining = remaining.substring(8);
         }
+        
+        // 로트번호(10) 처리 (가변 길이이므로 나머지를 로트로 간주하거나 패턴 매칭)
+        if (remaining.startsWith('10')) {
+            parsedData.lotNumber = remaining.substring(2);
+        }
+    } 
+    // 2. 880으로 시작하는 일반 바코드 또는 AI가 생략된 경우
+    else if (cleanUdi.length === 13 || cleanUdi.length === 14) {
+        parsedData.gtin = cleanUdi.padStart(14, '0');
+        parsedData.barcode = parsedData.gtin;
     }
-
-    // 2. Fallback: If GTIN wasn't found by AI, try to find a 13-14 digit number in the string
-    if (!parsedData.gtin) {
-        const gtinCandidate = udiString.match(/\d{13,14}/);
-        if (gtinCandidate) {
-            parsedData.gtin = gtinCandidate[0].padStart(14, '0');
+    // 3. 기타 복합 패턴 (AI 검색)
+    else {
+        const gtinMatch = cleanUdi.match(/\(01\)(\d{14})/) || cleanUdi.match(/01(\d{14})/);
+        if (gtinMatch) {
+            parsedData.gtin = gtinMatch[1];
             parsedData.barcode = parsedData.gtin;
         }
     }
 
-    console.log(`Parsed UDI Result for "${udiString}":`, parsedData);
+    console.log(`[UDI Parser] Raw: ${udiString} -> GTIN: ${parsedData.gtin}`);
     return parsedData;
 }
