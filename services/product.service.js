@@ -44,7 +44,6 @@ export const ProductService = {
       this._notify(); // Notify components after local cache is updated
     }, error => {
       console.error("Error fetching products from Firestore:", error);
-      // Optionally, handle error notification to UI
     });
   },
 
@@ -58,8 +57,6 @@ export const ProductService = {
 
   /**
    * Finds a product by its unique ID.
-   * @param {string} id - The ID of the product.
-   * @returns {Object|undefined} The product object if found, otherwise undefined.
    */
   getProductById(id) {
     return this._firestoreProducts.find(p => p.id === id);
@@ -67,25 +64,23 @@ export const ProductService = {
 
   /**
    * Finds a product by its Global Trade Item Number (GTIN).
-   * @param {string} gtin - The GTIN of the product.
-   * @returns {Object|undefined} The product object if found, otherwise undefined.
    */
   getProductByGtin(gtin) {
-    return this._firestoreProducts.find(p => p.gtin === gtin);
+    if (!gtin) return undefined;
+    // Handle both 13 and 14 digit GTINs by padding with leading zeros
+    const paddedGtin = gtin.padStart(14, '0');
+    return this._firestoreProducts.find(p => (p.gtin && p.gtin.padStart(14, '0') === paddedGtin) || p.barcode === gtin);
   },
 
   /**
    * Finds a product by its legacy barcode.
-   * @param {string} barcode - The legacy barcode of the product.
-   * @returns {Object|undefined} The product object if found, otherwise undefined.
    */
   getProductByLegacyBarcode(barcode) {
       return this._firestoreProducts.find(p => p.barcode === barcode);
   },
 
   /**
-   * Retrieves a list of unique product brands, including a '전체' option.
-   * @returns {Array<string>} An array of unique brand names.
+   * Retrieves a list of unique product brands.
    */
   getUniqueBrands() {
     const brands = new Set(this._firestoreProducts.map(p => p.brand));
@@ -94,15 +89,13 @@ export const ProductService = {
 
   /**
    * Adds a new product to the inventory.
-   * Assigns a new ID and sets default values for missing properties.
-   * @param {Object} product - The product object to add.
    */
   async addProduct(product) {
     try {
       const docRef = await db.collection('products').add({
-        ...DEFAULT_PRODUCT_DATA, // Apply defaults first
-        ...product, // Then override with provided product data
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(), // Add timestamp
+        ...DEFAULT_PRODUCT_DATA,
+        ...product,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       });
       return docRef.id;
     } catch (error) {
@@ -112,14 +105,7 @@ export const ProductService = {
   },
 
   /**
-   * Updates an existing product's details.
-   * @param {Object} updatedProduct - The product object with updated details.
-   * @returns {Promise<string>} The ID of the updated product.
-   */
-
-  /**
-   * Deletes a product from the inventory by its ID.
-   * @param {string} id - The ID of the product to delete.
+   * Deletes a product.
    */
   async deleteProduct(id) {
     try {
@@ -132,9 +118,6 @@ export const ProductService = {
 
   /**
    * Decreases the stock quantity of a product.
-   * @param {string} productId - The ID of the product.
-   * @param {number} quantity - The amount to decrease the stock by.
-   * @returns {Promise<void>}
    */
   async decreaseStock(productId, quantity) {
     try {
@@ -150,62 +133,41 @@ export const ProductService = {
   },
 
   /**
-   * Makes a POST request to the AWS API Gateway to fetch product details.
-   * @param {string} gtin - The GTIN (UDI-DI) to query.
-   * @returns {Promise<Object>} The JSON response from the API.
-   * @throws {Error} If the network request fails or the API returns an error.
+   * Makes a POST request to the AWS API Function URL.
    */
   async _makeExternalApiRequest(gtin) {
     const response = await fetch(API_GATEWAY_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ udiDi: gtin }),
     });
 
     if (!response.ok) {
-      const errorContentType = response.headers.get('content-type');
-      let errorMessage = `HTTP error! status: ${response.status}`;
-      if (errorContentType && errorContentType.includes('application/json')) {
-        const errorData = await response.json();
-        errorMessage += `, message: ${errorData.error || errorData.message || 'Unknown error'}`;
-      } else {
-        const errorText = await response.text();
-        errorMessage += `, raw response: ${errorText}`;
-      }
-      throw new Error(errorMessage);
+      throw new Error(`API Request Failed: ${response.status}`);
     }
     return response.json();
   },
 
   /**
    * Maps the external API response to the internal product structure.
-   * @param {Object} apiResponse - The response object from the external API.
-   * @param {string} gtin - The original GTIN queried.
-   * @returns {Object|null} A product object in internal format, or null if no product found.
+   * Improved to be more resilient to different response formats.
    */
   _mapExternalApiResponseToProduct(apiResponse, gtin) {
-    if (apiResponse && apiResponse.productFound) {
-      // Use logical OR for null/undefined values, and N/A for undefined/empty strings.
-      // Prioritize product name from PRDT_ADD_EXPL, then generic
-      const productName = apiResponse.productName || DEFAULT_PRODUCT_NAME;
-      const brand = apiResponse.brand || DEFAULT_BRAND;
-      const model = apiResponse.model || DEFAULT_MODEL;
-
+    // If the response has item details regardless of the 'productFound' flag
+    const data = apiResponse.item_details || apiResponse;
+    
+    if (data && (data.brand || data.model || data.productName)) {
       return {
-        brand: brand,
-        model: model,
-        productName: productName, // Use the mapped product name
-        // UDI-DI API does not provide power, quantity, price, expirationDate.
-        // These must be sourced elsewhere or entered manually.
+        brand: data.brand || DEFAULT_BRAND,
+        model: data.model || DEFAULT_MODEL,
+        productName: data.productName || DEFAULT_PRODUCT_NAME,
         powerS: 0, 
         powerC: 0,
         powerAX: 0,
         quantity: DEFAULT_QUANTITY,
-        expirationDate: DEFAULT_EXPIRATION_DATE, // Placeholder (can be overridden by UDI parser)
+        expirationDate: DEFAULT_EXPIRATION_DATE,
         price: DEFAULT_PRICE,
-        barcode: gtin, // Use GTIN as barcode
+        barcode: gtin,
         gtin: gtin,
         lensType: DEFAULT_LENS_TYPE,
         wearType: DEFAULT_WEAR_TYPE
@@ -215,32 +177,31 @@ export const ProductService = {
   },
 
   /**
-   * Fetches product details from an external API (AWS Lambda).
-   * @param {string} gtin - The GTIN (UDI-DI) of the product.
-   * @returns {Promise<Object|null>} A product object in internal format if found, otherwise null.
+   * Fetches product details from an external API.
    */
   async fetchProductDetailsFromExternalApi(gtin) {
+    if (!gtin) return null;
     try {
+      console.log(`Calling API for GTIN: ${gtin}`);
       const apiResponse = await this._makeExternalApiRequest(gtin);
-      console.log('AWS Lambda Function response:', apiResponse); // Log raw API response
+      console.log('API Raw Response:', apiResponse);
       
-      // Check if rawResponse exists and items_list is empty, means API returned no data
-      if (apiResponse && apiResponse.rawResponse && apiResponse.message && apiResponse.message.includes('API returned empty items list.')) {
-        console.warn('External API returned an empty items list:', apiResponse.rawResponse);
-        return null; // Return null if API explicitly states no items
+      const mappedProduct = this._mapExternalApiResponseToProduct(apiResponse, gtin);
+      if (mappedProduct) {
+          console.log('Successfully mapped product:', mappedProduct);
+          return mappedProduct;
       }
-
-      return this._mapExternalApiResponseToProduct(apiResponse, gtin);
+      
+      console.warn('API returned data but it could not be mapped to a product.');
+      return null;
     } catch (error) {
-      console.error('Error calling AWS Lambda Function:', error);
+      console.error('External API Call Error:', error);
       return null;
     }
   },
 
   /**
    * Retrieves products expiring within a specified number of days.
-   * @param {number} [days=90] - The number of days within which products will expire.
-   * @returns {Array<Object>} An array of expiring product objects, sorted by expiration date.
    */
   getExpiringProducts(days = 90) {
     const today = new Date();
@@ -255,16 +216,11 @@ export const ProductService = {
 
   /**
    * Retrieves products with abnormal (negative) inventory quantities.
-   * @returns {Array<Object>} An array of products with abnormal inventory.
    */
   getAbnormalInventory() {
     return this._firestoreProducts.filter(p => p.quantity < 0);
   },
 
-  /**
-   * Dispatches a custom event to notify listeners that products have been updated.
-   * @private
-   */
   _notify() {
     document.dispatchEvent(new CustomEvent('productsUpdated', { detail: this._firestoreProducts }));
   }
