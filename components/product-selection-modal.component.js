@@ -17,6 +17,7 @@ function groupProducts(products) {
 const MODAL_STYLES = `
     :host {
         display: block;
+        --row-height: 48px; /* 도수 테이블 행 높이 고정 */
     }
     .modal-overlay {
         position: fixed;
@@ -158,9 +159,11 @@ const MODAL_STYLES = `
         border-bottom: 2px solid #dee2e6;
     }
     .power-table th, .power-table td {
-        padding: 12px;
+        padding: 0 12px; /* 세로 패딩 제거하고 높이로 조절 */
+        height: var(--row-height);
         text-align: center;
         border-right: 1px solid #eee;
+        box-sizing: border-box;
     }
     .power-table th {
         font-weight: 600;
@@ -178,8 +181,13 @@ const MODAL_STYLES = `
     }
     .power-table tbody {
         display: block;
-        max-height: 400px;
+        height: calc(var(--row-height) * 10); /* 정확히 10개 행 높이 */
         overflow-y: scroll;
+        scrollbar-width: none; /* Firefox 스크롤바 숨기기 */
+        -ms-overflow-style: none; /* IE/Edge 스크롤바 숨기기 */
+    }
+    .power-table tbody::-webkit-scrollbar {
+        display: none; /* Chrome/Safari 스크롤바 숨기기 */
     }
     .power-table thead, .power-table tbody tr {
         display: table;
@@ -203,33 +211,6 @@ const MODAL_STYLES = `
         border: 1px solid #ced4da;
         border-radius: 4px;
         text-align: center;
-    }
-
-    /* Pagination */
-    .pagination {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 12px;
-        margin-top: 20px;
-        padding-top: 10px;
-        border-top: 1px solid #eee;
-    }
-    .page-btn {
-        background: #fff;
-        border: 1px solid #dee2e6;
-        padding: 6px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.9rem;
-    }
-    .page-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-    .page-info {
-        font-size: 0.9rem;
-        color: #666;
     }
 
     .back-nav {
@@ -280,13 +261,11 @@ export default class ProductSelectionModal extends HTMLElement {
         this._currentStep = 1; // 1: Brand, 2: Product, 3: Power
         this._selectedBrand = null;
         this._selectedModel = null;
-        this._selectedProduct = null; // The final specific product item
+        this._selectedProduct = null;
         this._selectedQuantity = 1;
 
         this._sortBy = 'powerS';
         this._sortOrder = 'asc';
-        this._currentPage = 1;
-        this._itemsPerPage = 10;
 
         // Bindings
         this.openModal = this.openModal.bind(this);
@@ -304,7 +283,6 @@ export default class ProductSelectionModal extends HTMLElement {
         this._selectedModel = null;
         this._selectedProduct = null;
         this._selectedQuantity = 1;
-        this._currentPage = 1;
         this._groupedData = groupProducts(ProductService.getProducts());
         this._render();
     }
@@ -322,7 +300,6 @@ export default class ProductSelectionModal extends HTMLElement {
             this._sortBy = field;
             this._sortOrder = 'asc';
         }
-        this._currentPage = 1;
         this._render();
     }
 
@@ -376,12 +353,6 @@ export default class ProductSelectionModal extends HTMLElement {
             return this._sortOrder === 'asc' ? valA - valB : valB - valA;
         });
 
-        // Pagination
-        const totalItems = options.length;
-        const totalPages = Math.ceil(totalItems / this._itemsPerPage);
-        const startIndex = (this._currentPage - 1) * this._itemsPerPage;
-        const paginatedOptions = options.slice(startIndex, startIndex + this._itemsPerPage);
-
         const sortIcon = (field) => {
             if (this._sortBy !== field) return '';
             return this._sortOrder === 'asc' ? ' ▲' : ' ▼';
@@ -403,7 +374,7 @@ export default class ProductSelectionModal extends HTMLElement {
                         </tr>
                     </thead>
                     <tbody>
-                        ${paginatedOptions.map(opt => `
+                        ${options.map(opt => `
                             <tr class="${this._selectedProduct?.id === opt.id ? 'selected' : ''}" data-id="${opt.id}">
                                 <td>${opt.powerS > 0 ? '+' : ''}${opt.powerS.toFixed(2)}</td>
                                 <td>${opt.powerC > 0 ? '+' : ''}${opt.powerC.toFixed(2)}</td>
@@ -417,11 +388,6 @@ export default class ProductSelectionModal extends HTMLElement {
                         `).join('')}
                     </tbody>
                 </table>
-            </div>
-            <div class="pagination">
-                <button class="page-btn" id="prev-page" ${this._currentPage === 1 ? 'disabled' : ''}>이전</button>
-                <span class="page-info">${this._currentPage} / ${totalPages || 1}</span>
-                <button class="page-btn" id="next-page" ${this._currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}>다음</button>
             </div>
         `;
     }
@@ -511,19 +477,6 @@ export default class ProductSelectionModal extends HTMLElement {
                     this._selectedQuantity = parseInt(e.target.value, 10);
                 };
             });
-            root.querySelector('#prev-page').onclick = () => {
-                if (this._currentPage > 1) {
-                    this._currentPage--;
-                    this._render();
-                }
-            };
-            root.querySelector('#next-page').onclick = () => {
-                const options = this._groupedData[this._selectedBrand][this._selectedModel];
-                if (this._currentPage < Math.ceil(options.length / this._itemsPerPage)) {
-                    this._currentPage++;
-                    this._render();
-                }
-            };
         }
 
         root.querySelector('#add-to-cart').onclick = this._handleAddToCart.bind(this);
