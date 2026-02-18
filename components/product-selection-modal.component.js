@@ -18,6 +18,11 @@ function augmentProductWithPowerOptions(product) {
 }
 
 const MODAL_STYLES = `
+    :host {
+        display: block;
+        --power-option-header-height: 40px; /* Default header height for power option table */
+        --power-option-row-height: 36px;    /* Default row height for power option table body */
+    }
     .modal-overlay {
         position: fixed;
         top: 0;
@@ -233,11 +238,40 @@ const MODAL_STYLES = `
         width: 100%;
         border-collapse: collapse;
         margin-top: 1rem;
+        table-layout: fixed; /* 헤더와 바디의 열 너비를 고정 */
+    }
+    .power-option-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background-color: #f2f2f2;
+        height: var(--power-option-header-height); /* Apply header height variable */
+    }
+    .power-option-table tbody {
+        display: block; /* 스크롤 가능하게 함 */
+        max-height: calc(var(--power-option-header-height) + 10 * var(--power-option-row-height)); /* 1 header + 10 body rows = 11 visible rows */
+        overflow-y: auto; /* 세로 스크롤 활성화 */
+        width: 100%;
+    }
+    /* 스크롤바 숨기기 (선택 사항) */
+    .power-option-table tbody::-webkit-scrollbar {
+        display: none; /* Webkit 기반 브라우저 */
+    }
+    .power-option-table tbody {
+        -ms-overflow-style: none; /* Internet Explorer 10+ */
+        scrollbar-width: none; /* Firefox */
+    }
+    .power-option-table tr { /* tbody 내부의 tr 요소에 적용 */
+        display: table; /* 테이블 행처럼 동작하게 함 */
+        width: 100%; /* tr이 tbody의 전체 너비를 차지하도록 하여 스크롤바 공간을 고려 */
+        table-layout: fixed; /* 열 너비를 고정하여 헤더와 정렬 유지 */
+        height: var(--power-option-row-height); /* Apply row height variable */
     }
     .power-option-table th, .power-option-table td {
         border: 1px solid #ddd;
         padding: 8px;
         text-align: center;
+        box-sizing: border-box; /* 패딩과 테두리를 너비에 포함 */
     }
     .power-option-table th {
         background-color: #f2f2f2;
@@ -578,7 +612,7 @@ export default class ProductSelectionModal extends HTMLElement {
                             <tr class="power-option-table-row ${isSelected ? 'selected' : ''}" data-product-id="${product.id}" data-detail-id="${option.detailId}">
                                 <td>${(option.s !== null && option.s !== undefined) ? (option.s > 0 ? '+' : '') + option.s.toFixed(2) : 'N/A'}</td>
                                 <td>${(option.c !== null && option.c !== undefined) ? (option.c > 0 ? '+' : '') + option.c.toFixed(2) : 'N/A'}</td>
-                                <td>${option.ax !== null ? option.ax : 'N/A'}</td>
+                                <td>${product.powerAX !== null ? product.powerAX : 'N/A'}</td>
                                 <td>${option.quantity}</td>
                                 <td>
                                     <input type="number" min="1" max="${option.quantity}" value="${quantityToDisplay}"
