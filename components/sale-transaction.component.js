@@ -176,7 +176,7 @@ export default class SaleTransaction extends HTMLElement {
   }
 
   /**
-   * Detaches event listeners.
+   * Detaches all event listeners.
    * @private
    */
   _detachEventListeners = () => {
@@ -624,7 +624,15 @@ export default class SaleTransaction extends HTMLElement {
             .top-sales-section { flex-direction: column; padding: 1rem; }
             .main-content, .cart-section { flex: none; width: 100%; min-width: unset; }
         }
-        .form-group { margin-bottom: 1.5rem; }
+        .form-group { 
+            margin-bottom: 1.5rem; 
+            border-bottom: none !important; /* Ensure no bottom border */
+        }
+        /* Specific removal for customer search group bottom line */
+        .customer-search-wrapper {
+            border-bottom: none !important;
+            padding-bottom: 0;
+        }
         label { display: block; margin-bottom: 0.6rem; font-weight: 600; color: #555; font-size: 0.95rem; }
         input[type="text"], input[type="number"] {
             width: 100%; padding: 0.9rem 1rem; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem;

@@ -107,13 +107,14 @@ main {
     margin-top: 0;
 }
 
-/* Sales Tab Header - Removed border-bottom as per user request */
+/* Sales Tab Header */
 .sales-header-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
+    border-bottom: 2px solid #3498db; /* Match h2's border-bottom */
+    padding-bottom: 0.5rem; /* Match h2's padding-bottom */
+    margin-bottom: 1.5rem; /* Match .tab-content's h2 margin */
 }
 
 .sales-header-container h2 {
@@ -533,4 +534,41 @@ customer-list, customer-purchase-history, product-list,
 customer-form, product-form, brand-product-list-modal,
 discard-inventory-modal, udi-scanner-modal, abnormal-inventory-list {
   display: block;
+}
+.sales-header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #3498db; /* Match h2's border-bottom */
+    padding-bottom: 0.5rem; /* Match h2's padding-bottom */
+    margin-bottom: 1.5rem; /* Match .tab-content's h2 margin */
+}
+
+.sales-header-container h2 {
+    margin: 0; /* Remove default margin from h2 inside container */
+    padding-bottom: 0; /* Remove default padding from h2 inside container */
+    border-bottom: none; /* Remove h2's own border-bottom */
+}
+
+#reset-sales-tab-btn {
+    background-color: #ffc107; /* Yellow for reset */
+    color: white; /* Text color for yellow background */
+    padding: 0.9rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#reset-sales-tab-btn:hover {
+    background-color: #e0a800; /* Darker yellow on hover */
+    transform: translateY(-1px);
+}
+
+#reset-sales-tab-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
