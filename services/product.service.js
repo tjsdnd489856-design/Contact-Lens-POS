@@ -105,19 +105,23 @@ export const ProductService = {
   },
 
   /**
-   * GET 방식을 사용하여 API를 호출합니다. (CORS 에러를 줄이기 위한 가장 단순한 방식)
+   * 브라우저 보안 정책을 가장 잘 통과하는 GET 방식으로 호출합니다.
    */
   async _makeExternalApiRequest(gtin) {
+    // 쿼리 스트링을 사용하여 사전 점검(Preflight) 없이 단순 요청으로 처리될 확률을 높입니다.
     const url = `${API_GATEWAY_URL}?udiDi=${encodeURIComponent(gtin)}`;
     
-    // 단순 GET 요청은 보안 검사(Preflight)가 생략될 가능성이 매우 높습니다.
     const response = await fetch(url, {
       method: 'GET',
-      mode: 'cors'
+      headers: {
+          'Accept': 'application/json'
+      }
     });
 
     if (!response.ok) {
-      throw new Error(`API 호출 실패: ${response.status}`);
+      // 만약 람다 내부에서 에러가 났다면 에러 메시지를 읽어옵니다.
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Server Error ${response.status}`);
     }
     
     return response.json();
@@ -148,13 +152,13 @@ export const ProductService = {
   async fetchProductDetailsFromExternalApi(gtin) {
     if (!gtin) return null;
     try {
-      console.log(`[ProductService] API(GET) 호출 시작: ${gtin}`);
+      console.log(`[ProductService] UDI 조회 요청: ${gtin}`);
       const apiResponse = await this._makeExternalApiRequest(gtin);
-      console.log('[ProductService] API 응답 성공:', apiResponse);
+      console.log('[ProductService] UDI 응답 수신:', apiResponse);
       
       return this._mapExternalApiResponseToProduct(apiResponse, gtin);
     } catch (error) {
-      console.error('[ProductService] API 에러:', error);
+      console.error('[ProductService] UDI 조회 실패:', error.message);
       return null;
     }
   },
