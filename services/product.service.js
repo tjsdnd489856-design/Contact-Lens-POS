@@ -1,7 +1,6 @@
-import { db } from '../modules/firebase-init.js'; // Import Firestore instance
+import { db } from '../modules/firebase-init.js';
 
-// Constants for better maintainability
-const API_GATEWAY_URL = 'https://oupi92eoc7.lambda-url.ap-southeast-2.on.aws/'; // Updated to Function URL
+const API_GATEWAY_URL = 'https://oupi92eoc7.lambda-url.ap-southeast-2.on.aws/';
 export const DEFAULT_LENS_TYPE = '투명';
 export const DEFAULT_WEAR_TYPE = 'N/A';
 const DEFAULT_PRODUCT_NAME = 'N/A';
@@ -28,67 +27,47 @@ const DEFAULT_PRODUCT_DATA = {
 };
 
 export const ProductService = {
-  _initialized: false, // Flag to ensure initialization only runs once
-  _firestoreProducts: [], // Local cache of Firestore data
+  _initialized: false,
+  _firestoreProducts: [],
 
   async init() {
     if (this._initialized) return;
     this._initialized = true;
 
-    // Set up a real-time listener for the 'products' collection
     db.collection('products').orderBy('brand').orderBy('model').onSnapshot(snapshot => {
       this._firestoreProducts = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
-      this._notify(); // Notify components after local cache is updated
+      this._notify();
     }, error => {
       console.error("Error fetching products from Firestore:", error);
     });
   },
 
-  /**
-   * Retrieves a copy of all products.
-   * @returns {Array<Object>} An array of product objects.
-   */
   getProducts() {
     return [...this._firestoreProducts];
   },
 
-  /**
-   * Finds a product by its unique ID.
-   */
   getProductById(id) {
     return this._firestoreProducts.find(p => p.id === id);
   },
 
-  /**
-   * Finds a product by its Global Trade Item Number (GTIN).
-   */
   getProductByGtin(gtin) {
     if (!gtin) return undefined;
     const paddedGtin = gtin.padStart(14, '0');
     return this._firestoreProducts.find(p => (p.gtin && p.gtin.padStart(14, '0') === paddedGtin) || p.barcode === gtin);
   },
 
-  /**
-   * Finds a product by its legacy barcode.
-   */
   getProductByLegacyBarcode(barcode) {
       return this._firestoreProducts.find(p => p.barcode === barcode);
   },
 
-  /**
-   * Retrieves a list of unique product brands.
-   */
   getUniqueBrands() {
     const brands = new Set(this._firestoreProducts.map(p => p.brand));
     return ['전체', ...Array.from(brands)];
   },
 
-  /**
-   * Adds a new product to the inventory.
-   */
   async addProduct(product) {
     try {
       const docRef = await db.collection('products').add({
@@ -103,9 +82,6 @@ export const ProductService = {
     }
   },
 
-  /**
-   * Deletes a product.
-   */
   async deleteProduct(id) {
     try {
       await db.collection('products').doc(id).delete();
@@ -115,9 +91,6 @@ export const ProductService = {
     }
   },
 
-  /**
-   * Decreases the stock quantity of a product.
-   */
   async decreaseStock(productId, quantity) {
     try {
       const productRef = db.collection('products').doc(productId);
@@ -131,14 +104,13 @@ export const ProductService = {
     }
   },
 
-  /**
-   * Makes a POST request to the AWS API Function URL.
-   * CORS-safe request.
-   */
   async _makeExternalApiRequest(gtin) {
-    // Content-Type을 생략하거나 단순하게 설정하여 Preflight(사전점검)를 우회합니다.
+    // 브라우저 환경에 최적화된 Fetch 요청
     const response = await fetch(API_GATEWAY_URL, {
       method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ udiDi: gtin }),
     });
 
@@ -149,12 +121,8 @@ export const ProductService = {
     return response.json();
   },
 
-  /**
-   * Maps the external API response to the internal product structure.
-   */
   _mapExternalApiResponseToProduct(apiResponse, gtin) {
     const data = apiResponse.item_details || apiResponse;
-    
     if (data && (data.brand || data.model || data.productName)) {
       return {
         brand: data.brand || DEFAULT_BRAND,
@@ -175,23 +143,17 @@ export const ProductService = {
     return null;
   },
 
-  /**
-   * Fetches product details from an external API.
-   */
   async fetchProductDetailsFromExternalApi(gtin) {
     if (!gtin) return null;
     try {
-      console.log(`[ProductService] Calling API for GTIN: ${gtin}`);
+      console.log(`[ProductService] API 호출 시작 (GTIN: ${gtin})`);
       const apiResponse = await this._makeExternalApiRequest(gtin);
-      console.log('[ProductService] API Response:', apiResponse);
+      console.log('[ProductService] API 응답 성공:', apiResponse);
       
       const mappedProduct = this._mapExternalApiResponseToProduct(apiResponse, gtin);
-      if (mappedProduct) {
-          return mappedProduct;
-      }
-      return null;
+      return mappedProduct;
     } catch (error) {
-      console.error('[ProductService] API Error:', error);
+      console.error('[ProductService] API 호출 에러:', error);
       return null;
     }
   },
