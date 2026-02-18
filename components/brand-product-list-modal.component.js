@@ -10,6 +10,11 @@ const MESSAGES = {
 };
 
 const MODAL_STYLES = `
+    :host {
+        display: block;
+        --details-table-header-height: 40px; /* Default header height for details table */
+        --details-table-row-height: 36px;    /* Default row height for details table body */
+    }
     h3 {
         margin-top: 0;
         color: #333;
@@ -83,11 +88,40 @@ const MODAL_STYLES = `
         width: 100%;
         border-collapse: collapse;
         margin-top: 1rem;
+        table-layout: fixed; /* 헤더와 바디의 열 너비를 고정 */
+    }
+    .details-table thead {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background-color: #f2f2f2;
+        height: var(--details-table-header-height); /* Apply header height variable */
+    }
+    .details-table tbody {
+        display: block; /* 스크롤 가능하게 함 */
+        max-height: calc(var(--details-table-header-height) + 10 * var(--details-table-row-height)); /* 1 header + 10 body rows = 11 visible rows */
+        overflow-y: auto; /* 세로 스크롤 활성화 */
+        width: 100%;
+    }
+    /* 스크롤바 숨기기 (선택 사항) */
+    .details-table tbody::-webkit-scrollbar {
+        display: none; /* Webkit 기반 브라우저 */
+    }
+    .details-table tbody {
+        -ms-overflow-style: none; /* Internet Explorer 10+ */
+        scrollbar-width: none; /* Firefox */
+    }
+    .details-table tr { /* tbody 내부의 tr 요소에 적용 */
+        display: table; /* 테이블 행처럼 동작하게 함 */
+        width: 100%; /* tr이 tbody의 전체 너비를 차지하도록 하여 스크롤바 공간을 고려 */
+        table-layout: fixed; /* 열 너비를 고정하여 헤더와 정렬 유지 */
+        height: var(--details-table-row-height); /* Apply row height variable */
     }
     .details-table th, .details-table td {
         border: 1px solid #ddd;
         padding: 8px;
-        text-align: left;
+        text-align: center;
+        box-sizing: border-box; /* 패딩과 테두리를 너비에 포함 */
     }
     .details-table th {
         background-color: #f2f2f2;
@@ -113,7 +147,7 @@ export default class BrandProductListModal extends HTMLElement {
         this._selectedWearType = null;
         this._selectedModel = null;
         this._currentView = 'brands'; // 'brands', 'lensTypes', 'wearTypes', 'models', 'details'
-        this._sortBy = null; // 'powerS', 'powerC'
+        this._sortBy = null; // 'powerS', 'powerC', 'powerAX', 'quantity', 'expirationDate'
         this._sortDirection = 'asc'; // 'asc', 'desc'
     }
 
@@ -189,6 +223,15 @@ export default class BrandProductListModal extends HTMLElement {
                 // Handle 'N/A', null, undefined values for sorting
                 valA = (valA === null || valA === undefined || valA === 'N/A') ? (this._sortDirection === 'asc' ? -Infinity : Infinity) : valA;
                 valB = (valB === null || valB === undefined || valB === 'N/A') ? (this._sortDirection === 'asc' ? -Infinity : Infinity) : valB;
+
+                // Specific handling for 'powerS', 'powerC', 'powerAX', 'quantity' (numeric) and 'expirationDate' (date string)
+                if (this._sortBy === 'powerS' || this._sortBy === 'powerC' || this._sortBy === 'powerAX' || this._sortBy === 'quantity') {
+                    valA = parseFloat(valA) || 0;
+                    valB = parseFloat(valB) || 0;
+                } else if (this._sortBy === 'expirationDate') {
+                    valA = new Date(valA);
+                    valB = new Date(valB);
+                }
 
                 if (valA < valB) return this._sortDirection === 'asc' ? -1 : 1;
                 if (valA > valB) return this._sortDirection === 'asc' ? 1 : -1;
@@ -457,9 +500,9 @@ export default class BrandProductListModal extends HTMLElement {
                         <tr>
                             <th class="sortable" data-sort-by="powerS">S ${getSortIndicator('powerS')}</th>
                             <th class="sortable" data-sort-by="powerC">C ${getSortIndicator('powerC')}</th>
-                            <th>AX</th>
-                            <th>수량</th>
-                            <th>유통기한</th>
+                            <th class="sortable" data-sort-by="powerAX">AX ${getSortIndicator('powerAX')}</th>
+                            <th class="sortable" data-sort-by="quantity">수량 ${getSortIndicator('quantity')}</th>
+                            <th class="sortable" data-sort-by="expirationDate">유통기한 ${getSortIndicator('expirationDate')}</th>
                         </tr>
                     </thead>
                     <tbody>
