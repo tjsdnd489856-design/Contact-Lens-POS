@@ -105,11 +105,11 @@ export const ProductService = {
   },
 
   async _makeExternalApiRequest(gtin) {
-    // 브라우저 환경에 최적화된 Fetch 요청
+    // 'text/plain'을 사용하여 브라우저의 CORS Preflight 보안 점검을 우회 시도합니다.
     const response = await fetch(API_GATEWAY_URL, {
       method: 'POST',
       headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'text/plain' 
       },
       body: JSON.stringify({ udiDi: gtin }),
     });
