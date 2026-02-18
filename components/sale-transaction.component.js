@@ -560,7 +560,7 @@ export default class SaleTransaction extends HTMLElement {
 
     this.shadowRoot.querySelectorAll('.remove-from-cart-btn').forEach(button => {
       button.addEventListener('click', (e) => {
-        const productId = parseInt(e.target.dataset.productId, 10);
+        const productId = e.target.dataset.productId;
         this._removeFromCart(productId);
       });
     });
@@ -580,13 +580,20 @@ export default class SaleTransaction extends HTMLElement {
       return;
     }
 
+    // Calculate total price for the sale
+    const total = this.cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+
     const saleItems = this.cart.map(item => ({
       productId: item.product.id,
       quantity: item.quantity,
       price: item.product.price
     }));
 
-    SalesService.addSale({ customerId: this.selectedCustomer.id, items: saleItems })
+    SalesService.addSale({ 
+      customerId: this.selectedCustomer.id, 
+      items: saleItems,
+      total: total // Explicitly include total price
+    })
       .then(() => {
         alert(ALERT_MESSAGES.SALE_SUCCESS);
         this.cart = [];
