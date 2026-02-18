@@ -45,13 +45,8 @@ export const ProductService = {
     });
   },
 
-  getProducts() {
-    return [...this._firestoreProducts];
-  },
-
-  getProductById(id) {
-    return this._firestoreProducts.find(p => p.id === id);
-  },
+  getProducts() { return [...this._firestoreProducts]; },
+  getProductById(id) { return this._firestoreProducts.find(p => p.id === id); },
 
   getProductByGtin(gtin) {
     if (!gtin) return undefined;
@@ -59,10 +54,7 @@ export const ProductService = {
     return this._firestoreProducts.find(p => (p.gtin && p.gtin.padStart(14, '0') === paddedGtin) || p.barcode === gtin);
   },
 
-  getProductByLegacyBarcode(barcode) {
-      return this._firestoreProducts.find(p => p.barcode === barcode);
-  },
-
+  getProductByLegacyBarcode(barcode) { return this._firestoreProducts.find(p => p.barcode === barcode); },
   getUniqueBrands() {
     const brands = new Set(this._firestoreProducts.map(p => p.brand));
     return ['전체', ...Array.from(brands)];
@@ -78,7 +70,7 @@ export const ProductService = {
       return docRef.id;
     } catch (error) {
       console.error("Error adding product to Firestore:", error);
-      throw new Error("제품 추가 중 오류가 발생했습니다: " + error.message);
+      throw new Error("제품 추가 실패: " + error.message);
     }
   },
 
@@ -87,7 +79,7 @@ export const ProductService = {
       await db.collection('products').doc(id).delete();
     } catch (error) {
       console.error("Error deleting product from Firestore:", error);
-      throw new Error("제품 삭제 중 오류가 발생했습니다: " + error.message);
+      throw new Error("제품 삭제 실패: " + error.message);
     }
   },
 
@@ -100,59 +92,53 @@ export const ProductService = {
       });
     } catch (error) {
       console.error("Error decreasing stock in Firestore:", error);
-      throw new Error("재고 감소 중 오류가 발생했습니다: " + error.message);
+      throw new Error("재고 감소 실패: " + error.message);
     }
   },
 
   /**
-   * 외부 API를 호출하여 제품 정보를 가져옵니다.
+   * 브라우저 보안 정책을 가장 안전하게 통과하는 호출 방식 (GET)
    */
   async _makeExternalApiRequest(gtin) {
     const url = `${API_GATEWAY_URL}?udiDi=${encodeURIComponent(gtin)}`;
     
-    // 가장 원시적인 형태의 fetch 요청으로 통신 성공률을 극대화합니다.
-    const response = await fetch(url);
+    // 복잡한 헤더를 제거하여 Preflight 없이 단순 요청으로 처리되게 합니다.
+    const response = await fetch(url, {
+      method: 'GET',
+      mode: 'cors'
+    });
 
     if (!response.ok) {
-      const errorMsg = await response.text().catch(() => 'Unknown Error');
-      throw new Error(errorMsg);
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Server Error ${response.status}`);
     }
     
     return response.json();
   },
 
-  _mapExternalApiResponseToProduct(apiResponse, gtin) {
-    // 응답 데이터가 item_details에 들어있거나 전체 객체인 경우 모두 대응
-    const data = apiResponse.item_details || apiResponse;
-    
-    if (data && (data.brand || data.model || data.productName)) {
-      return {
-        brand: data.brand || DEFAULT_BRAND,
-        model: data.model || DEFAULT_MODEL,
-        productName: data.productName || DEFAULT_PRODUCT_NAME,
-        powerS: 0, 
-        powerC: 0,
-        powerAX: 0,
-        quantity: DEFAULT_QUANTITY,
-        expirationDate: DEFAULT_EXPIRATION_DATE,
-        price: DEFAULT_PRICE,
-        barcode: gtin,
-        gtin: gtin,
-        lensType: DEFAULT_LENS_TYPE,
-        wearType: DEFAULT_WEAR_TYPE
-      };
-    }
-    return null;
-  },
-
   async fetchProductDetailsFromExternalApi(gtin) {
     if (!gtin) return null;
     try {
+      console.log(`[UDI 조회] 제품 번호: ${gtin}`);
       const apiResponse = await this._makeExternalApiRequest(gtin);
-      console.log('[ProductService] UDI 조회 성공:', apiResponse);
-      return this._mapExternalApiResponseToProduct(apiResponse, gtin);
+      
+      const data = apiResponse.item_details || apiResponse;
+      if (data && (data.brand || data.model || data.productName)) {
+        return {
+          brand: data.brand || DEFAULT_BRAND,
+          model: data.model || DEFAULT_MODEL,
+          productName: data.productName || DEFAULT_PRODUCT_NAME,
+          powerS: 0, powerC: 0, powerAX: 0,
+          quantity: DEFAULT_QUANTITY,
+          expirationDate: DEFAULT_EXPIRATION_DATE,
+          price: DEFAULT_PRICE,
+          barcode: gtin, gtin: gtin,
+          lensType: DEFAULT_LENS_TYPE, wearType: DEFAULT_WEAR_TYPE
+        };
+      }
+      return null;
     } catch (error) {
-      console.error('[ProductService] UDI 조회 중 에러 발생:', error.message);
+      console.error('[UDI 조회 실패]', error.message);
       return null;
     }
   },
@@ -161,18 +147,13 @@ export const ProductService = {
     const today = new Date();
     const warningDate = new Date();
     warningDate.setDate(today.getDate() + days);
-
     return this._firestoreProducts.filter(product => {
         const expiration = new Date(product.expirationDate);
         return expiration <= warningDate && expiration >= today;
     }).sort((a, b) => new Date(a.expirationDate) - new Date(b.expirationDate));
   },
 
-  getAbnormalInventory() {
-    return this._firestoreProducts.filter(p => p.quantity < 0);
-  },
+  getAbnormalInventory() { return this._firestoreProducts.filter(p => p.quantity < 0); },
 
-  _notify() {
-    document.dispatchEvent(new CustomEvent('productsUpdated', { detail: this._firestoreProducts }));
-  }
+  _notify() { document.dispatchEvent(new CustomEvent('productsUpdated', { detail: this._firestoreProducts })); }
 };
