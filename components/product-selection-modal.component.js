@@ -92,6 +92,7 @@ const MODAL_STYLES = `
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
         gap: 16px;
+        margin-top: 12px; /* 상단 구분선과의 거리를 늘림 */
     }
     .brand-card {
         background: #fff;
