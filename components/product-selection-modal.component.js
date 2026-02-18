@@ -263,7 +263,7 @@ export default class ProductSelectionModal extends HTMLElement {
         this._selectedBrand = null;
         this._selectedModel = null;
         this._selectedProduct = null;
-        this._selectedQuantity = 0; // 기본값을 0으로 설정
+        this._selectedQuantity = 0;
 
         this._sortBy = 'powerS';
         this._sortOrder = 'asc';
@@ -276,7 +276,6 @@ export default class ProductSelectionModal extends HTMLElement {
 
     connectedCallback() {
         this._render();
-        // 데이터베이스 제품 정보 업데이트 이벤트 리스너 추가 (실시간 연동)
         document.addEventListener('productsUpdated', this._handleProductsUpdated);
     }
 
@@ -284,9 +283,6 @@ export default class ProductSelectionModal extends HTMLElement {
         document.removeEventListener('productsUpdated', this._handleProductsUpdated);
     }
 
-    /**
-     * 데이터베이스 업데이트 시 호출되어 화면을 갱신합니다.
-     */
     _handleProductsUpdated() {
         if (this.isOpen) {
             this._groupedData = groupProducts(ProductService.getProducts());
@@ -300,7 +296,7 @@ export default class ProductSelectionModal extends HTMLElement {
         this._selectedBrand = null;
         this._selectedModel = null;
         this._selectedProduct = null;
-        this._selectedQuantity = 0; // 모달을 열 때도 수량을 0으로 초기화
+        this._selectedQuantity = 0;
         this._groupedData = groupProducts(ProductService.getProducts());
         this._render();
     }
@@ -309,6 +305,45 @@ export default class ProductSelectionModal extends HTMLElement {
         this.isOpen = false;
         this._render();
         document.dispatchEvent(new CustomEvent('closeProductSelectionModal'));
+    }
+
+    /**
+     * "카트에 추가" 버튼의 활성화 상태만 수동으로 업데이트합니다.
+     */
+    _updateAddToCartButtonState() {
+        const btn = this.shadowRoot.querySelector('#add-to-cart');
+        if (btn) {
+            btn.disabled = !this._selectedProduct || this._selectedQuantity <= 0;
+        }
+    }
+
+    /**
+     * 선택된 행의 시각적 피드백과 수량 입력을 수동으로 조절합니다.
+     * 전체 렌더링을 피하여 스크롤과 포커스를 유지합니다.
+     */
+    _updateRowSelectionVisual(selectedId) {
+        const root = this.shadowRoot;
+        const rows = root.querySelectorAll('.power-table tbody tr');
+        
+        rows.forEach(tr => {
+            const trId = tr.dataset.id;
+            const input = tr.querySelector('.qty-input');
+            
+            if (trId === selectedId) {
+                tr.classList.add('selected');
+                // 다른 행을 클릭해서 선택된 경우, 기본 수량을 1로 설정
+                if (this._selectedQuantity === 0) {
+                    this._selectedQuantity = 1;
+                    if (input) input.value = 1;
+                }
+            } else {
+                tr.classList.remove('selected');
+                // 선택되지 않은 행의 수량 입력창은 0으로 표시 (일관성)
+                if (input) input.value = 0;
+            }
+        });
+        
+        this._updateAddToCartButtonState();
     }
 
     _handleSort(field) {
@@ -323,8 +358,6 @@ export default class ProductSelectionModal extends HTMLElement {
 
     _handleAddToCart() {
         if (!this._selectedProduct) return;
-        
-        // 수량이 0인 경우 경고 및 중단
         if (this._selectedQuantity <= 0) {
             alert('수량을 1개 이상 입력해주세요.');
             return;
@@ -372,7 +405,6 @@ export default class ProductSelectionModal extends HTMLElement {
         if (!this._selectedBrand || !this._selectedModel || !this._groupedData[this._selectedBrand][this._selectedModel]) return '';
         let options = this._groupedData[this._selectedBrand][this._selectedModel];
         
-        // Sorting
         options.sort((a, b) => {
             const valA = a[this._sortBy] ?? 0;
             const valB = b[this._sortBy] ?? 0;
@@ -501,18 +533,23 @@ export default class ProductSelectionModal extends HTMLElement {
                     const id = tr.dataset.id;
                     const products = this._groupedData[this._selectedBrand][this._selectedModel];
                     this._selectedProduct = products.find(p => p.id === id);
-                    // 행 선택 시 수량이 0이면 1로 자동 변경 (사용자 편의성)
-                    if (this._selectedQuantity === 0) this._selectedQuantity = 1;
-                    this._render();
+                    this._updateRowSelectionVisual(id);
                 };
             });
             root.querySelectorAll('.qty-input').forEach(input => {
-                input.onchange = (e) => {
-                    this._selectedQuantity = parseInt(e.target.value, 10);
-                    this._render(); // 버튼 상태 업데이트를 위해 리렌더링
-                };
                 input.oninput = (e) => {
+                    const id = e.target.dataset.id;
+                    const products = this._groupedData[this._selectedBrand][this._selectedModel];
+                    this._selectedProduct = products.find(p => p.id === id);
                     this._selectedQuantity = parseInt(e.target.value, 10) || 0;
+                    
+                    // 입력 시 즉시 행 선택 상태 업데이트 (리렌더링 없이)
+                    this._updateRowSelectionVisual(id);
+                };
+                input.onchange = (e) => {
+                    // onchange 시 리렌더링을 하지 않음으로써 포커스와 스크롤 유지
+                    this._selectedQuantity = parseInt(e.target.value, 10) || 0;
+                    this._updateAddToCartButtonState();
                 };
             });
         }
