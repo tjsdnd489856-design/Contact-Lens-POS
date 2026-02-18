@@ -356,7 +356,8 @@ export default class ProductList extends HTMLElement {
    */
   _groupExpiringProductsAndRender() {
     this._groupedExpiringProducts.clear();
-    const expiringProducts = ProductService.getExpiringProducts(); // Get fresh data
+    // Get fresh data and filter by quantity > 0 (재고량이 0인 제품 제외)
+    const expiringProducts = ProductService.getExpiringProducts().filter(p => p.quantity > 0); 
     this._allExpiringProducts = expiringProducts; // Keep a copy of all expiring products
 
     this._allExpiringProducts.forEach(product => {
