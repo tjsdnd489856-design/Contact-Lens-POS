@@ -105,30 +105,26 @@ export const ProductService = {
   },
 
   /**
-   * 브라우저 보안 정책을 가장 잘 통과하는 GET 방식으로 호출합니다.
+   * 외부 API를 호출하여 제품 정보를 가져옵니다.
    */
   async _makeExternalApiRequest(gtin) {
-    // 쿼리 스트링을 사용하여 사전 점검(Preflight) 없이 단순 요청으로 처리될 확률을 높입니다.
     const url = `${API_GATEWAY_URL}?udiDi=${encodeURIComponent(gtin)}`;
     
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-          'Accept': 'application/json'
-      }
-    });
+    // 가장 원시적인 형태의 fetch 요청으로 통신 성공률을 극대화합니다.
+    const response = await fetch(url);
 
     if (!response.ok) {
-      // 만약 람다 내부에서 에러가 났다면 에러 메시지를 읽어옵니다.
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Server Error ${response.status}`);
+      const errorMsg = await response.text().catch(() => 'Unknown Error');
+      throw new Error(errorMsg);
     }
     
     return response.json();
   },
 
   _mapExternalApiResponseToProduct(apiResponse, gtin) {
+    // 응답 데이터가 item_details에 들어있거나 전체 객체인 경우 모두 대응
     const data = apiResponse.item_details || apiResponse;
+    
     if (data && (data.brand || data.model || data.productName)) {
       return {
         brand: data.brand || DEFAULT_BRAND,
@@ -152,13 +148,11 @@ export const ProductService = {
   async fetchProductDetailsFromExternalApi(gtin) {
     if (!gtin) return null;
     try {
-      console.log(`[ProductService] UDI 조회 요청: ${gtin}`);
       const apiResponse = await this._makeExternalApiRequest(gtin);
-      console.log('[ProductService] UDI 응답 수신:', apiResponse);
-      
+      console.log('[ProductService] UDI 조회 성공:', apiResponse);
       return this._mapExternalApiResponseToProduct(apiResponse, gtin);
     } catch (error) {
-      console.error('[ProductService] UDI 조회 실패:', error.message);
+      console.error('[ProductService] UDI 조회 중 에러 발생:', error.message);
       return null;
     }
   },
