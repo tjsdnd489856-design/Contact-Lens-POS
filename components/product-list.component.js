@@ -124,17 +124,31 @@ const PRODUCT_LIST_STYLES = `
         text-align: center;
         margin-bottom: 15px;
     }
-    .detail-popup ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
+    .detail-popup .detail-table { /* New style for popup table */
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+        table-layout: fixed;
     }
-    .detail-popup ul li {
-        padding: 8px 0;
-        border-bottom: 1px dashed #eee;
+    .detail-popup .detail-table th, .detail-popup .detail-table td {
+        border: 1px solid #eee;
+        padding: 8px;
+        text-align: center;
+        box-sizing: border-box;
     }
-    .detail-popup ul li:last-child {
-        border-bottom: none;
+    .detail-popup .detail-table th {
+        background-color: #f9f9f9;
+        cursor: pointer;
+    }
+    .detail-popup .detail-table th.active {
+        background-color: #007bff;
+        color: white;
+    }
+    .detail-popup .detail-table tbody tr:nth-child(even) {
+        background-color: #fcfcfc;
+    }
+    .detail-popup .detail-table tbody tr:hover {
+        background-color: #f0f0f0;
     }
     .detail-popup button {
         display: block;
@@ -160,6 +174,8 @@ export default class ProductList extends HTMLElement {
     this._sortExpiringOrder = 'asc'; // 'asc' 또는 'desc'
     this._detailPopupVisible = false;
     this._currentDetailedExpiringProducts = [];
+    this._detailPopupSortBy = null; // Sort key for detail popup table
+    this._detailPopupSortOrder = 'asc'; // Sort order for detail popup table
     
     // Bind event handlers
     this._handleProductsUpdated = this._handleProductsUpdated.bind(this);
@@ -167,6 +183,7 @@ export default class ProductList extends HTMLElement {
     this._handleSortExpiring = this._handleSortExpiring.bind(this);
     this._handleExpiringRowDoubleClick = this._handleExpiringRowDoubleClick.bind(this);
     this._closeDetailExpiringPopup = this._closeDetailExpiringPopup.bind(this);
+    this._handleDetailPopupSort = this._handleDetailPopupSort.bind(this);
   }
     
   connectedCallback() {
@@ -412,7 +429,7 @@ export default class ProductList extends HTMLElement {
   _handleExpiringRowDoubleClick(event) {
       const row = event.currentTarget;
       const modelName = row.dataset.model;
-      this._currentDetailedExpiringProducts = this._sortExpiringProducts(this._groupedExpiringProducts.get(modelName) || []);
+      this._currentDetailedExpiringProducts = this._sortDetailedProductsForPopup(this._groupedExpiringProducts.get(modelName) || []);
       this._detailPopupVisible = true;
       this._render();
   }
@@ -424,7 +441,63 @@ export default class ProductList extends HTMLElement {
   _closeDetailExpiringPopup() {
       this._detailPopupVisible = false;
       this._currentDetailedExpiringProducts = [];
+      this._detailPopupSortBy = null; // Reset sort for popup
+      this._detailPopupSortOrder = 'asc'; // Reset sort order for popup
       this._render();
+  }
+
+  /**
+   * Sorts the detailed products for the popup based on _detailPopupSortBy and _detailPopupSortOrder.
+   * @param {Array<Object>} products - The list of detailed products to sort.
+   * @returns {Array<Object>} Sorted products.
+   * @private
+   */
+  _sortDetailedProductsForPopup(products) {
+    if (!this._detailPopupSortBy) {
+        // Default sort by expirationDate if no specific sort is set
+        return [...products].sort((a, b) => new Date(a.expirationDate) - new Date(b.expirationDate));
+    }
+
+    return [...products].sort((a, b) => {
+        let valA = a[this._detailPopupSortBy];
+        let valB = b[this._detailPopupSortBy];
+
+        // Handle date comparison for expirationDate
+        if (this._detailPopupSortBy === 'expirationDate') {
+            valA = new Date(valA);
+            valB = new Date(valB);
+        } else if (this._detailPopupSortBy === 'powerS' || this._detailPopupSortBy === 'powerC' || this._detailPopupSortBy === 'powerAX' || this._detailPopupSortBy === 'quantity') {
+            // Ensure numeric comparison for power and quantity fields
+            valA = parseFloat(valA) || 0;
+            valB = parseFloat(valB) || 0;
+        }
+
+
+        if (valA < valB) {
+            return this._detailPopupSortOrder === 'asc' ? -1 : 1;
+        }
+        if (valA > valB) {
+            return this._detailPopupSortOrder === 'asc' ? 1 : -1;
+        }
+        return 0;
+    });
+  }
+
+  /**
+   * Handles sorting for the detail popup table.
+   * @param {string} sortBy - The key to sort by.
+   * @private
+   */
+  _handleDetailPopupSort(sortBy) {
+      if (this._detailPopupSortBy === sortBy) {
+          this._detailPopupSortOrder = (this._detailPopupSortOrder === 'asc' ? 'desc' : 'asc');
+      } else {
+          this._detailPopupSortBy = sortBy;
+          this._detailPopupSortOrder = 'asc';
+      }
+      // Re-sort current detailed products and re-render
+      this._currentDetailedExpiringProducts = this._sortDetailedProductsForPopup(this._currentDetailedExpiringProducts);
+      this._render(); 
   }
 
   /**
@@ -433,21 +506,36 @@ export default class ProductList extends HTMLElement {
    */
   _renderDetailExpiringPopup() {
       if (!this._detailPopupVisible) return '';
+      
+      const sortedDetailedProducts = this._sortDetailedProductsForPopup(this._currentDetailedExpiringProducts);
 
-      const detailListItems = this._currentDetailedExpiringProducts.map(product => `
-          <li>
-              <strong>도수:</strong> S ${product.powerS !== null ? product.powerS.toFixed(2) : 'N/A'},
-                       C ${product.powerC !== null ? product.powerC.toFixed(2) : 'N/A'},
-                       AX ${product.powerAX !== null ? product.powerAX : 'N/A'}<br>
-              <strong>수량:</strong> ${product.quantity}<br>
-              <strong>유통기한:</strong> ${product.expirationDate}
-          </li>
+      const tableRows = sortedDetailedProducts.map(product => `
+            <tr>
+                <td>${(product.powerS !== null && product.powerS !== undefined) ? (product.powerS > 0 ? '+' : '') + product.powerS.toFixed(2) : 'N/A'}</td>
+                <td>${(product.powerC !== null && product.powerC !== undefined) ? (product.powerC > 0 ? '+' : '') + product.powerC.toFixed(2) : 'N/A'}</td>
+                <td>${product.powerAX !== null ? product.powerAX : 'N/A'}</td>
+                <td>${product.quantity}</td>
+                <td>${product.expirationDate}</td>
+            </tr>
       `).join('');
 
       return `
           <div class="detail-popup">
               <h4>${this._currentDetailedExpiringProducts[0]?.model} 상세 정보</h4>
-              <ul>${detailListItems}</ul>
+              <table class="detail-table">
+                  <thead>
+                      <tr>
+                          <th data-sort-by="powerS">S</th>
+                          <th data-sort-by="powerC">C</th>
+                          <th data-sort-by="powerAX">AX</th>
+                          <th data-sort-by="quantity">수량</th>
+                          <th data-sort-by="expirationDate">유통기한</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      ${tableRows}
+                  </tbody>
+              </table>
               <button class="close-popup-btn">닫기</button>
           </div>
       `;
@@ -475,6 +563,13 @@ export default class ProductList extends HTMLElement {
           closeButton.removeEventListener('click', this._closeDetailExpiringPopup); // Remove existing
           closeButton.addEventListener('click', this._closeDetailExpiringPopup);
       }
+
+      // Attach event listeners for detail popup table headers
+      const detailTableHeaders = this.shadowRoot.querySelectorAll('.detail-popup .detail-table th[data-sort-by]');
+      detailTableHeaders.forEach(header => {
+          header.removeEventListener('click', this._handleDetailPopupSort); // Remove existing
+          header.addEventListener('click', () => this._handleDetailPopupSort(header.dataset.sortBy));
+      });
   }
 
 }
