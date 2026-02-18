@@ -1,5 +1,6 @@
 import { CustomerService } from '../services/customer.service.js';
 import { ProductService } from '../services/product.service.js'; // Import ProductService
+import { SalesService } from '../services/sales.service.js'; // Import SalesService
 // import { initializeFirebase } from '../modules/firebase-init.js'; // Firebase is initialized globally via CDN and its modules handle services
 import { initTabManager } from '../modules/tab-manager.js';
 import { validateDOMElements, tabButtons, tabContents, customerSearchInput } from '../utils/dom-elements.js';
@@ -19,6 +20,7 @@ export function initializeApp() {
         // 1. Initialize Firebase services and data stores
         CustomerService.init(); // Initialize CustomerService with Firestore listener
         ProductService.init(); // Initialize ProductService with Firestore listener
+        SalesService.init();   // Initialize SalesService with Firestore listener
         // initializeFirebase(); // No longer needed, Firebase app is initialized via global script and CustomerService uses its own init
 
         // 2. Validate essential DOM elements
